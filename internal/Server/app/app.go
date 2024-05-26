@@ -19,6 +19,4 @@ func NewApp(ctx context.Context, connString string) (*App, error) {
 }
 
 func Run() {
-	//
-	NewApp
 }

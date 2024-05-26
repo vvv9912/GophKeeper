@@ -1,12 +1,12 @@
-package Server
+package main
 
 import "GophKeeper/pkg/logger"
 
 var flagLogLevel string
 
-func init() {
-	//
-}
+//func init() {
+//	//
+//}
 
 func Run() error {
 	flagLogLevel = "debug"

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"GophKeeper/internal/Server/handler"
 	"GophKeeper/pkg/logger"
 	"context"
 	"github.com/go-chi/chi/v5"
@@ -10,6 +11,7 @@ import (
 
 func StartServer(ctx context.Context) {
 	r := chi.NewRouter()
+	r.Get("/", handler.Handler)
 	//http.Serve(autocert.NewListener())
 	server := &http.Server{
 		Addr:    ":8080",
