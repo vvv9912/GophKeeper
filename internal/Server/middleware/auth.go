@@ -1,17 +1,32 @@
 package middleware
 
-import "net/http"
+import (
+	"GophKeeper/internal/Server/service"
+	"context"
+	"net/http"
+)
 
-func MiddlewareAuth(next http.Handler) http.Handler {
+type Mw struct {
+	service.Auth
+}
+
+func (m Mw) MiddlewareAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
 		if token == "" {
 			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
-		//Получение userId и перадача по контексту
 
-		//
-		next.ServeHTTP(w, r)
+		userId, err := m.GetUserId(token)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		//todo
+		ctx := context.WithValue(r.Context(), "UserId", userId)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 
 	})
 }

@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+
 	Run()
 	service.StartServer(context.Background())
 	ch := make(chan os.Signal, 1)
