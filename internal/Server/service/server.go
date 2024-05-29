@@ -3,18 +3,18 @@ package service
 import (
 	"GophKeeper/pkg/logger"
 	"context"
-	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"net/http"
 )
 
-func StartServer(ctx context.Context) {
-	r := chi.NewRouter()
+func StartServer(ctx context.Context, h http.Handler) {
+	//r := chi.NewRouter()
+
 	//r.Get("/", handler.Handler)
 	//http.Serve(autocert.NewListener())
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: r,
+		Handler: h,
 	}
 	go func() {
 		err := server.ListenAndServe()
