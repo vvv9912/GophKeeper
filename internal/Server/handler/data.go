@@ -38,7 +38,7 @@ func (h *Handler) HandlerPostCredentials(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.service.Data.CreateCredentials(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
+	err = h.service.Data.CreateData(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
 	if err != nil {
 		return
 	}
