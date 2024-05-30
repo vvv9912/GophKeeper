@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// CreateCredentials - Создание пары логин/пароль.
 func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) error {
 	tx, err := db.db.Begin()
 	if err != nil {
@@ -40,6 +41,8 @@ func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []
 
 	return nil
 }
+
+// CreateCreditCard - Создание пары данные банковских карт.
 func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) error {
 	tx, err := db.db.Begin()
 	if err != nil {
@@ -73,6 +76,8 @@ func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []b
 
 	return nil
 }
+
+// CreateFileData - Создание произвольных данных.
 func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) error {
 	tx, err := db.db.Begin()
 	if err != nil {
