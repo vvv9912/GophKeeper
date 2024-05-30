@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE if not exists users (
-    id SERIAL PRIMARY KEY,
+    user_id SERIAL PRIMARY KEY,
     login varchar(20) not null,
     password varchar(20) not null,
     created_at timestamp default NOW(),

@@ -1,13 +1,15 @@
 package app
 
 import (
+	"GophKeeper/internal/Server/handler"
+	"GophKeeper/internal/Server/service"
 	"GophKeeper/pkg/store"
-	"GophKeeper/pkg/store/postgresql"
 	"context"
 	"crypto/rsa"
 	"github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"os"
 )
 
 type App struct {
@@ -28,19 +30,27 @@ type App struct {
 
 func Run() error {
 	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, "postgres://postgres:postgres@localhost:5434/postgres?sslmode=disable")
-	if err != nil {
-		//todo Log
-		return err
-	}
-	_ = conn
+	//conn, err := pgx.Connect(ctx, "postgres://postgres:postgres@localhost:5434/postgres?sslmode=disable")
+	//if err != nil {
+	//	//todo Log
+	//	return err
+	//}
+	//_ = conn
 	db, err := sqlx.Open("pgx", "postgres://postgres:postgres@localhost:5434/postgres?sslmode=disable")
 
-	ss := postgresql.NewDatabase(db)
-	ss.CreateUser("login2", "pass")
+	//ss := postgresql.NewDatabase(db)
+
 	err = store.Migrate(db)
 	if err != nil {
 		return err
 	}
+
+	services := service.NewService(db, nil, nil)
+
+	h := handler.NewHandler(services)
+	server := service.StartServer(ctx, h.InitRoutes())
+	_ = server
+	ch := make(chan os.Signal, 1)
+	<-ch
 	return nil
 }

@@ -14,3 +14,9 @@ type RespError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
+
+type ReqData struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Data        []byte `json:"data"`
+}

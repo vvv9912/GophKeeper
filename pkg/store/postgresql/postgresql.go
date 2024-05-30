@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func (db *Database) CreateUser(login, password string) (int64, error) {
-	id, err := db.createUser(context.Background(), login, password)
+func (db *Database) CreateUser(ctx context.Context, login, password string) (int64, error) {
+	id, err := db.createUser(ctx, login, password)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
@@ -27,4 +27,8 @@ func (db *Database) CreateUser(login, password string) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func (db *Database) GetUserId(ctx context.Context, login, password string) (int64, error) {
+	return 0, nil
 }

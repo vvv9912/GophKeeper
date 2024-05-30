@@ -7,11 +7,11 @@ import (
 	"net/http"
 )
 
-func StartServer(ctx context.Context, h http.Handler) {
-	//r := chi.NewRouter()
+type Server struct {
+	httpServer *http.Server
+}
 
-	//r.Get("/", handler.Handler)
-	//http.Serve(autocert.NewListener())
+func StartServer(ctx context.Context, h http.Handler) *Server {
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: h,
@@ -35,4 +35,9 @@ func StartServer(ctx context.Context, h http.Handler) {
 		}
 
 	}()
+	return &Server{}
+}
+
+func (s *Server) Stop(ctx context.Context) error {
+	return s.httpServer.Shutdown(ctx)
 }

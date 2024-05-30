@@ -21,11 +21,11 @@ func NewAutorization(tokenExp time.Duration, secretKey string) *Autorization {
 // и одно пользовательское — UserID
 type Claims struct {
 	jwt.RegisteredClaims
-	UserID int
+	UserID int64
 }
 
 // BuildJWTString создаёт токен и возвращает его в виде строки.
-func (a *Autorization) BuildJWTString(userId int) (string, error) {
+func (a *Autorization) BuildJWTString(userId int64) (string, error) {
 	// создаём новый токен с алгоритмом подписи HS256 и утверждениями — Claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -47,7 +47,7 @@ func (a *Autorization) BuildJWTString(userId int) (string, error) {
 }
 
 // GetUserId - возвращает id пользователя из jwt
-func (a *Autorization) GetUserId(tokenString string) (int, error) {
+func (a *Autorization) GetUserId(tokenString string) (int64, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims,
 		func(t *jwt.Token) (interface{}, error) {
