@@ -4,8 +4,10 @@ import (
 	"GophKeeper/pkg/customErrors"
 	"GophKeeper/pkg/logger"
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -159,4 +161,38 @@ func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err = h.service.Data.ChangeData(r.Context(), userId, LastTimeUpdate)
+}
+
+func (h *Handler) HandlerGetData(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var resp []byte
+
+	defer func() {
+		if err != nil {
+			deferHandler(err, w)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			_, err = w.Write(resp)
+			if err != nil {
+				logger.Log.Error("Error send resp", zap.Error(err))
+			}
+		}
+	}()
+	userId, err := getUserId(r)
+	if err != nil {
+		return
+	}
+
+	strUserDataId := chi.URLParam(r, "userDataId")
+
+	userDataId, err := strconv.Atoi(strUserDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusBadRequest, "UserDataId is invalid")
+		logger.Log.Error("UserDataId is invalid", zap.Error(err))
+		return
+	}
+	resp, err = h.service.Data.GetData(r.Context(), userId, int64(userDataId))
+	if err != nil {
+		return
+	}
 }

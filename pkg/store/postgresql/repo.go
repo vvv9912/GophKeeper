@@ -88,7 +88,7 @@ func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.D
 }
 
 // getDataByUserId - Получение информации о данных пользователя, которые не удалены
-func (db *Database) getDataUserByUserId(ctx context.Context, userDataId int64, userId int64) (*store.UsersData, error) {
+func (db *Database) getDataUserByUserId(ctx context.Context, userId int64, userDataId int64) (*store.UsersData, error) {
 	query := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_data_id = $1 and is_deleted = false and user_id = $2 FOR UPDATE "
 	row := db.db.QueryRowContext(ctx, query, userDataId, userId)
 

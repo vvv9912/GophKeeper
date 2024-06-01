@@ -4,6 +4,7 @@ import (
 	"GophKeeper/pkg/ShaHash"
 	"GophKeeper/pkg/customErrors"
 	"GophKeeper/pkg/logger"
+	"GophKeeper/pkg/store"
 	"context"
 	"encoding/json"
 	"errors"
@@ -90,4 +91,29 @@ func (s *ServiceData) ChangeData(ctx context.Context, userId int64, lastTimeUpda
 		return nil, err
 	}
 	return resp, nil
+}
+
+func (s *ServiceData) GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
+	if userId == 0 {
+		logger.Log.Error("userId is empty")
+		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
+	}
+	usersData, data, err := s.StoreData.GetData(ctx, userId, userDataId)
+	if err != nil {
+		return nil, err
+	}
+	type Data struct {
+		InfoUsersData *store.UsersData `json:"infoUsersData"`
+		EncryptData   *store.DataFile  `json:"encryptData"`
+	}
+	resp := Data{
+		InfoUsersData: usersData,
+		EncryptData:   data,
+	}
+	response, err := json.Marshal(resp)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Marshal data error")
+		return nil, err
+	}
+	return response, nil
 }

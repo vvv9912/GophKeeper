@@ -4,6 +4,7 @@ import (
 	"GophKeeper/pkg/customErrors"
 	"GophKeeper/pkg/store"
 	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 	"time"
@@ -126,6 +127,10 @@ func (db *Database) ChangeData(ctx context.Context, userId int64, lastTimeUpdate
 func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error) {
 	usersData, err := db.getDataUserByUserId(ctx, userId, usersDataId)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			err = customErrors.NewCustomError(err, http.StatusNotFound, "get data failed")
+			return nil, nil, err
+		}
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")
 		return nil, nil, err
 	}

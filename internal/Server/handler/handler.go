@@ -22,7 +22,7 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 	r.Post("/signIn", h.HandlerSignIn)
 	r.With(mw.MiddlewareAuth).Post("/postCredentials", h.HandlerPostCredentials)
 	r.With(mw.MiddlewareAuth).Get("/changes", h.HandlerCheckChanges)
-
+	r.With(mw.MiddlewareAuth).Get("/getData/{userDataId:[0-9]+}", h.HandlerGetData)
 	return r
 }
 

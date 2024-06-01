@@ -28,6 +28,7 @@ type Data interface {
 	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) error
 	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) error
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
+	GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
 }
 
 // StoreData - интерфейс для работы с БД данных пользователя.
@@ -36,6 +37,7 @@ type StoreData interface {
 	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) error
 	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) error
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error)
+	GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error)
 }
 
 // Service - структура сервисного слоя.
