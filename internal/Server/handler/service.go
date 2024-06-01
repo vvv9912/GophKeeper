@@ -5,6 +5,7 @@ import (
 	"GophKeeper/pkg/logger"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -12,6 +13,7 @@ import (
 // deferHandler - defer function for get error
 func deferHandler(err error, w http.ResponseWriter) {
 
+	fmt.Println(err)
 	var MyErr *customErrors.CustomError
 	if errors.As(err, &MyErr) {
 

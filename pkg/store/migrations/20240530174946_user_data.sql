@@ -10,7 +10,7 @@ CREATE TABLE if not exists users_data (
   hash text not null,
   created_at timestamp default NOW(),
   update_at timestamp default NOW(),
-  isDelete boolean
+  is_Deleted boolean default false
 );
 -- +goose StatementEnd
 

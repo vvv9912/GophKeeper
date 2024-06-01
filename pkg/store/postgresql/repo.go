@@ -71,7 +71,7 @@ func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (in
 }
 
 func (db *Database) getDataByUserId(ctx context.Context, userId int64) ([]store.UsersData, error) {
-	query := "SELECT user_data_id, data_id,users_id,data_type,name, description, hash, created_at,update_at,isDeleted FROM data WHERE user_id = $1 and isDeleted = false"
+	query := "SELECT user_data_id, data_id,users_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_id = $1 and is_deleted = false"
 	row, err := db.db.QueryContext(ctx, query, userId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
@@ -114,7 +114,7 @@ func (db *Database) getDataByUserId(ctx context.Context, userId int64) ([]store.
 
 func (db *Database) changeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error) {
 
-	query := "SELECT user_data_id, name, description,data_type, hash, update_at,isDeleted FROM data WHERE user_id = $1 and update_at > $2"
+	query := "SELECT user_data_id, name, description,data_type, hash, update_at,is_deleted FROM users_data WHERE user_id = $1 and update_at > $2"
 
 	row, err := db.db.QueryContext(ctx, query, userId, lastTimeUpdate)
 	if err != nil {

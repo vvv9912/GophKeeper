@@ -1,6 +1,9 @@
 package customErrors
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type CustomError struct {
 	Err        error
@@ -9,6 +12,9 @@ type CustomError struct {
 }
 
 func NewCustomError(err error, statusCode int, msg string) *CustomError {
+	if err == nil {
+		err = errors.New("")
+	}
 	return &CustomError{err, statusCode, msg}
 }
 

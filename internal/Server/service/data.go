@@ -51,7 +51,7 @@ func (s *ServiceData) CreateFile(ctx context.Context, userId int64, data []byte,
 // createData - проверка правильности данных и расчет хэша.
 func (s *ServiceData) createData(ctx context.Context, userId int64, data []byte, name, description string) (string, error) {
 	var err error
-	if data == nil {
+	if data == nil || len(data) == 0 {
 		logger.Log.Error("data is empty")
 		err = errors.Join(err, customErrors.NewCustomError(nil, http.StatusBadRequest, "data is empty"))
 	}
