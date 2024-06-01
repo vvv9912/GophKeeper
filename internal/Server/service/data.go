@@ -5,8 +5,10 @@ import (
 	"GophKeeper/pkg/customErrors"
 	"GophKeeper/pkg/logger"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 )
 
 // ServiceData - структура для работы с данными пользователя.
@@ -72,4 +74,20 @@ func (s *ServiceData) createData(ctx context.Context, userId int64, data []byte,
 	// Считаем хэш полученных данных
 	hash := ShaHash.Sha256Hash(data)
 	return hash, err
+}
+func (s *ServiceData) ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error) {
+	if userId == 0 {
+		logger.Log.Error("userId is empty")
+		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
+	}
+	data, err := s.StoreData.ChangeData(ctx, userId, lastTimeUpdate)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := json.Marshal(data)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Marshal data error")
+		return nil, err
+	}
+	return resp, nil
 }

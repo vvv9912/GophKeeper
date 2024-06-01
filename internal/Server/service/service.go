@@ -2,6 +2,7 @@ package service
 
 import (
 	"GophKeeper/internal/Server/authorization"
+	"GophKeeper/pkg/store"
 	"GophKeeper/pkg/store/postgresql"
 	"context"
 	"crypto/rsa"
@@ -24,6 +25,9 @@ type StoreAuth interface {
 // Data - интерфейс для работы с данными пользователя.
 type Data interface {
 	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) error
+	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) error
+	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) error
+	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
 }
 
 // StoreData - интерфейс для работы с БД данных пользователя.
@@ -31,6 +35,7 @@ type StoreData interface {
 	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) error
 	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) error
 	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) error
+	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error)
 }
 
 // Service - структура сервисного слоя.

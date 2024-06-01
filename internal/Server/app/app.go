@@ -38,8 +38,6 @@ func Run() error {
 	//_ = conn
 	db, err := sqlx.Open("pgx", "postgres://postgres:postgres@localhost:5434/postgres?sslmode=disable")
 
-	//ss := postgresql.NewDatabase(db)
-
 	err = store.Migrate(db)
 	if err != nil {
 		return err
