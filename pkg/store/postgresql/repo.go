@@ -160,18 +160,23 @@ func (db *Database) changeData(ctx context.Context, userId int64, lastTimeUpdate
 
 // updateData - обновление пользовательских данных
 func (db *Database) updateData(ctx context.Context, newData store.UsersData, data []byte) error {
-
+	//todo логика работы с транзакцийе
 	// Блокирующая транзацкция SELECT * FROM table_name WHERE condition FOR UPDATE;
 	tx, err := db.db.Begin()
+
 	if err != nil {
 		logger.Log.Error("Error while begin transaction", zap.Error(err))
 		return err
 	}
 
+	// Блокировка таблицы users_data и получение dataid
 	queryBlock1 := "SELECT data_id FROM users_data WHERE user_id = $1 and user_data_id = $2 for update"
+	// Блокировка таблицы data
 	queryBlock2 := "SELECT data_id FROM data WHERE data_id = $1 for update"
 
+	// Изменение данных в таблице users_data
 	query1 := "UPDATE users_data SET name=$1, description=$2, hash=$3, update_at=$4 WHERE user_data_id = $6"
+	// Изменение данных в таблице data
 	query2 := "UPDATE data SET encrypt_data = $1 where data_id=$2"
 
 	// Получим dataId и заблокируем на изменение табилцу
@@ -226,6 +231,39 @@ func (db *Database) updateData(ctx context.Context, newData store.UsersData, dat
 		//todo add err in repo
 		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
 	}
+
+	return nil
+}
+
+// removeData - удаление пользовательских данных
+func (db *Database) removeData(ctx context.Context, user_data_id int64) error {
+
+	// Удаление данных в таблице users_data
+	query1 := "UPDATE users_data SET is_deleted=$1 WHERE user_data_id = $2"
+
+	res, err := db.db.ExecContext(ctx, query1, true, user_data_id)
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+
+	nr, err := res.RowsAffected()
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+	if nr == 0 {
+		//todo add err in repo
+		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
+	}
+
+	return nil
+}
+
+// deleteData - удаление пользовательских данных
+func (db *Database) deleteData(ctx context.Context, user_data_id int64) error {
+
+	// todo
 
 	return nil
 }
