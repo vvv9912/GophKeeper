@@ -11,13 +11,15 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func StartServer(ctx context.Context, h http.Handler) *Server {
+// openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
+func StartServer(ctx context.Context, h http.Handler, addr, cert, key string) *Server {
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    addr,
 		Handler: h,
 	}
+
 	go func() {
-		err := server.ListenAndServe()
+		err := server.ListenAndServeTLS(cert, key)
 		if err != nil {
 			logger.Log.Error("Start server error", zap.Error(err))
 			return

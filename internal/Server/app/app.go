@@ -47,7 +47,10 @@ func Run() error {
 	services := service.NewService(db, nil, nil, secretKey)
 
 	h := handler.NewHandler(services)
-	server := service.StartServer(ctx, h.InitRoutes(services))
+	cert := "cert.pem"
+	key := "key.pem"
+	addr := ":8080"
+	server := service.StartServer(ctx, h.InitRoutes(services), addr, cert, key)
 	_ = server
 	ch := make(chan os.Signal, 1)
 	<-ch
