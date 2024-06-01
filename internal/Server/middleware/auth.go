@@ -4,6 +4,7 @@ import (
 	"GophKeeper/internal/Server/service"
 	"context"
 	"net/http"
+	"strings"
 )
 
 type Mw struct {
@@ -18,8 +19,16 @@ func (m Mw) MiddlewareAuth(next http.Handler) http.Handler {
 			return
 		}
 
+		// Отделение префикса "Bearer" от токена
+		if len(token) > 7 && strings.ToUpper(token[0:7]) == "BEARER " {
+			token = token[7:]
+		}
 		userId, err := m.GetUserId(token)
 		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if userId == -1 {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

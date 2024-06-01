@@ -43,10 +43,11 @@ func Run() error {
 		return err
 	}
 
-	services := service.NewService(db, nil, nil)
+	secretKey := string([]byte("asdahgf53sk41250"))
+	services := service.NewService(db, nil, nil, secretKey)
 
 	h := handler.NewHandler(services)
-	server := service.StartServer(ctx, h.InitRoutes())
+	server := service.StartServer(ctx, h.InitRoutes(services))
 	_ = server
 	ch := make(chan os.Signal, 1)
 	<-ch

@@ -75,7 +75,7 @@ func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (in
 
 // getDataByUserId - Получение информации о данных пользователя, которые не удалены
 func (db *Database) getDataByUserId(ctx context.Context, userId int64) ([]store.UsersData, error) {
-	query := "SELECT user_data_id, data_id,users_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_id = $1 and is_deleted = false FOR UPDATE "
+	query := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_id = $1 and is_deleted = false FOR UPDATE "
 	row, err := db.db.QueryContext(ctx, query, userId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
@@ -108,8 +108,8 @@ func (db *Database) getDataByUserId(ctx context.Context, userId int64) ([]store.
 			Name:        name,
 			Description: description,
 			Hash:        hash,
-			CreatedAt:   createdAt,
-			UpdateAt:    updateAt,
+			CreatedAt:   &createdAt,
+			UpdateAt:    &updateAt,
 			IsDeleted:   isDeleted,
 		})
 	}
@@ -150,7 +150,7 @@ func (db *Database) changeData(ctx context.Context, userId int64, lastTimeUpdate
 			Description: description,
 			DataType:    dataType,
 			Hash:        hash,
-			UpdateAt:    updateAt,
+			UpdateAt:    &updateAt,
 			IsDeleted:   isDeleted,
 		})
 	}

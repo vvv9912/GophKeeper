@@ -30,5 +30,5 @@ func (db *Database) CreateUser(ctx context.Context, login, password string) (int
 }
 
 func (db *Database) GetUserId(ctx context.Context, login, password string) (int64, error) {
-	return 0, nil
+	return 1, nil
 }

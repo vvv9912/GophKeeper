@@ -49,10 +49,10 @@ type Service struct {
 }
 
 // Service - Конструктор структуры сервисного слоя.
-func NewService(db *sqlx.DB, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) *Service {
+func NewService(db *sqlx.DB, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey, secretKey string) *Service {
 	nDb := postgresql.NewDatabase(db)
 	//todo
-	return &Service{Auth: authorization.NewAutorization(5*time.Minute, ""),
+	return &Service{Auth: authorization.NewAutorization(9000*time.Minute, secretKey),
 		StoreAuth:  nDb,
 		Data:       NewServiceData(nDb),
 		StoreData:  nDb,

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"GophKeeper/internal/Server/middleware"
 	"GophKeeper/internal/Server/service"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -14,12 +15,14 @@ func NewHandler(service *service.Service) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) InitRoutes() http.Handler {
+func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 
 	r := chi.NewRouter()
+	mw := middleware.Mw{services.Auth}
+	r.Post("/signIn", h.HandlerSignIn)
+	r.With(mw.MiddlewareAuth).Post("/postCredentials", h.HandlerPostCredentials)
+	r.With(mw.MiddlewareAuth).Get("/changes", h.HandlerCheckChanges)
 
-	r.Post("/", h.HandlerPostCredentials)
-	r.Get("/changes", h.HandlerCheckChanges)
 	return r
 }
 
