@@ -151,7 +151,7 @@ func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Error("Last-Time-Update header is required", zap.Error(err))
 		return
 	}
-	//TODO LAYOUT
+
 	LastTimeUpdate, err := time.Parse("2006-01-02 15:04:05.999999", strLastTime)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusBadRequest, "Last-Time-Update header is invalid")
