@@ -3,14 +3,19 @@ package store
 import "time"
 
 type UsersData struct {
-	UserDataId  int64      `json:"user_data_id,omitempty"`
-	UserId      int64      `json:"user_id,omitempty"`
-	DataId      int64      `json:"data_id,omitempty"`
-	DataType    int        `json:"data_type,omitempty"`
+	UserDataId  int64      `json:"userDataId,omitempty"`
+	UserId      int64      `json:"userId,omitempty"`
+	DataId      int64      `json:"dataId,omitempty"`
+	DataType    int        `json:"dataType,omitempty"`
 	Name        string     `json:"name,omitempty"`
 	Description string     `json:"description,omitempty"`
 	Hash        string     `json:"hash,omitempty"`
-	CreatedAt   *time.Time `json:"created_at,omitempty"`
-	UpdateAt    *time.Time `json:"update_at,omitempty"`
-	IsDeleted   bool       `json:"is_deleted,omitempty"`
+	CreatedAt   *time.Time `json:"createdAt,omitempty"`
+	UpdateAt    *time.Time `json:"updateAt,omitempty"`
+	IsDeleted   bool       `json:"isDeleted,omitempty"`
+}
+
+type DataFile struct {
+	DataId      int    `json:"dataId"`
+	EncryptData []byte `json:"EncryptData"`
 }

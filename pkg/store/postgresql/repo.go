@@ -72,48 +72,47 @@ func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (in
 
 	return id, nil
 }
-
-// getDataByUserId - Получение информации о данных пользователя, которые не удалены
-func (db *Database) getDataByUserId(ctx context.Context, userId int64) ([]store.UsersData, error) {
-	query := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_id = $1 and is_deleted = false FOR UPDATE "
-	row, err := db.db.QueryContext(ctx, query, userId)
+func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.DataFile, error) {
+	query := "SELECT data_id, encrypt_data FROM data WHERE data_id = $1"
+	var data store.DataFile
+	err := db.db.QueryRow(query, dataId).Scan(&data.DataId, &data.EncryptData)
 	if err != nil {
-		logger.Log.Error("Error while querying data", zap.Error(err))
+		//if err == sql.ErrNoRows {
+		//	err
+		//}
+		//todo
+		logger.Log.Error("Get data by id", zap.Error(err))
 		return nil, err
 	}
-	defer row.Close()
+	return &data, nil
+}
 
-	var data []store.UsersData
+// getDataByUserId - Получение информации о данных пользователя, которые не удалены
+func (db *Database) getDataUserByUserId(ctx context.Context, userDataId int64, userId int64) (*store.UsersData, error) {
+	query := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_data_id = $1 and is_deleted = false and user_id = $2 FOR UPDATE "
+	row := db.db.QueryRowContext(ctx, query, userDataId, userId)
 
-	for row.Next() {
-		var userDataId int64
-		var DataId int64
-		var dataType int
-		var name string
-		var description string
-		var hash string
-		var createdAt time.Time
-		var updateAt time.Time
-		var isDeleted bool
+	var data store.UsersData
 
-		err = row.Scan(&userDataId, &DataId, &userId, &dataType, &name, &description, &hash, &createdAt, &updateAt, &isDeleted)
-		if err != nil {
-			logger.Log.Error("Error getting data", zap.Error(err))
-			return nil, err
-		}
-		data = append(data, store.UsersData{
-			UserDataId:  userDataId,
-			UserId:      userId,
-			DataType:    dataType,
-			Name:        name,
-			Description: description,
-			Hash:        hash,
-			CreatedAt:   &createdAt,
-			UpdateAt:    &updateAt,
-			IsDeleted:   isDeleted,
-		})
+	err := row.Scan(
+		&userDataId,
+		&data.DataId,
+		&data.UserId,
+		&data.DataType,
+		&data.Name,
+		&data.Description,
+		&data.Hash,
+		&data.CreatedAt,
+		&data.UpdateAt,
+		&data.IsDeleted,
+	)
+
+	if err != nil {
+		logger.Log.Error("Error getting data", zap.Error(err))
+		return nil, err
 	}
-	return data, err
+
+	return &data, err
 }
 
 // changeData - получение информации об изменненных данных

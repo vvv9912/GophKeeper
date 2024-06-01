@@ -122,3 +122,18 @@ func (db *Database) ChangeData(ctx context.Context, userId int64, lastTimeUpdate
 	}
 	return data, nil
 }
+
+func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error) {
+	usersData, err := db.getDataUserByUserId(ctx, userId, usersDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")
+		return nil, nil, err
+	}
+	data, err := db.getDataByDataId(ctx, usersData.DataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")
+		return nil, nil, err
+	}
+
+	return usersData, data, nil
+}
