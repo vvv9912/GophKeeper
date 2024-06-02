@@ -9,7 +9,7 @@ import (
 
 func (s *Service) SignUp(ctx context.Context, login, password string) (string, error) {
 	// Получаем хэш пароль передает User
-
+	// TODO: ограничение на пользовательский пароль логин
 	hashPassword := authorization.Sha256Hash(password)
 
 	userId, err := s.StoreAuth.CreateUser(ctx, login, hashPassword)
@@ -30,7 +30,6 @@ func (s *Service) SignIn(ctx context.Context, login, password string) (string, e
 
 	hashPassword := authorization.Sha256Hash(password)
 
-	// TODO:Добавить ошибки кастомные
 	userId, err := s.StoreAuth.GetUserId(ctx, login, hashPassword)
 	if err != nil {
 		return "", customErrors.NewCustomError(err, http.StatusInternalServerError, "Error get user id")
