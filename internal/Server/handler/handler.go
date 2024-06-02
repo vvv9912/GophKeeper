@@ -36,6 +36,9 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 
 		r.Get("/changes", h.HandlerCheckChanges)
 		r.Get("/{userDataId:[0-9]+}", h.HandlerGetData)
+
+		r.Patch("/", h.HandlerUpdateData)
+		r.Delete("/{userDataId:[0-9]+}", h.HandlerRemoveData)
 	})
 
 	return r
