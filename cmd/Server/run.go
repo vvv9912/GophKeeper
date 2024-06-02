@@ -4,9 +4,11 @@ import "GophKeeper/pkg/logger"
 
 var flagLogLevel string
 
-//func init() {
-//	//
-//}
+// todo config
+//	func init() {
+//		//
+//	}
+//
 
 func Run() error {
 	flagLogLevel = "debug"

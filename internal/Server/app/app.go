@@ -6,28 +6,24 @@ import (
 	"GophKeeper/pkg/store"
 	"context"
 	"crypto/rsa"
-	"github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"os"
 )
 
 type App struct {
-	db         *pgx.Conn
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 }
 
-//
-//func NewApp(ctx context.Context, connString string) (*App, error) {
-//	conn, err := pgx.Connect(ctx, connString)
-//	if err != nil {
+//	func NewApp(ctx context.Context, connString string) (*App, error) {
+//		conn, err := pgx.Connect(ctx, connString)
+//		if err != nil {
+//			return nil, err
+//		}
+//		_ = conn
 //		return nil, err
 //	}
-//	_ = conn
-//	return nil, err
-//}
-
 func Run() error {
 	ctx := context.Background()
 	//conn, err := pgx.Connect(ctx, "postgres://postgres:postgres@localhost:5434/postgres?sslmode=disable")
