@@ -18,13 +18,14 @@ func (h *Handler) HandlerPostCredentials(w http.ResponseWriter, r *http.Request)
 	defer func() {
 		if err != nil {
 			deferHandler(err, w)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, err = w.Write(resp)
-			if err != nil {
-				logger.Log.Error("Error send resp", zap.Error(err))
-			}
+			return
 		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
 	}()
 
 	userId, err := getUserId(r)
@@ -57,13 +58,14 @@ func (h *Handler) HandlerPostCreditCard(w http.ResponseWriter, r *http.Request) 
 	defer func() {
 		if err != nil {
 			deferHandler(err, w)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, err = w.Write(resp)
-			if err != nil {
-				logger.Log.Error("Error send resp", zap.Error(err))
-			}
+			return
 		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
 	}()
 
 	userId, err := getUserId(r)
@@ -96,13 +98,14 @@ func (h *Handler) HandlerPostCrateFile(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err != nil {
 			deferHandler(err, w)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, err = w.Write(resp)
-			if err != nil {
-				logger.Log.Error("Error send resp", zap.Error(err))
-			}
+			return
 		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
 	}()
 
 	userId, err := getUserId(r)
@@ -135,14 +138,16 @@ func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err != nil {
 			deferHandler(err, w)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, err = w.Write(resp)
-			if err != nil {
-				logger.Log.Error("Error send resp", zap.Error(err))
-			}
+			return
 		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
 	}()
+
 	userId, err := getUserId(r)
 	if err != nil {
 		return
@@ -170,14 +175,16 @@ func (h *Handler) HandlerGetData(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err != nil {
 			deferHandler(err, w)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, err = w.Write(resp)
-			if err != nil {
-				logger.Log.Error("Error send resp", zap.Error(err))
-			}
+			return
 		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
 	}()
+
 	userId, err := getUserId(r)
 	if err != nil {
 		return

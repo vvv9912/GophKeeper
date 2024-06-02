@@ -16,10 +16,14 @@ func (h Handler) HandlerSignUp(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err != nil {
 			deferHandler(err, w)
-		} else {
-			w.Write(resp)
-			w.WriteHeader(http.StatusOK)
+			return
 		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
 	}()
 
 	var auth Auth
@@ -57,10 +61,14 @@ func (h Handler) HandlerSignIn(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err != nil {
 			deferHandler(err, w)
-		} else {
-			w.Write(resp)
-			w.WriteHeader(http.StatusOK)
+			return
 		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
 	}()
 
 	var auth Auth
