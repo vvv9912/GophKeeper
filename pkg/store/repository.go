@@ -16,4 +16,6 @@ type Data interface {
 	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) error
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]UsersData, error)
 	GetData(ctx context.Context, userId int64, usersDataId int64) (*UsersData, *DataFile, error)
+	UpdateData(ctx context.Context, updateData *UpdateUsersData, data []byte) error
+	RemoveData(ctx context.Context, usersDataId int64) error
 }

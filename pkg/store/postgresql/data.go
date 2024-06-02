@@ -142,3 +142,11 @@ func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64
 
 	return usersData, data, nil
 }
+
+func (db *Database) UpdateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error {
+	return db.updateData(ctx, updateData, data)
+}
+
+func (db *Database) RemoveData(ctx context.Context, usersDataId int64) error {
+	return db.removeData(ctx, usersDataId)
+}

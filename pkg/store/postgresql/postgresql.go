@@ -6,6 +6,7 @@ import (
 	"GophKeeper/pkg/store"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -158,10 +159,23 @@ func (db *Database) changeData(ctx context.Context, userId int64, lastTimeUpdate
 }
 
 // updateData - обновление пользовательских данных
-func (db *Database) updateData(ctx context.Context, newData store.UsersData, data []byte) error {
+func (db *Database) updateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error {
 	//todo логика работы с транзакцийе
 	// Блокирующая транзацкция SELECT * FROM table_name WHERE condition FOR UPDATE;
 	tx, err := db.db.Begin()
+	defer func() {
+		if err != nil {
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		} else {
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		}
+	}()
 
 	if err != nil {
 		logger.Log.Error("Error while begin transaction", zap.Error(err))
@@ -180,26 +194,26 @@ func (db *Database) updateData(ctx context.Context, newData store.UsersData, dat
 
 	// Получим dataId и заблокируем на изменение табилцу
 	var dataId int64
-	err = tx.QueryRowContext(ctx, queryBlock1, newData.DataId, newData.DataId).Scan(&dataId)
+	err = tx.QueryRowContext(ctx, queryBlock1, updateData.UserId, updateData.UserDataId).Scan(&dataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
 	}
 
-	if dataId != newData.DataId {
-		//todo add err in repo
-		err = customErrors.NewCustomError(nil, http.StatusBadRequest, "dataId != newData.DataId")
-		return err
-	}
+	//if dataId != updateData.DataId {
+	//	//todo add err in repo
+	//	err = customErrors.NewCustomError(nil, http.StatusBadRequest, "dataId != newData.DataId")
+	//	return err
+	//}
 
 	// Заблокируем таблицу data
-	_, err = tx.QueryContext(ctx, queryBlock2, newData.DataId)
+	_, err = tx.QueryContext(ctx, queryBlock2, dataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
 	}
 
-	res, err := tx.ExecContext(ctx, query2, data, newData.DataId)
+	res, err := tx.ExecContext(ctx, query2, data, dataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
@@ -215,7 +229,7 @@ func (db *Database) updateData(ctx context.Context, newData store.UsersData, dat
 		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
 	}
 
-	res, err = tx.ExecContext(ctx, query1, newData.Name, newData.Description, newData.Hash, newData.UpdateAt, newData.UserDataId)
+	res, err = tx.ExecContext(ctx, query1, updateData.Name, updateData.Description, updateData.Hash, updateData.UpdateAt, updateData.UserDataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
@@ -235,12 +249,12 @@ func (db *Database) updateData(ctx context.Context, newData store.UsersData, dat
 }
 
 // removeData - удаление пользовательских данных
-func (db *Database) removeData(ctx context.Context, user_data_id int64) error {
+func (db *Database) removeData(ctx context.Context, usersDataId int64) error {
 
 	// Удаление данных в таблице users_data
 	query1 := "UPDATE users_data SET is_deleted=$1 WHERE user_data_id = $2"
 
-	res, err := db.db.ExecContext(ctx, query1, true, user_data_id)
+	res, err := db.db.ExecContext(ctx, query1, true, usersDataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err

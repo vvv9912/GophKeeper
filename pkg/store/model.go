@@ -19,3 +19,12 @@ type DataFile struct {
 	DataId      int    `json:"dataId"`
 	EncryptData []byte `json:"EncryptData"`
 }
+
+type UpdateUsersData struct {
+	UserDataId  int64      `json:"userDataId,omitempty"`
+	UserId      int64      `json:"userId,omitempty"`
+	Name        string     `json:"name,omitempty"`
+	Description string     `json:"description,omitempty"`
+	Hash        string     `json:"hash,omitempty"`
+	UpdateAt    *time.Time `json:"updateAt,omitempty"`
+}
