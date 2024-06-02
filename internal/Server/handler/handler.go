@@ -19,31 +19,24 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 
 	r := chi.NewRouter()
 	mw := middleware.Mw{services.Auth}
-	r.Post("/signIn", h.HandlerSignIn)
-	r.Route("/data", func(r chi.Router) {
+
+	apiR := r.Route("/api", func(r chi.Router) {})
+	// /api/signIn
+	apiR.Post("/signIn", h.HandlerSignIn)
+	// /api/signIn
+	apiR.Post("/signUp", h.HandlerSignUp)
+
+	// /api/data
+	apiR.Route("/data", func(r chi.Router) {
 		r.Use(mw.MiddlewareAuth)
-		r.Post("/postCredentials", h.HandlerPostCredentials)
+
+		r.Post("/credentials", h.HandlerPostCredentials)
+		r.Post("/file", h.HandlerPostCrateFile)
+		r.Post("/creditCard", h.HandlerPostCreditCard)
+
 		r.Get("/changes", h.HandlerCheckChanges)
-		r.Get("/getData/{userDataId:[0-9]+}", h.HandlerGetData)
+		r.Get("/{userDataId:[0-9]+}", h.HandlerGetData)
 	})
 
 	return r
-}
-
-// getUserId - получение id пользователя из контекста request
-func getUserId(r *http.Request) (userId int64, err error) {
-	//value := r.Context().Value("UserId")
-	//
-	//if value == nil {
-	//	err := fmt.Errorf("UserId is empty")
-	//	return 0, err
-	//}
-	//
-	//userId, ok := value.(int64)
-	//if !ok {
-	//	err := fmt.Errorf("UserId is not int64")
-	//	return 0, err
-	//}
-	userId = 1
-	return userId, nil
 }
