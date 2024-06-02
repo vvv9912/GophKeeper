@@ -117,3 +117,36 @@ func (s *ServiceData) GetData(ctx context.Context, userId int64, userDataId int6
 	}
 	return response, nil
 }
+
+func (s *ServiceData) UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error {
+	if userId == 0 {
+		logger.Log.Error("userId is empty")
+		return customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
+	}
+	usersData.UserId = userId
+
+	// todo проверка, если данные уже обновлены с другого устр-ва
+	err := s.StoreData.UpdateData(ctx, usersData, data)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+func (s *ServiceData) RemoveData(ctx context.Context, userId, userDataId int64) error {
+	if userId == 0 {
+		logger.Log.Error("userId is empty")
+		return customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
+	}
+	if userDataId == 0 {
+		logger.Log.Error("userDataId is empty")
+		return customErrors.NewCustomError(nil, http.StatusBadRequest, "userDataId is empty")
+	}
+
+	err := s.StoreData.RemoveData(ctx, userId, userDataId)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}

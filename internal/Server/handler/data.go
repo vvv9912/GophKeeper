@@ -3,6 +3,7 @@ package handler
 import (
 	"GophKeeper/pkg/customErrors"
 	"GophKeeper/pkg/logger"
+	"GophKeeper/pkg/store"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -198,8 +199,81 @@ func (h *Handler) HandlerGetData(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Error("UserDataId is invalid", zap.Error(err))
 		return
 	}
+
 	resp, err = h.service.Data.GetData(r.Context(), userId, int64(userDataId))
 	if err != nil {
 		return
 	}
+}
+
+func (h *Handler) HandlerUpdateData(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var resp []byte
+
+	defer func() {
+		if err != nil {
+			deferHandler(err, w)
+			return
+		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
+	}()
+
+	userId, err := getUserId(r)
+	if err != nil {
+		return
+	}
+
+	var updateData *store.UpdateUsersData
+	err = json.NewDecoder(r.Body).Decode(&updateData)
+	if err != nil {
+		logger.Log.Error("Unmarshal json failed", zap.Error(err))
+		err = customErrors.NewCustomError(err, http.StatusBadRequest, "Error reading request body")
+	}
+
+	err = h.service.Data.UpdateData(r.Context(), int64(userId), updateData, updateData.EncryptData)
+	if err != nil {
+		return
+	}
+
+}
+func (h *Handler) HandlerRemoveData(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var resp []byte
+
+	defer func() {
+		if err != nil {
+			deferHandler(err, w)
+			return
+		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
+	}()
+
+	userId, err := getUserId(r)
+	if err != nil {
+		return
+	}
+
+	strUserDataId := chi.URLParam(r, "userDataId")
+	userDataId, err := strconv.Atoi(strUserDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusBadRequest, "UserDataId is invalid")
+		logger.Log.Error("UserDataId is invalid", zap.Error(err))
+		return
+	}
+
+	err = h.service.Data.RemoveData(r.Context(), userId, int64(userDataId))
+	if err != nil {
+		return
+	}
+
 }

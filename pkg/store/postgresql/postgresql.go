@@ -249,12 +249,12 @@ func (db *Database) updateData(ctx context.Context, updateData *store.UpdateUser
 }
 
 // removeData - удаление пользовательских данных
-func (db *Database) removeData(ctx context.Context, usersDataId int64) error {
+func (db *Database) removeData(ctx context.Context, userId int64, usersDataId int64) error {
 
 	// Удаление данных в таблице users_data
-	query1 := "UPDATE users_data SET is_deleted=$1 WHERE user_data_id = $2"
+	query1 := "UPDATE users_data SET is_deleted=$1 WHERE user_data_id = $2 and user_id = $3"
 
-	res, err := db.db.ExecContext(ctx, query1, true, usersDataId)
+	res, err := db.db.ExecContext(ctx, query1, true, usersDataId, userId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err

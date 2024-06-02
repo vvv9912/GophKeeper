@@ -21,10 +21,11 @@ type DataFile struct {
 }
 
 type UpdateUsersData struct {
-	UserDataId  int64      `json:"userDataId,omitempty"`
+	UserDataId  int64      `json:"userDataId"`
 	UserId      int64      `json:"userId,omitempty"`
-	Name        string     `json:"name,omitempty"`
-	Description string     `json:"description,omitempty"`
-	Hash        string     `json:"hash,omitempty"`
-	UpdateAt    *time.Time `json:"updateAt,omitempty"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Hash        string     `json:"hash"`
+	UpdateAt    *time.Time `json:"updateAt"`
+	EncryptData []byte     `json:"EncryptData"`
 }

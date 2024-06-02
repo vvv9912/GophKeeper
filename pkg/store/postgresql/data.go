@@ -144,9 +144,19 @@ func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64
 }
 
 func (db *Database) UpdateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error {
-	return db.updateData(ctx, updateData, data)
+	err := db.updateData(ctx, updateData, data)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "update data failed")
+		return err
+	}
+	return nil
 }
 
-func (db *Database) RemoveData(ctx context.Context, usersDataId int64) error {
-	return db.removeData(ctx, usersDataId)
+func (db *Database) RemoveData(ctx context.Context, userId, usersDataId int64) error {
+	err := db.removeData(ctx, userId, usersDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "remove data failed")
+		return err
+	}
+	return nil
 }

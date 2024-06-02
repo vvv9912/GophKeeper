@@ -29,6 +29,8 @@ type Data interface {
 	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) error
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
 	GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
+	UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error
+	RemoveData(ctx context.Context, userId, userDataId int64) error
 }
 
 // StoreData - интерфейс для работы с БД данных пользователя.
@@ -39,7 +41,7 @@ type StoreData interface {
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error)
 	GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error)
 	UpdateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error
-	RemoveData(ctx context.Context, usersDataId int64) error
+	RemoveData(ctx context.Context, userId, usersDataId int64) error
 }
 
 // Service - структура сервисного слоя.
