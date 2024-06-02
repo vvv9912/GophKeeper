@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE if not exists data (
-    data_id serial primary key,
+    data_id INTEGER PRIMARY KEY,
     encrypt_data bytea not null
 );
 -- +goose StatementEnd

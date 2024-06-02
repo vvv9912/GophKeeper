@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE if not exists data_types (
-    data_type SERIAL PRIMARY KEY,
+    data_type INTEGER PRIMARY KEY,
     type text not null
 );
 INSERT INTO data_types (type)
