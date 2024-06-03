@@ -10,6 +10,10 @@ import (
 	"net/http"
 )
 
+func (a *AgentServer) SetJWTToken(token string) {
+	a.JWTToken = token
+}
+
 func (a *AgentServer) SignIn(ctx context.Context, login, password string) (*User, error) {
 	client := resty.New()
 	req := client.R()

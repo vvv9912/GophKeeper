@@ -15,14 +15,16 @@ var (
 )
 
 type AgentServer struct {
-	publicKey *rsa.PublicKey
-	host      string
-	JWTToken  []string
+	publicKey  *rsa.PublicKey
+	privateKey *rsa.PrivateKey
+	host       string
+	JWTToken   string
 }
 
-func NewAgentServer(publicKey *rsa.PublicKey, host string) *AgentServer {
+func NewAgentServer(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey, host string) *AgentServer {
 	return &AgentServer{
-		publicKey: publicKey,
-		host:      host,
+		publicKey:  publicKey,
+		privateKey: privateKey,
+		host:       host,
 	}
 }

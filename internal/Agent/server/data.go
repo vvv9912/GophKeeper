@@ -12,13 +12,13 @@ import (
 	"time"
 )
 
-func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData, jwt string) error {
+func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) error {
 	client := resty.New()
 	req := client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type":  "application/json",
-		"Authorization": "Bearer " + jwt,
+		"Authorization": "Bearer " + a.JWTToken,
 	})
 
 	resp, err := req.SetBody(data).Post(a.host + pathCredentials)
@@ -41,13 +41,13 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData, jwt st
 	return nil
 }
 
-func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData, jwt string) error {
+func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) error {
 	client := resty.New()
 	req := client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type":  "application/json",
-		"Authorization": "Bearer " + jwt,
+		"Authorization": "Bearer " + a.JWTToken,
 	})
 
 	resp, err := req.SetBody(data).Post(a.host + pathFile)
@@ -69,13 +69,13 @@ func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData, jwt stri
 
 	return nil
 }
-func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData, jwt string) error {
+func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData) error {
 	client := resty.New()
 	req := client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type":  "application/json",
-		"Authorization": "Bearer " + jwt,
+		"Authorization": "Bearer " + a.JWTToken,
 	})
 
 	resp, err := req.SetBody(data).Post(a.host + pathCreditCard)
@@ -97,13 +97,13 @@ func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData, jwt str
 
 	return nil
 }
-func (a *AgentServer) getCheckChanges(ctx context.Context, data *ReqData, jwt string, lastTime time.Time) ([]store.UsersData, error) {
+func (a *AgentServer) GetCheckChanges(ctx context.Context, data *ReqData, lastTime time.Time) ([]store.UsersData, error) {
 	client := resty.New()
 	req := client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type":     "application/json",
-		"Authorization":    "Bearer " + jwt,
+		"Authorization":    "Bearer " + a.JWTToken,
 		"Last-Time-Update": lastTime.Format("2006-01-02 15:04:05.999999"),
 	})
 
