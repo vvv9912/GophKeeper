@@ -11,10 +11,10 @@ import (
 )
 
 // CreateCredentials - Создание пары логин/пароль.
-func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) error {
+func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error) {
 	tx, err := db.db.Begin()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	defer func() {
@@ -34,15 +34,15 @@ func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credentials failed")
-		return err
+		return 0, err
 	}
-	err = db.createUserData(ctx, tx, userId, dataId, TypeCredentials, name, description, hash)
+	userDataId, err := db.createUserData(ctx, tx, userId, dataId, TypeCredentials, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credentials failed")
-		return err
+		return 0, err
 	}
 
-	return nil
+	return userDataId, nil
 }
 
 // CreateCreditCard - Создание пары данные банковских карт.
@@ -71,7 +71,7 @@ func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []b
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credit card failed")
 		return err
 	}
-	err = db.createUserData(ctx, tx, userId, dataId, TypeCreditCardData, name, description, hash)
+	_, err = db.createUserData(ctx, tx, userId, dataId, TypeCreditCardData, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credit card failed")
 		return err
@@ -101,12 +101,14 @@ func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byt
 		}
 	}()
 
+	// возвращаем user_data_id
+
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
 		return err
 	}
-	err = db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
+	_, err = db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
 		return err

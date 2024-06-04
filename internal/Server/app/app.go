@@ -3,9 +3,10 @@ package app
 import (
 	"GophKeeper/internal/Server/handler"
 	"GophKeeper/internal/Server/service"
-	"GophKeeper/pkg/store"
+	"GophKeeper/pkg/logger"
 	"context"
 	"crypto/rsa"
+	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"os"
@@ -25,6 +26,8 @@ type App struct {
 //		return nil, err
 //	}
 func Run() error {
+	fmt.Println(logger.Initialize("info"))
+	logger.Log.Info("start app")
 	ctx := context.Background()
 	//conn, err := pgx.Connect(ctx, "postgres://postgres:postgres@localhost:5434/postgres?sslmode=disable")
 	//if err != nil {
@@ -33,18 +36,22 @@ func Run() error {
 	//}
 	//_ = conn
 	db, err := sqlx.Open("pgx", "postgres://postgres:postgres@localhost:5434/postgres?sslmode=disable")
-
-	err = store.Migrate(db)
 	if err != nil {
 		return err
 	}
+	//err = store.MigratePostgres(db)
+	//if err != nil {
+	//	return err
+	//}
 
 	secretKey := string([]byte("asdahgf53sk41250"))
 	services := service.NewService(db, nil, nil, secretKey)
 
 	h := handler.NewHandler(services)
-	cert := "cert.pem"
-	key := "key.pem"
+	cert := "server/cert.pem"
+	key := "server/key.pem"
+	//cert := "server/server.crt"
+	//key := "server/server.key"
 	addr := ":8080"
 	server := service.StartServer(ctx, h.InitRoutes(services), addr, cert, key)
 	_ = server

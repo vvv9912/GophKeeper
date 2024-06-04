@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE if not exists data (
-    data_id INTEGER PRIMARY KEY,
+    data_id INTEGER PRIMARY KEY AUTOINCREMENT,
     encrypt_data bytea not null
 );
 -- +goose StatementEnd

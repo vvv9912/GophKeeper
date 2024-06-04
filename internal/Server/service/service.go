@@ -24,7 +24,7 @@ type StoreAuth interface {
 
 // Data - интерфейс для работы с данными пользователя.
 type Data interface {
-	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) error
+	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
 	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) error
 	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) error
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
@@ -35,7 +35,7 @@ type Data interface {
 
 // StoreData - интерфейс для работы с БД данных пользователя.
 type StoreData interface {
-	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) error
+	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
 	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) error
 	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) error
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error)

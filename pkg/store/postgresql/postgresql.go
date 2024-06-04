@@ -7,7 +7,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"net/http"
@@ -38,26 +37,19 @@ func (db *Database) createUser(ctx context.Context, login, password string) (int
 	return id, nil
 }
 
-func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userId int64, dataId int64, dataType int, name, description, hash string) error {
+func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userId int64, dataId int64, dataType int, name, description, hash string) (int64, error) {
 
-	query := "INSERT INTO users_data (data_id,user_id, data_type, name, description,hash) VALUES ($1, $2,$3,$4,$5,$6)"
+	query := "INSERT INTO users_data (data_id,user_id, data_type, name, description,hash) VALUES ($1, $2,$3,$4,$5,$6) RETURNING user_data_id"
 
-	res, err := db.db.Exec(query, dataId, userId, dataType, name, description, hash)
+	var userDataId int64
+
+	err := db.db.QueryRowContext(ctx, query, dataId, userId, dataType, name, description, hash).Scan(&userDataId)
 	if err != nil {
 		logger.Log.Error("Add credentials error", zap.String("name", name), zap.String("description", description), zap.String("hash", hash), zap.Int("data_type", dataType))
-		return err
-	}
-	r, err := res.RowsAffected()
-	if err != nil {
-		logger.Log.Error("Error getting rows affected", zap.Error(err))
-		return err
-	}
-	if r == 0 {
-		err = fmt.Errorf("Insert 0")
-		return err
+		return 0, err
 	}
 
-	return err
+	return userDataId, err
 }
 
 // createData - добавление пользовательских данных.

@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) error {
+func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*RespData, error) {
 	client := resty.New()
 	req := client.R()
 
@@ -24,21 +24,25 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) error 
 	resp, err := req.SetBody(data).Post(a.host + pathCredentials)
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
-		return err
+		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
 		var respError RespError
 		err = json.Unmarshal(resp.Body(), &respError)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		return errors.New(respError.Message)
-
+		return nil, errors.New(respError.Message)
+	}
+	var respData RespData
+	err = json.Unmarshal(resp.Body(), &respData)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return &respData, nil
 }
 
 func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) error {

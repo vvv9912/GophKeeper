@@ -19,3 +19,8 @@ type ReqData struct {
 	Description string `json:"description"`
 	Data        []byte `json:"data"`
 }
+
+type RespData struct {
+	UserDataId int64  `json:"userDataId"`
+	Hash       string `json:"hash"`
+}
