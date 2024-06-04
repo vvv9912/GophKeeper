@@ -3,12 +3,9 @@ package server
 import (
 	"GophKeeper/pkg/logger"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
-	"log"
 	"net/http"
 )
 
@@ -18,20 +15,7 @@ func (a *AgentServer) SetJWTToken(token string) {
 
 func (a *AgentServer) SignIn(ctx context.Context, login, password string) (*User, error) {
 
-	client := resty.New()
-
-	//todo
-	client.SetTLSClientConfig(&tls.Config{
-		InsecureSkipVerify: true,
-	})
-	cert1, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")
-	if err != nil {
-		log.Fatalf("ERROR client certificate: %s", err)
-	}
-
-	client.SetCertificates(cert1)
-
-	req := client.R()
+	req := a.client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type": "application/json",
@@ -67,8 +51,8 @@ func (a *AgentServer) SignIn(ctx context.Context, login, password string) (*User
 
 }
 func (a *AgentServer) SignUp(ctx context.Context, login, password string) (*User, error) {
-	client := resty.New()
-	req := client.R()
+
+	req := a.client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type": "application/json",
