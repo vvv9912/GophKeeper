@@ -22,6 +22,7 @@ func Run() error {
 	return nil
 }
 func init() {
+
 	fmt.Println(logger.Initialize("info"))
 	logger.Log.Info("start app")
 	ctx := context.Background()

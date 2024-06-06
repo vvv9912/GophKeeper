@@ -1,6 +1,8 @@
 package service
 
-import "context"
+import (
+	"context"
+)
 
 func (s *Service) SignIn(ctx context.Context, username, password string) (string, error) {
 	user, err := s.AuthService.SignIn(ctx, username, password)
