@@ -19,7 +19,7 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 
 	r := chi.NewRouter()
 	mw := middleware.Mw{services.Auth}
-
+	_ = mw
 	apiR := r.Route("/api", func(r chi.Router) {})
 	// /api/signIn
 	apiR.Post("/signIn", h.HandlerSignIn)

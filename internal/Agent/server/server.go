@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	pathSignIn      = "api/signIn"
-	pathSignUp      = "api/signUp"
-	pathGetData     = "api/data"
-	pathChanges     = "api/changes"
+	pathSignIn      = "/api/signIn"
+	pathSignUp      = "/api/signUp"
+	pathGetData     = "/api/data"
+	pathChanges     = "/api/changes"
 	pathFile        = "/api/data/file"
 	pathCredentials = "/api/data/credentials"
 	pathCreditCard  = "/api/data/creditCard"

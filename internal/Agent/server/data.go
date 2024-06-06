@@ -6,15 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
 
 func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*RespData, error) {
-	client := resty.New()
-	req := client.R()
+	req := a.client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type":  "application/json",
@@ -31,6 +29,7 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 		var respError RespError
 		err = json.Unmarshal(resp.Body(), &respError)
 		if err != nil {
+			logger.Log.Error("Bad resp", zap.Error(err), zap.Int("status_code", resp.StatusCode()))
 			return nil, err
 		}
 
@@ -39,6 +38,7 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 	var respData RespData
 	err = json.Unmarshal(resp.Body(), &respData)
 	if err != nil {
+		logger.Log.Error("Bad resp", zap.Error(err))
 		return nil, err
 	}
 
@@ -46,8 +46,8 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 }
 
 func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) error {
-	client := resty.New()
-	req := client.R()
+
+	req := a.client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type":  "application/json",
@@ -74,8 +74,8 @@ func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) error {
 	return nil
 }
 func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData) error {
-	client := resty.New()
-	req := client.R()
+
+	req := a.client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type":  "application/json",
@@ -102,8 +102,8 @@ func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData) error {
 	return nil
 }
 func (a *AgentServer) GetCheckChanges(ctx context.Context, data *ReqData, lastTime time.Time) ([]store.UsersData, error) {
-	client := resty.New()
-	req := client.R()
+
+	req := a.client.R()
 
 	req.SetHeaders(map[string]string{
 		"Content-Type":     "application/json",

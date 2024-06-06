@@ -100,9 +100,9 @@ func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (in
 }
 func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userDataId int64, dataId int64, dataType int, name, description, hash string) error {
 
-	query := "INSERT INTO users_data (user_data_id,data_id,user_id, data_type, name, description,hash) VALUES (?, ?,?,?,?,?)"
+	query := "INSERT INTO users_data (user_data_id,data_id, data_type, name, description,hash) VALUES (?, ?,?,?,?,?)"
 
-	res, err := db.db.Exec(query, userDataId, dataId, dataType, name, description, hash)
+	res, err := tx.Exec(query, userDataId, dataId, dataType, name, description, hash)
 	if err != nil {
 		logger.Log.Error("Add credentials error", zap.String("name", name), zap.String("description", description), zap.String("hash", hash), zap.Int("data_type", dataType))
 		return err

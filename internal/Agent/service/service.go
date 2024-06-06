@@ -10,7 +10,7 @@ import (
 type AgentService interface{}
 
 func NewServiceAgent(db *sqlx.DB) *Service {
-	serv := server.NewAgentServer(nil, nil, "https://localhost:8080/")
+	serv := server.NewAgentServer(nil, nil, "https://localhost:8080")
 
 	return &Service{
 		AuthService:   serv,

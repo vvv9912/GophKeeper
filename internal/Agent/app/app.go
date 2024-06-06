@@ -1,6 +1,7 @@
 package app
 
 import (
+	"GophKeeper/internal/Agent/command"
 	"GophKeeper/internal/Agent/server"
 	"GophKeeper/internal/Agent/service"
 	"GophKeeper/pkg/logger"
@@ -18,22 +19,32 @@ type App struct {
 }
 
 func Run() error {
+	return nil
+}
+func init() {
 	fmt.Println(logger.Initialize("info"))
 	logger.Log.Info("start app")
 	ctx := context.Background()
 	db, err := sqlx.Open("sqlite", "clientdb.db")
 	if err != nil {
-		return err
+		return
 	}
 	err = store.MigrateSQLITE(db)
 	if err != nil {
-		return err
+		return
 	}
 	agent := service.NewServiceAgent(db)
 
+	cob := command.NewCobra(agent)
+	if err := cob.Start(); err != nil {
+		panic(err)
+		return
+	}
+
+	fmt.Println("next")
 	s, err := agent.SignIn(ctx, "sadds", "asddsa")
 	if err != nil {
-		return err
+		return
 	}
 	agent.CreateCredentials(ctx, &server.ReqData{
 		Name:        "testName",
@@ -42,5 +53,5 @@ func Run() error {
 	})
 	_ = ctx
 	_ = s
-	return nil
+	return
 }
