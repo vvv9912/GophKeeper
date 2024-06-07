@@ -45,7 +45,7 @@ func (h *Handler) HandlerPostCredentials(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	response, err := h.service.Data.CreateCredentials(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
+	response, err := h.service.CreateCredentials(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
 	if err != nil {
 		return
 	}
@@ -90,7 +90,7 @@ func (h *Handler) HandlerPostCreditCard(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	response, err := h.service.Data.CreateCreditCard(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
+	response, err := h.service.CreateCreditCard(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
 	if err != nil {
 		return
 	}
@@ -158,7 +158,7 @@ func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	w.Header().Set("Uuid", tmpFile.Uuid)
+	w.Header().Set("Uuid-chunk", tmpFile.Uuid)
 	w.Header().Set("Content-Type", "multipart/form-data")
 	resp = []byte(`{"status":"ok"}`)
 
@@ -180,7 +180,7 @@ func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		response, err := h.service.Data.CreateFile(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
+		response, err := h.service.CreateFile(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
 		if err != nil {
 			return
 		}
@@ -223,7 +223,7 @@ func (h *Handler) HandlerPostCrateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := h.service.Data.CreateFile(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
+	response, err := h.service.CreateFile(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
 	if err != nil {
 		return
 	}
@@ -270,7 +270,7 @@ func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Error("Last-Time-Update header is invalid", zap.Error(err))
 	}
 
-	resp, err = h.service.Data.ChangeData(r.Context(), userId, LastTimeUpdate)
+	resp, err = h.service.ChangeData(r.Context(), userId, LastTimeUpdate)
 }
 
 func (h *Handler) HandlerGetData(w http.ResponseWriter, r *http.Request) {
@@ -304,7 +304,7 @@ func (h *Handler) HandlerGetData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err = h.service.Data.GetData(r.Context(), userId, int64(userDataId))
+	resp, err = h.service.GetData(r.Context(), userId, int64(userDataId))
 	if err != nil {
 		return
 	}
@@ -339,7 +339,7 @@ func (h *Handler) HandlerUpdateData(w http.ResponseWriter, r *http.Request) {
 		err = customErrors.NewCustomError(err, http.StatusBadRequest, "Error reading request body")
 	}
 
-	err = h.service.Data.UpdateData(r.Context(), int64(userId), updateData, updateData.EncryptData)
+	err = h.service.UpdateData(r.Context(), int64(userId), updateData, updateData.EncryptData)
 	if err != nil {
 		return
 	}
@@ -375,7 +375,7 @@ func (h *Handler) HandlerRemoveData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.Data.RemoveData(r.Context(), userId, int64(userDataId))
+	err = h.service.RemoveData(r.Context(), userId, int64(userDataId))
 	if err != nil {
 		return
 	}

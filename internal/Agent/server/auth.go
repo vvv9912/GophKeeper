@@ -3,12 +3,19 @@ package server
 import (
 	"GophKeeper/pkg/logger"
 	"context"
+	"crypto/rsa"
 	"encoding/json"
 	"errors"
 	"go.uber.org/zap"
 	"net/http"
 )
 
+func (a *AgentServer) GetPublicKey() *rsa.PublicKey {
+	return a.publicKey
+}
+func (a *AgentServer) GetPrivateKey() *rsa.PrivateKey {
+	return a.privateKey
+}
 func (a *AgentServer) SetJWTToken(token string) {
 	a.JWTToken = token
 }

@@ -159,6 +159,7 @@ func (db *Database) GetJWTToken(ctx context.Context) (string, error) {
 	return jwt, nil
 }
 func (db *Database) SetJWTToken(ctx context.Context, JWTToken string) error {
+	//todo проверка существует ли поле
 	query := "UPDATE info SET jwt_Token = ?"
 	_, err := db.db.QueryContext(ctx, query, JWTToken)
 	if err != nil {

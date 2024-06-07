@@ -33,7 +33,7 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 
 		r.Post("/credentials", h.HandlerPostCredentials)
 		r.Post("/file", h.HandlerPostCrateFile)
-		r.Post("/fileChunk", h.HandlerPostChunkCrateFile)
+		r.Post("/fileChunks", h.HandlerPostChunkCrateFile)
 		r.Post("/creditCard", h.HandlerPostCreditCard)
 
 		r.Get("/changes", h.HandlerCheckChanges)

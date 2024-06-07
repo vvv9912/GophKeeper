@@ -106,7 +106,7 @@ func (s *SaveFiles) addNewSaveFile(pathSave string, r *http.Request) (bool, *Tmp
 
 func (s *SaveFiles) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
 
-	uuId := r.Header.Get("UUID")
+	uuId := r.Header.Get("Uuid-Chunk")
 
 	if uuId == "" {
 		return s.addNewSaveFile(additionalPath, r)

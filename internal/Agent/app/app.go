@@ -1,7 +1,6 @@
 package app
 
 import (
-	"GophKeeper/internal/Agent/command"
 	"GophKeeper/internal/Agent/server"
 	"GophKeeper/internal/Agent/service"
 	"GophKeeper/pkg/logger"
@@ -36,17 +35,19 @@ func init() {
 	}
 	agent := service.NewServiceAgent(db)
 
-	cob := command.NewCobra(agent)
-	if err := cob.Start(); err != nil {
-		panic(err)
-		return
-	}
+	//cob := command.NewCobra(agent)
+	//if err := cob.Start(); err != nil {
+	//	panic(err)
+	//	return
+	//}
 
 	fmt.Println("next")
 	s, err := agent.SignIn(ctx, "sadds", "asddsa")
 	if err != nil {
 		return
 	}
+	agent.CreateFile(ctx, "/home/vlad/Загрузки/customify.0.4.4.zip")
+
 	agent.CreateCredentials(ctx, &server.ReqData{
 		Name:        "testName",
 		Description: "testDescription",

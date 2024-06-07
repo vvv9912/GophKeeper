@@ -2,11 +2,13 @@ package service
 
 import (
 	"GophKeeper/internal/Server/authorization"
+	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store"
 	"GophKeeper/pkg/store/postgresql"
 	"context"
 	"crypto/rsa"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -50,20 +52,27 @@ type StoreData interface {
 type Service struct {
 	Auth
 	StoreAuth
-	Data
 	StoreData
+	SaveFiles
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 }
 
 // Service - Конструктор структуры сервисного слоя.
-func NewService(db *sqlx.DB, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey, secretKey string) *Service {
+func NewService(db *sqlx.DB, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey, secretKey string) (*Service, error) {
 	nDb := postgresql.NewDatabase(db)
+	saveFiles, err := NewSaveFiles(10 * time.Minute)
+
 	//todo
+
+	if err != nil {
+		logger.Log.Error("Error creating save files", zap.Error(err))
+		return nil, err
+	}
 	return &Service{Auth: authorization.NewAutorization(9000*time.Minute, secretKey),
 		StoreAuth:  nDb,
-		Data:       NewServiceData(nDb),
+		SaveFiles:  *saveFiles,
 		StoreData:  nDb,
 		privateKey: privateKey,
-		publicKey:  publicKey}
+		publicKey:  publicKey}, nil
 }

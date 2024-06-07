@@ -4,13 +4,24 @@ import (
 	"GophKeeper/internal/Agent/server"
 	"GophKeeper/pkg/store/sqllite"
 	"context"
+	"crypto/rsa"
+	"crypto/tls"
 	"github.com/jmoiron/sqlx"
 )
 
 type AgentService interface{}
 
 func NewServiceAgent(db *sqlx.DB) *Service {
-	serv := server.NewAgentServer(nil, nil, "https://localhost:8080")
+
+	cert1, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")
+	if err != nil {
+		panic(err)
+	}
+
+	priv := cert1.PrivateKey.(*rsa.PrivateKey)
+	pub := priv.PublicKey
+
+	serv := server.NewAgentServer(&pub, priv, "https://localhost:8080")
 
 	return &Service{
 		AuthService:   serv,
@@ -20,16 +31,19 @@ func NewServiceAgent(db *sqlx.DB) *Service {
 }
 
 type AuthService interface {
-	SetJWTToken(token string)
 	SignIn(ctx context.Context, login, password string) (*server.User, error)
 	SignUp(ctx context.Context, login, password string) (*server.User, error)
+	SetJWTToken(token string)
 	GetJWTToken() string
+	GetPublicKey() *rsa.PublicKey
+	GetPrivateKey() *rsa.PrivateKey
 }
 
 type DataInterface interface {
 	PostCredentials(ctx context.Context, data *server.ReqData) (*server.RespData, error)
 	PostCrateFile(ctx context.Context, data *server.ReqData) (*server.RespData, error)
 	PostCreditCard(ctx context.Context, data *server.ReqData) (*server.RespData, error)
+	PostCrateFileStartChunks(ctx context.Context, data []byte, name string, uuidChunk string, nStart int, nEnd int, maxSize int) (string, error)
 }
 
 type StorageData interface {

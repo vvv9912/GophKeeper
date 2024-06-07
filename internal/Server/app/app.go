@@ -45,7 +45,10 @@ func Run() error {
 	//}
 
 	secretKey := string([]byte("asdahgf53sk41250"))
-	services := service.NewService(db, nil, nil, secretKey)
+	services, err := service.NewService(db, nil, nil, secretKey)
+	if err != nil {
+		return err
+	}
 
 	h := handler.NewHandler(services)
 	cert := "server/cert.pem"

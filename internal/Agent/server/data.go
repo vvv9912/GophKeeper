@@ -3,10 +3,14 @@ package server
 import (
 	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
+	"mime/multipart"
 	"net/http"
 	"time"
 )
@@ -43,6 +47,64 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 	}
 
 	return &respData, nil
+}
+
+func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte, name string, uuidChunk string, nStart int, nEnd int, maxSize int) (string, error) {
+	req := a.client.R()
+
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+
+	// Добавление файла в форму
+	fileWriter, err := writer.CreateFormFile("file", name)
+	if err != nil {
+		return "", err
+	}
+
+	// Записываем данные
+	_, err = fileWriter.Write(data)
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return "", err
+	}
+	req.SetHeaders(map[string]string{
+		//"Content-Type":  writer.FormDataContentType(),
+		"Authorization": "Bearer " + a.JWTToken,
+		"Content-Range": fmt.Sprintf("bytes %d-%d/%d", nStart, nEnd, maxSize),
+	})
+
+	if uuidChunk != "" {
+		req.SetHeaders(map[string]string{
+			"Uuid-chunk": uuidChunk,
+		})
+	}
+
+	resp, err := req.SetContext(ctx).SetBody(&buf).SetMultipartFields(
+		&resty.MultipartField{
+			Param:       "file",
+			FileName:    "ff",
+			ContentType: writer.FormDataContentType(),
+			Reader:      bytes.NewReader(data)},
+	).Post(a.host + pathFileChunks)
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return "", err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		var respError RespError
+		err = json.Unmarshal(resp.Body(), &respError)
+		if err != nil {
+			return "", err
+		}
+
+		return "", errors.New(respError.Message)
+
+	}
+
+	uuidChunk = resp.Header().Get("Uuid-chunk")
+
+	return uuidChunk, nil
 }
 
 func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) (*RespData, error) {

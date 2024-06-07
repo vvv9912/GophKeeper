@@ -13,17 +13,18 @@ import (
 )
 
 // ServiceData - структура для работы с данными пользователя.
-type ServiceData struct {
-	StoreData
-}
+//type ServiceData struct {
+//	StoreData
+//}
 
 // NewServiceData - конструктор структуры для работы с данными пользователя.
-func NewServiceData(storeData StoreData) *ServiceData {
-	return &ServiceData{StoreData: storeData}
-}
+//func NewServiceData(storeData StoreData, saveFiles *SaveFiles) *ServiceData {
+//	return &ServiceData{StoreData: storeData}
+//}
 
 // CreateCredentials - Создание пары логин/пароль.
-func (s *ServiceData) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
+func (s *Service) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
+
 	hash, err := s.createData(ctx, userId, data, name, description)
 	if err != nil {
 		return nil, err
@@ -41,7 +42,7 @@ func (s *ServiceData) CreateCredentials(ctx context.Context, userId int64, data 
 }
 
 // CreateCreditCard - Создание пары данные банковских карт.
-func (s *ServiceData) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
+func (s *Service) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	hash, err := s.createData(ctx, userId, data, name, description)
 	if err != nil {
 		return nil, err
@@ -58,7 +59,7 @@ func (s *ServiceData) CreateCreditCard(ctx context.Context, userId int64, data [
 }
 
 // CreateFile - Создание произвольных данных.
-func (s *ServiceData) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
+func (s *Service) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	hash, err := s.createData(ctx, userId, data, name, description)
 	if err != nil {
 		return nil, err
@@ -77,7 +78,7 @@ func (s *ServiceData) CreateFile(ctx context.Context, userId int64, data []byte,
 }
 
 // createData - проверка правильности данных и расчет хэша.
-func (s *ServiceData) createData(ctx context.Context, userId int64, data []byte, name, description string) (string, error) {
+func (s *Service) createData(ctx context.Context, userId int64, data []byte, name, description string) (string, error) {
 	var err error
 	if data == nil || len(data) == 0 {
 		logger.Log.Error("data is empty")
@@ -103,7 +104,7 @@ func (s *ServiceData) createData(ctx context.Context, userId int64, data []byte,
 	hash := ShaHash.Sha256Hash(data)
 	return hash, err
 }
-func (s *ServiceData) ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error) {
+func (s *Service) ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -120,7 +121,7 @@ func (s *ServiceData) ChangeData(ctx context.Context, userId int64, lastTimeUpda
 	return resp, nil
 }
 
-func (s *ServiceData) GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
+func (s *Service) GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -145,7 +146,7 @@ func (s *ServiceData) GetData(ctx context.Context, userId int64, userDataId int6
 	return response, nil
 }
 
-func (s *ServiceData) UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error {
+func (s *Service) UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -160,7 +161,7 @@ func (s *ServiceData) UpdateData(ctx context.Context, userId int64, usersData *s
 	return nil
 
 }
-func (s *ServiceData) RemoveData(ctx context.Context, userId, userDataId int64) error {
+func (s *Service) RemoveData(ctx context.Context, userId, userDataId int64) error {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -176,4 +177,8 @@ func (s *ServiceData) RemoveData(ctx context.Context, userId, userDataId int64) 
 	}
 	return nil
 
+}
+
+func (s *Service) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
+	return s.SaveFiles.UploadFile(additionalPath, r)
 }
