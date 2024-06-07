@@ -12,7 +12,9 @@ import (
 func (a *AgentServer) SetJWTToken(token string) {
 	a.JWTToken = token
 }
-
+func (a *AgentServer) GetJWTToken() string {
+	return a.JWTToken
+}
 func (a *AgentServer) SignIn(ctx context.Context, login, password string) (*User, error) {
 
 	req := a.client.R()

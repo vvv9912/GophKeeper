@@ -46,10 +46,10 @@ func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []
 }
 
 // CreateCreditCard - Создание пары данные банковских карт.
-func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) error {
+func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error) {
 	tx, err := db.db.Begin()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	defer func() {
@@ -69,22 +69,22 @@ func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []b
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credit card failed")
-		return err
+		return 0, err
 	}
-	_, err = db.createUserData(ctx, tx, userId, dataId, TypeCreditCardData, name, description, hash)
+	userDataId, err := db.createUserData(ctx, tx, userId, dataId, TypeCreditCardData, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credit card failed")
-		return err
+		return 0, err
 	}
 
-	return nil
+	return userDataId, nil
 }
 
 // CreateFileData - Создание произвольных данных.
-func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) error {
+func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error) {
 	tx, err := db.db.Begin()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	defer func() {
@@ -106,15 +106,15 @@ func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byt
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
-		return err
+		return 0, err
 	}
-	_, err = db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
+	userDataId, err := db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
-		return err
+		return 0, err
 	}
 
-	return nil
+	return userDataId, nil
 }
 
 func (db *Database) ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error) {

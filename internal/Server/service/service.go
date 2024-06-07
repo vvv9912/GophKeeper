@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/rsa"
 	"github.com/jmoiron/sqlx"
+	"net/http"
 	"time"
 )
 
@@ -25,19 +26,20 @@ type StoreAuth interface {
 // Data - интерфейс для работы с данными пользователя.
 type Data interface {
 	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
-	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) error
-	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) error
+	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
+	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
 	GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
 	UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error
 	RemoveData(ctx context.Context, userId, userDataId int64) error
+	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
 }
 
 // StoreData - интерфейс для работы с БД данных пользователя.
 type StoreData interface {
 	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
-	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) error
-	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) error
+	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
+	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error)
 	GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error)
 	UpdateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error

@@ -5,6 +5,10 @@ import (
 )
 
 func main() {
+
+	app.Run()
+}
+func cert() {
 	//создаём шаблон сертификата
 	//cert := &x509.Certificate{
 	//	// указываем уникальный номер сертификата
@@ -65,5 +69,4 @@ func main() {
 	//	Type:  "RSA PRIVATE KEY",
 	//	Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	//})
-	app.Run()
 }

@@ -12,8 +12,8 @@ type Auth interface {
 
 type Data interface {
 	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
-	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) error
-	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) error
+	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
+	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]UsersData, error)
 	GetData(ctx context.Context, userId int64, usersDataId int64) (*UsersData, *DataFile, error)
 	UpdateData(ctx context.Context, updateData *UpdateUsersData, data []byte) error
@@ -23,4 +23,7 @@ type Data interface {
 type DataClient interface {
 	CreateFileData(ctx context.Context, data []byte, userDataId int64, name, description, hash string) error
 	CreateCredentials(ctx context.Context, data []byte, userDataId int64, name, description, hash string) error
+	CreateCreditCard(ctx context.Context, data []byte, userDataId int64, name, description, hash string) error
+	GetJWTToken(ctx context.Context) (string, error)
+	SetJWTToken(ctx context.Context, JWTToken string) error
 }

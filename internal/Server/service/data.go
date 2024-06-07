@@ -41,21 +41,39 @@ func (s *ServiceData) CreateCredentials(ctx context.Context, userId int64, data 
 }
 
 // CreateCreditCard - Создание пары данные банковских карт.
-func (s *ServiceData) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) error {
+func (s *ServiceData) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	hash, err := s.createData(ctx, userId, data, name, description)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return s.StoreData.CreateCreditCard(ctx, userId, data, name, description, hash)
+	userDataId, err := s.StoreData.CreateCreditCard(ctx, userId, data, name, description, hash)
+	if err != nil {
+		return nil, err
+	}
+	resp := &RespData{
+		UserDataId: userDataId,
+		Hash:       hash,
+	}
+	return resp, nil
 }
 
 // CreateFile - Создание произвольных данных.
-func (s *ServiceData) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) error {
+func (s *ServiceData) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	hash, err := s.createData(ctx, userId, data, name, description)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return s.StoreData.CreateFileData(ctx, userId, data, name, description, hash)
+
+	userDataId, err := s.StoreData.CreateFileData(ctx, userId, data, name, description, hash)
+	if err != nil {
+		return nil, err
+	}
+	resp := &RespData{
+		UserDataId: userDataId,
+		Hash:       hash,
+	}
+	return resp, nil
+
 }
 
 // createData - проверка правильности данных и расчет хэша.

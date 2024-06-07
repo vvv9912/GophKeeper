@@ -84,6 +84,36 @@ func (db *Database) CreateCredentials(ctx context.Context, data []byte, userData
 	}
 	return nil
 }
+func (db *Database) CreateCreditCard(ctx context.Context, data []byte, userDataId int64, name, description, hash string) error {
+	// Получаем userDataId
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		} else {
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		}
+	}()
+	dataId, err := db.createData(ctx, tx, data)
+	if err != nil {
+		return err
+	}
+	err = db.createUserData(ctx, tx, userDataId, dataId, TypeCreditCardData, name, description, hash)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // createData - добавление пользовательских данных.
 func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (int64, error) {
@@ -118,4 +148,21 @@ func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userDataId i
 	}
 
 	return err
+}
+func (db *Database) GetJWTToken(ctx context.Context) (string, error) {
+	query := "Select jwt_Token from info"
+	var jwt string
+	err := db.db.QueryRowxContext(ctx, query).Scan(&jwt)
+	if err != nil {
+		return "", err
+	}
+	return jwt, nil
+}
+func (db *Database) SetJWTToken(ctx context.Context, JWTToken string) error {
+	query := "UPDATE info SET jwt_Token = ?"
+	_, err := db.db.QueryContext(ctx, query, JWTToken)
+	if err != nil {
+		return err
+	}
+	return nil
 }

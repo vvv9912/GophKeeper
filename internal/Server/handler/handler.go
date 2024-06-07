@@ -19,7 +19,7 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 
 	r := chi.NewRouter()
 	mw := middleware.Mw{services.Auth}
-	_ = mw
+
 	apiR := r.Route("/api", func(r chi.Router) {})
 	// /api/signIn
 	apiR.Post("/signIn", h.HandlerSignIn)
@@ -29,9 +29,11 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 	// /api/data
 	apiR.Route("/data", func(r chi.Router) {
 		r.Use(mw.MiddlewareAuth)
+		//_ = mw
 
 		r.Post("/credentials", h.HandlerPostCredentials)
 		r.Post("/file", h.HandlerPostCrateFile)
+		r.Post("/fileChunk", h.HandlerPostChunkCrateFile)
 		r.Post("/creditCard", h.HandlerPostCreditCard)
 
 		r.Get("/changes", h.HandlerCheckChanges)

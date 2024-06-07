@@ -3,7 +3,7 @@
 CREATE TABLE if not exists info (
         info_id INTEGER PRIMARY KEY AUTOINCREMENT,
         last_time_update timestamp not null,
-        jwtToken text
+        jwt_Token text
 );
 -- +goose StatementEnd
 

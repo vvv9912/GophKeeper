@@ -19,7 +19,7 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 		"Authorization": "Bearer " + a.JWTToken,
 	})
 
-	resp, err := req.SetBody(data).Post(a.host + pathCredentials)
+	resp, err := req.SetContext(ctx).SetBody(data).Post(a.host + pathCredentials)
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
 		return nil, err
@@ -45,7 +45,7 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 	return &respData, nil
 }
 
-func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) error {
+func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) (*RespData, error) {
 
 	req := a.client.R()
 
@@ -54,26 +54,31 @@ func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) error {
 		"Authorization": "Bearer " + a.JWTToken,
 	})
 
-	resp, err := req.SetBody(data).Post(a.host + pathFile)
+	resp, err := req.SetContext(ctx).SetBody(data).Post(a.host + pathFile)
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
-		return err
+		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
 		var respError RespError
 		err = json.Unmarshal(resp.Body(), &respError)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		return errors.New(respError.Message)
+		return nil, errors.New(respError.Message)
 
 	}
-
-	return nil
+	var respData RespData
+	err = json.Unmarshal(resp.Body(), &respData)
+	if err != nil {
+		logger.Log.Error("Bad resp", zap.Error(err))
+		return nil, err
+	}
+	return &respData, nil
 }
-func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData) error {
+func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData) (*RespData, error) {
 
 	req := a.client.R()
 
@@ -82,24 +87,30 @@ func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData) error {
 		"Authorization": "Bearer " + a.JWTToken,
 	})
 
-	resp, err := req.SetBody(data).Post(a.host + pathCreditCard)
+	resp, err := req.SetContext(ctx).SetBody(data).Post(a.host + pathCreditCard)
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
-		return err
+		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
 		var respError RespError
 		err = json.Unmarshal(resp.Body(), &respError)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		return errors.New(respError.Message)
+		return nil, errors.New(respError.Message)
 
 	}
 
-	return nil
+	var respData RespData
+	err = json.Unmarshal(resp.Body(), &respData)
+	if err != nil {
+		logger.Log.Error("Bad resp", zap.Error(err))
+		return nil, err
+	}
+	return &respData, nil
 }
 func (a *AgentServer) GetCheckChanges(ctx context.Context, data *ReqData, lastTime time.Time) ([]store.UsersData, error) {
 
@@ -111,7 +122,7 @@ func (a *AgentServer) GetCheckChanges(ctx context.Context, data *ReqData, lastTi
 		"Last-Time-Update": lastTime.Format("2006-01-02 15:04:05.999999"),
 	})
 
-	resp, err := req.SetBody(data).Post(a.host + pathChanges)
+	resp, err := req.SetContext(ctx).SetBody(data).Post(a.host + pathChanges)
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
 		return nil, err

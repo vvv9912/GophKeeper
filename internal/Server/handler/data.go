@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
+	"mime/multipart"
 	"net/http"
+	"path"
 	"strconv"
 	"time"
 )
@@ -88,15 +90,108 @@ func (h *Handler) HandlerPostCreditCard(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = h.service.Data.CreateCreditCard(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
+	response, err := h.service.Data.CreateCreditCard(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
 	if err != nil {
 		return
 	}
 
-	resp = []byte("Credential successfully created")
+	resp, err = json.Marshal(response)
+	if err != nil {
+		logger.Log.Error("Marshal response failed", zap.Error(err))
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Error reading request body")
+		return
+	}
 
 }
 
+func validateFile(header *multipart.FileHeader) error {
+	if header.Size == 0 {
+		err := customErrors.NewCustomError(nil, http.StatusBadRequest, "File is empty")
+		logger.Log.Warn("File is empty", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+// HandlerPostCrateFile2 - загрузка чанками
+func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var resp []byte
+
+	defer func() {
+		if err != nil {
+			deferHandler(err, w)
+			return
+		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
+	}()
+
+	userId, err := getUserId(r)
+	if err != nil {
+		return
+	}
+
+	// Валидация файла
+	// Считывание файл по ключу
+	_, header, err := r.FormFile("file")
+	if err != nil {
+		return
+	}
+
+	err = validateFile(header)
+	if err != nil {
+		return
+	}
+
+	additionPath := path.Join("files", strconv.Itoa(int(userId)))
+	ok, tmpFile, err := h.service.UploadFile(additionPath, r)
+	if err != nil {
+		return
+	}
+	if tmpFile == nil {
+		return
+	}
+
+	w.Header().Set("Uuid", tmpFile.Uuid)
+	w.Header().Set("Content-Type", "multipart/form-data")
+	resp = []byte(`{"status":"ok"}`)
+
+	if ok {
+
+		//todo
+		// Считывание тела по ключу
+
+		headerInfo := r.FormValue("info")
+		if err != nil {
+			return
+		}
+		var Cred ReqData
+
+		err = json.Unmarshal([]byte(headerInfo), &Cred)
+		if err != nil {
+			logger.Log.Error("Unmarshal json failed", zap.Error(err))
+			err = customErrors.NewCustomError(err, http.StatusBadRequest, "Error reading request body")
+			return
+		}
+
+		response, err := h.service.Data.CreateFile(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
+		if err != nil {
+			return
+		}
+		resp, err = json.Marshal(response)
+		if err != nil {
+			logger.Log.Error("Marshal response failed", zap.Error(err))
+			err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Error reading request body")
+			return
+		}
+	}
+}
 func (h *Handler) HandlerPostCrateFile(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -128,13 +223,17 @@ func (h *Handler) HandlerPostCrateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.Data.CreateFile(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
+	response, err := h.service.Data.CreateFile(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
 	if err != nil {
 		return
 	}
 
-	resp = []byte("Credential successfully created")
-
+	resp, err = json.Marshal(response)
+	if err != nil {
+		logger.Log.Error("Marshal response failed", zap.Error(err))
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Error reading request body")
+		return
+	}
 }
 
 func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
