@@ -46,7 +46,10 @@ func init() {
 	if err != nil {
 		return
 	}
-	agent.CreateFile(ctx, "/home/vlad/Загрузки/customify.0.4.4.zip")
+
+	agent.GetData(ctx, 1)
+
+	agent.CreateFile(ctx, "/home/vlad/Загрузки/customify.0.4.4.zip", " file zip", "test description")
 
 	agent.CreateCredentials(ctx, &server.ReqData{
 		Name:        "testName",

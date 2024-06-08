@@ -22,12 +22,14 @@ type TmpFile struct {
 	OriginalFileName string
 	Uuid             string
 	Extension        string
+	Size             int64
 }
 type SaveFiles struct {
 	Chunks          map[string]TmpFile
 	tmpFileLifeTime time.Duration
 	muMap           sync.Mutex
 	defaultPath     string
+	fileSave        bool
 }
 
 const defaultTmpPath = "./tmp"
@@ -137,6 +139,8 @@ func (s *SaveFiles) UploadFile(additionalPath string, r *http.Request) (bool, *T
 		return false, nil, err
 	}
 
+	chunk.Size = fileSize
+
 	chunk.LastUpdate = time.Now()
 	s.Chunks[uuId] = chunk
 
@@ -149,11 +153,13 @@ func (s *SaveFiles) DeleteFile(uuID string) error {
 		err := customErrors.NewCustomError(nil, http.StatusBadRequest, "Error during file not found in map chunk.")
 		return err
 	}
-	if err := os.Remove(f.PathFileSave); err != nil {
-		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Error during delete file.")
-		return err
+	// Если файл скачен то не надо удалять, тк перемещен
+	if !s.fileSave {
+		if err := os.Remove(f.PathFileSave); err != nil {
+			err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Error during delete file.")
+			return err
+		}
 	}
-
 	delete(s.Chunks, uuID)
 
 	return nil
@@ -284,6 +290,7 @@ func (s *SaveFiles) FileUploadCompleted(realFileSize int64, r *http.Request) (bo
 	}
 
 	if fileSize == rangeMax && realFileSize == int64(rangeMax) {
+		s.fileSave = true
 		return true, nil
 	}
 

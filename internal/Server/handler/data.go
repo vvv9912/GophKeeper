@@ -171,8 +171,8 @@ func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			return
 		}
-		var Cred ReqData
 
+		var Cred ReqData
 		err = json.Unmarshal([]byte(headerInfo), &Cred)
 		if err != nil {
 			logger.Log.Error("Unmarshal json failed", zap.Error(err))
@@ -180,7 +180,7 @@ func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		response, err := h.service.CreateFile(r.Context(), userId, Cred.Data, Cred.Name, Cred.Description)
+		response, err := h.service.CreateFileChunks(r.Context(), userId, tmpFile, Cred.Name, Cred.Description, Cred.Data)
 		if err != nil {
 			return
 		}

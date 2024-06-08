@@ -8,7 +8,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"go.uber.org/zap"
 	"net/http"
+	"os"
+	"path"
+	"strconv"
 	"time"
 )
 
@@ -57,6 +61,70 @@ func (s *Service) CreateCreditCard(ctx context.Context, userId int64, data []byt
 	}
 	return resp, nil
 }
+func createPathIfNotExists(dirPath string) error {
+	err := os.MkdirAll(dirPath, os.ModePerm)
+	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			logger.Log.Error("createPathIfNotExists", zap.Error(err))
+			return nil
+		}
+		logger.Log.Error("createPathIfNotExists", zap.Error(err))
+		return err
+	}
+	return nil
+}
+func moveFile(src, dst string) error {
+	err := os.Rename(src, dst)
+	if err != nil {
+		logger.Log.Error("moveFile", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// CreateFile - Создание произвольных данных.
+func (s *Service) CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string, encryptedData []byte) (*RespData, error) {
+
+	// Создаем путь
+	pathStorage := path.Join("storage", strconv.Itoa(int(userId)))
+
+	if err := createPathIfNotExists(pathStorage); err != nil {
+		return nil, err
+	}
+
+	if err := moveFile(tmpFile.PathFileSave, path.Join(pathStorage, tmpFile.Uuid)); err != nil {
+		return nil, err
+	}
+
+	// Структура с метаданными
+	metaData := &store.MetaData{
+		FileName: tmpFile.OriginalFileName,
+		PathSave: pathStorage,
+		Size:     tmpFile.Size,
+	}
+
+	data, err := json.Marshal(metaData)
+	if err != nil {
+		return nil, err
+	}
+	// считаем хэш метаднныех
+	hash, err := s.createData(ctx, userId, data, name, description)
+	if err != nil {
+		return nil, err
+	}
+
+	// Сохраняем структуру с описанием файла.
+	userDataId, err := s.StoreData.CreateFileDataChunks(ctx, userId, encryptedData, name, description, hash, metaData)
+	if err != nil {
+		return nil, err
+	}
+	resp := &RespData{
+		UserDataId: userDataId,
+		Hash:       hash,
+	}
+	return resp, nil
+
+}
 
 // CreateFile - Создание произвольных данных.
 func (s *Service) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
@@ -65,6 +133,7 @@ func (s *Service) CreateFile(ctx context.Context, userId int64, data []byte, nam
 		return nil, err
 	}
 
+	// Храним путь на файл.
 	userDataId, err := s.StoreData.CreateFileData(ctx, userId, data, name, description, hash)
 	if err != nil {
 		return nil, err
@@ -126,14 +195,17 @@ func (s *Service) GetData(ctx context.Context, userId int64, userDataId int64) (
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
 	}
+	// Получаем ингформацию из бд о файле
 	usersData, data, err := s.StoreData.GetData(ctx, userId, userDataId)
 	if err != nil {
 		return nil, err
 	}
+
 	type Data struct {
 		InfoUsersData *store.UsersData `json:"infoUsersData"`
 		EncryptData   *store.DataFile  `json:"encryptData"`
 	}
+
 	resp := Data{
 		InfoUsersData: usersData,
 		EncryptData:   data,
@@ -182,3 +254,7 @@ func (s *Service) RemoveData(ctx context.Context, userId, userDataId int64) erro
 func (s *Service) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
 	return s.SaveFiles.UploadFile(additionalPath, r)
 }
+
+//func (s *Service) createFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
+//	return s.SaveFiles.CreateFile(additionalPath, r)
+//}

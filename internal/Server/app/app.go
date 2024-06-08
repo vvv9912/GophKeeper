@@ -4,6 +4,7 @@ import (
 	"GophKeeper/internal/Server/handler"
 	"GophKeeper/internal/Server/service"
 	"GophKeeper/pkg/logger"
+	"GophKeeper/pkg/store"
 	"context"
 	"crypto/rsa"
 	"fmt"
@@ -39,10 +40,11 @@ func Run() error {
 	if err != nil {
 		return err
 	}
-	//err = store.MigratePostgres(db)
-	//if err != nil {
-	//	return err
-	//}
+
+	err = store.MigratePostgres(db)
+	if err != nil {
+		return err
+	}
 
 	secretKey := string([]byte("asdahgf53sk41250"))
 	services, err := service.NewService(db, nil, nil, secretKey)

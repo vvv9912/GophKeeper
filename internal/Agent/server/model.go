@@ -1,5 +1,7 @@
 package server
 
+import "GophKeeper/pkg/store"
+
 type Auth struct {
 	Login    string `json:"login" `
 	Password string `json:"password" `
@@ -17,10 +19,18 @@ type RespError struct {
 type ReqData struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Data        []byte `json:"data"`
+	Data        []byte `json:"data,omitempty"`
 }
 
 type RespData struct {
 	UserDataId int64  `json:"userDataId"`
 	Hash       string `json:"hash"`
+}
+
+type DataFileInfo struct {
+	OriginalFileName string `json:"originalFileName"`
+}
+type RespUsersData struct {
+	InfoUsersData *store.UsersData `json:"infoUsersData"`
+	EncryptData   *store.DataFile  `json:"encryptData"`
 }

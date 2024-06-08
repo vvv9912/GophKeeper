@@ -27,11 +27,11 @@ func NewDatabase(db *sqlx.DB) *Database {
 	return &Database{db: db}
 }
 func (db *Database) createUser(ctx context.Context, login, password string) (int64, error) {
-	query := "INSERT INTO users (login, password) VALUES ($1, $2) RETURNING id"
+	query := "INSERT INTO users (login, password) VALUES ($1, $2) RETURNING user_id"
 	var id int64
 	err := db.db.QueryRowxContext(ctx, query, login, password).Scan(&id)
 	if err != nil {
-		logger.Log.Error("Error while creating user", zap.String("login", login), zap.String("password", password))
+		logger.Log.Error("Error while creating user", zap.String("login", login), zap.String("password", password), zap.Error(err))
 		return 0, err
 	}
 	return id, nil
@@ -53,6 +53,20 @@ func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userId int64
 }
 
 // createData - добавление пользовательских данных.
+func (db *Database) createDataWithMeta(ctx context.Context, tx *sql.Tx, data []byte, metaData []byte) (int64, error) {
+
+	query := "INSERT INTO data (encrypt_data, meta_data) VALUES ($1,$2) RETURNING data_id"
+	var id int64
+	err := tx.QueryRowContext(ctx, query, data, metaData).Scan(&id)
+	if err != nil {
+		logger.Log.Error("Add data")
+		return 0, err
+	}
+
+	return id, nil
+}
+
+// createData - добавление пользовательских данных.
 func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (int64, error) {
 
 	query := "INSERT INTO data (encrypt_data) VALUES ($1) RETURNING data_id"
@@ -65,6 +79,7 @@ func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (in
 
 	return id, nil
 }
+
 func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.DataFile, error) {
 	query := "SELECT data_id, encrypt_data FROM data WHERE data_id = $1"
 	var data store.DataFile

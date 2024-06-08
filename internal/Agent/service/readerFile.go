@@ -17,6 +17,7 @@ type Reader struct {
 	f         *os.File
 	size      int64
 	maxChunk  int
+	NameFile  string
 }
 
 func NewReader(path string) *Reader {
@@ -44,7 +45,7 @@ func (r *Reader) NumChunk() (int, error) {
 	n := math.Ceil(float64(fileInfo.Size()) / float64(r.SizeChunk))
 
 	r.maxChunk = int(n)
-
+	r.NameFile = fileInfo.Name()
 	return r.maxChunk, nil
 }
 func (r *Reader) ReadFile(numChunk int) ([]byte, error) {

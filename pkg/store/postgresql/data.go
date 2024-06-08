@@ -5,6 +5,7 @@ import (
 	"GophKeeper/pkg/store"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
@@ -81,6 +82,47 @@ func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []b
 }
 
 // CreateFileData - Создание произвольных данных.
+func (db *Database) CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name, description, hash string, metaData *store.MetaData) (int64, error) {
+	tx, err := db.db.Begin()
+	if err != nil {
+		return 0, err
+	}
+
+	defer func() {
+		if err != nil {
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		} else {
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		}
+	}()
+	m, err := json.Marshal(metaData)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "err json marshal metadata")
+		return 0, err
+	}
+
+	// возвращаем user_data_id
+	dataId, err := db.createDataWithMeta(ctx, tx, data, m)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
+		return 0, err
+	}
+	userDataId, err := db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
+		return 0, err
+	}
+
+	return userDataId, nil
+}
+
+// CreateFileData - Создание произвольных данных.
 func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error) {
 	tx, err := db.db.Begin()
 	if err != nil {
@@ -136,6 +178,7 @@ func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")
 		return nil, nil, err
 	}
+
 	data, err := db.getDataByDataId(ctx, usersData.DataId)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")

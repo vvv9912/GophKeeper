@@ -29,3 +29,9 @@ type UpdateUsersData struct {
 	UpdateAt    *time.Time `json:"updateAt"`
 	EncryptData []byte     `json:"EncryptData"`
 }
+
+type MetaData struct {
+	FileName string `json:"fileName"`
+	PathSave string `json:"pathSave"`
+	Size     int64  `json:"size"`
+}

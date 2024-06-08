@@ -3,6 +3,7 @@ package server
 import (
 	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store"
+	"GophKeeper/pkg/store/sqllite"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -12,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"mime/multipart"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -49,14 +51,14 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 	return &respData, nil
 }
 
-func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte, name string, uuidChunk string, nStart int, nEnd int, maxSize int) (string, error) {
+func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte, fileName string, uuidChunk string, nStart int, nEnd int, maxSize int, reqData []byte) (string, error) {
 	req := a.client.R()
 
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 
 	// Добавление файла в форму
-	fileWriter, err := writer.CreateFormFile("file", name)
+	fileWriter, err := writer.CreateFormFile("file", fileName)
 	if err != nil {
 		return "", err
 	}
@@ -68,7 +70,6 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 		return "", err
 	}
 	req.SetHeaders(map[string]string{
-		//"Content-Type":  writer.FormDataContentType(),
 		"Authorization": "Bearer " + a.JWTToken,
 		"Content-Range": fmt.Sprintf("bytes %d-%d/%d", nStart, nEnd, maxSize),
 	})
@@ -79,13 +80,33 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 		})
 	}
 
-	resp, err := req.SetContext(ctx).SetBody(&buf).SetMultipartFields(
-		&resty.MultipartField{
-			Param:       "file",
-			FileName:    "ff",
-			ContentType: writer.FormDataContentType(),
-			Reader:      bytes.NewReader(data)},
-	).Post(a.host + pathFileChunks)
+	var resp *resty.Response
+	if nEnd != maxSize {
+		resp, err = req.SetContext(ctx).SetBody(&buf).SetMultipartFields(
+			&resty.MultipartField{
+				Param:       "file",
+				FileName:    fileName,
+				ContentType: writer.FormDataContentType(),
+				Reader:      bytes.NewReader(data)},
+		).Post(a.host + pathFileChunks)
+
+	} else {
+		// Последний чанк, передаем информацию о файле
+
+		resp, err = req.SetContext(ctx).SetBody(&buf).SetMultipartFields(
+			&resty.MultipartField{
+				Param:       "file",
+				FileName:    fileName,
+				ContentType: writer.FormDataContentType(),
+				Reader:      bytes.NewReader(data)},
+			&resty.MultipartField{
+				Param:       "info",
+				ContentType: "application/json",
+				Reader:      bytes.NewReader(reqData),
+			},
+		).Post(a.host + pathFileChunks)
+	}
+
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
 		return "", err
@@ -207,4 +228,39 @@ func (a *AgentServer) GetCheckChanges(ctx context.Context, data *ReqData, lastTi
 		return nil, err
 	}
 	return usersData, nil
+}
+
+func (a *AgentServer) GetData(ctx context.Context, userDataId int64) ([]byte, error) {
+	req := a.client.R()
+	req.SetHeaders(map[string]string{
+		"Authorization": "Bearer " + a.JWTToken,
+	})
+	resp, err := req.SetContext(ctx).Get(a.host + pathGetData + "/" + strconv.Itoa(int(userDataId)))
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return nil, err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		var respError RespError
+		err = json.Unmarshal(resp.Body(), &respError)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New(respError.Message)
+	}
+
+	var Data RespUsersData
+	err = json.Unmarshal(resp.Body(), &Data)
+	if err != nil {
+		return nil, err
+	}
+
+	if Data.InfoUsersData.DataType == sqllite.TypeFile {
+		// логика скачивания
+	}
+
+	// Готовим ответ
+	// Тут расшифрока
+	return Data.EncryptData.EncryptData, nil
 }

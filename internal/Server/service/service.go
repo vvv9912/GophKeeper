@@ -35,6 +35,8 @@ type Data interface {
 	UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error
 	RemoveData(ctx context.Context, userId, userDataId int64) error
 	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
+
+	CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string) (*RespData, error)
 }
 
 // StoreData - интерфейс для работы с БД данных пользователя.
@@ -42,6 +44,7 @@ type StoreData interface {
 	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
 	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
 	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
+	CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name, description, hash string, metaData *store.MetaData) (int64, error)
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error)
 	GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error)
 	UpdateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error
