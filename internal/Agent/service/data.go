@@ -73,6 +73,8 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	}
 	return nil
 }
+
+// binary file
 func (s *Service) CreateFileData(ctx context.Context, data *server.ReqData) error {
 
 	if err := s.setJwtToken(ctx); err != nil {
