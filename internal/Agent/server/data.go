@@ -10,7 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -258,9 +260,118 @@ func (a *AgentServer) GetData(ctx context.Context, userDataId int64) ([]byte, er
 
 	if Data.InfoUsersData.DataType == sqllite.TypeFile {
 		// логика скачивания
+		fileSize, err := a.getFileSize(ctx, Data.InfoUsersData.UserDataId)
+		if err != nil {
+			return nil, err
+		}
+		// Скачиваем
+		pathSaveFile, err := a.getFileData(ctx, Data.InfoUsersData.UserDataId, fileSize)
+		if err != nil {
+			return nil, err
+		}
+		//todo rename
+		return []byte("файл скачен путь: " + pathSaveFile), nil
 	}
 
-	// Готовим ответ
-	// Тут расшифрока
+	// Готовим ответ todo
 	return Data.EncryptData.EncryptData, nil
 }
+
+func (a *AgentServer) getFileSize(ctx context.Context, userDataId int64) (int64, error) {
+	req := a.client.R()
+	req.SetHeaders(map[string]string{
+		"Authorization": "Bearer " + a.JWTToken,
+	})
+	resp, err := req.SetContext(ctx).Get(a.host + pathGetFileSize + "/" + strconv.Itoa(int(userDataId)))
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return 0, err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		var respError RespError
+		err = json.Unmarshal(resp.Body(), &respError)
+		if err != nil {
+			return 0, err
+		}
+		return 0, errors.New(respError.Message)
+	}
+	reqFileSize := struct {
+		FileSize int64 `json:"fileSize"`
+	}{}
+
+	err = json.Unmarshal(resp.Body(), &reqFileSize)
+	if err != nil {
+		return 0, err
+	}
+	return reqFileSize.FileSize, nil
+}
+
+func (a *AgentServer) getFileData(ctx context.Context, userDataId int64, fileSize int64) (string, error) {
+
+	sizeChunk := 1024 * 1024
+
+	nChunk := math.Ceil(float64(fileSize) / float64(sizeChunk))
+
+	saveFile, err := NewSaveFile(uuid.NewString())
+	if err != nil {
+		return "", err
+	}
+
+	for i := 1; i <= int(nChunk); i++ {
+		startChunk := (i - 1) * sizeChunk
+
+		endChunk := i * sizeChunk
+
+		if i == int(nChunk) {
+			endChunk = int(fileSize)
+		}
+
+		fileChunk, err := a.getFileChunks(ctx, userDataId, fileSize, startChunk, endChunk)
+		if err != nil {
+			return "", err
+		}
+		if _, err := saveFile.Write(fileChunk); err != nil {
+			logger.Log.Error("Error save file", zap.Error(err))
+			return "", err
+		}
+	}
+	return saveFile.GetPathFile(), nil
+}
+
+func (a *AgentServer) getFileChunks(ctx context.Context, userDataId int64, fileSize int64, startChunk int, endChunk int) ([]byte, error) {
+	req := a.client.R()
+	req.SetHeaders(map[string]string{
+		"Authorization": "Bearer " + a.JWTToken,
+		"Content-Range": fmt.Sprintf("bytes %d-%d/%d", startChunk, endChunk, fileSize),
+	})
+	resp, err := req.SetContext(ctx).Get(a.host + pathFileChunks + "/" + strconv.Itoa(int(userDataId)))
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return nil, err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		var respError RespError
+		err = json.Unmarshal(resp.Body(), &respError)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New(respError.Message)
+	}
+
+	return resp.Body(), err
+}
+
+//
+//func (a *AgentServer) getCredentials(ctx context.Context, userDataId int64) ([]byte, error) {
+//	req := a.client.R()
+//	req.SetHeaders(map[string]string{
+//		"Authorization": "Bearer " + a.JWTToken,
+//	})
+//	resp, err := req.SetContext(ctx).Get(a.host + pathCredentials + "/" + strconv.Itoa(int(userDataId)))
+//	if err != nil {
+//		logger.Log.Error("Bad req", zap.Error(err))
+//		return nil, err
+//	}
+//}

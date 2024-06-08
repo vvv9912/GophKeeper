@@ -98,7 +98,7 @@ func (s *Service) CreateFileChunks(ctx context.Context, userId int64, tmpFile *T
 
 	// Структура с метаданными
 	metaData := &store.MetaData{
-		FileName: tmpFile.OriginalFileName,
+		FileName: tmpFile.Uuid,
 		PathSave: pathStorage,
 		Size:     tmpFile.Size,
 	}
@@ -190,6 +190,87 @@ func (s *Service) ChangeData(ctx context.Context, userId int64, lastTimeUpdate t
 	return resp, nil
 }
 
+func (s *Service) GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
+	if userId == 0 {
+		logger.Log.Error("userId is empty")
+		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
+	}
+	size, err := s.StoreData.GetFileSize(ctx, userId, userDataId)
+	if err != nil {
+		return nil, err
+	}
+	resp := struct {
+		FileSize int64 `json:"fileSize"`
+	}{
+		FileSize: size,
+	}
+
+	response, err := json.Marshal(resp)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Marshal data error")
+		return nil, err
+	}
+	return response, nil
+}
+
+func (s *Service) GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error) {
+	if userId == 0 {
+		logger.Log.Error("userId is empty")
+		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
+	}
+	rangeMin, rangeMax, totalSize, err := ParserContentRange(r.Header.Get("Content-Range"))
+	if err != nil {
+		return nil, err
+	}
+
+	metaData, err := s.StoreData.GetMetaData(ctx, userId, userDataId)
+	if err != nil {
+		return nil, err
+	}
+	if metaData.Size != int64(totalSize) {
+		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "Wrong total size")
+	}
+
+	if rangeMin > rangeMax || rangeMin < 0 {
+		err = customErrors.NewCustomError(nil, http.StatusBadRequest, "RangeMin must be 0 for first request.")
+		return nil, err
+	}
+	if rangeMax > totalSize {
+		err = customErrors.NewCustomError(nil, http.StatusBadRequest, "RangeMax more than totalSize.")
+		return nil, err
+	}
+
+	return s.getFile(ctx, path.Join(metaData.PathSave, metaData.FileName), rangeMin, rangeMax)
+}
+func (s *Service) getFile(ctx context.Context, pathFile string, byteStart int, byteEnd int) ([]byte, error) {
+	f, err := os.OpenFile(pathFile, os.O_RDONLY, 0644)
+	if err != nil {
+		logger.Log.Error("error open file", zap.String("path", pathFile), zap.Error(err))
+		return nil, err
+	}
+
+	_, err = f.Seek(int64(byteStart), 0)
+	if err != nil {
+		logger.Log.Error("error seek file", zap.String("path", pathFile), zap.Error(err))
+		return nil, err
+	}
+
+	data := make([]byte, byteEnd-byteStart)
+	_, err = f.Read(data)
+	if err != nil {
+		logger.Log.Error("error read file", zap.String("path", pathFile), zap.Error(err))
+		return nil, err
+	}
+
+	err = f.Close()
+	if err != nil {
+		logger.Log.Error("error close file", zap.String("path", pathFile), zap.Error(err))
+		return nil, err
+	}
+
+	return data, nil
+}
+
 func (s *Service) GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
@@ -257,4 +338,12 @@ func (s *Service) UploadFile(additionalPath string, r *http.Request) (bool, *Tmp
 
 //func (s *Service) createFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
 //	return s.SaveFiles.CreateFile(additionalPath, r)
+//}
+
+//func (s *Service) CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string) (*RespData, error) {
+//	return s.SaveFiles.CreateFileChunks(ctx, userId, tmpFile, name, description)
+//}
+
+//func (s *Service) GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
+//	return s.SaveFiles.GetFileSize(ctx, userId, userDataId)
 //}

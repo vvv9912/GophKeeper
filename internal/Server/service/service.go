@@ -37,6 +37,8 @@ type Data interface {
 	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
 
 	CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string) (*RespData, error)
+	GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
+	GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error)
 }
 
 // StoreData - интерфейс для работы с БД данных пользователя.
@@ -49,6 +51,8 @@ type StoreData interface {
 	GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error)
 	UpdateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error
 	RemoveData(ctx context.Context, userId, usersDataId int64) error
+	GetFileSize(ctx context.Context, userId int64, userDataId int64) (int64, error)
+	GetMetaData(ctx context.Context, userId, userDataId int64) (*store.MetaData, error)
 }
 
 // Service - структура сервисного слоя.

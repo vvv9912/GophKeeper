@@ -38,6 +38,8 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 
 		r.Get("/changes", h.HandlerCheckChanges)
 		r.Get("/{userDataId:[0-9]+}", h.HandlerGetData)
+		r.Get("/fileSize/{userDataId:[0-9]+}", h.HandlerGetFileSize)
+		r.Get("/fileChunks/{userDataId:[0-9]+}", h.HandlerGetFile)
 
 		r.Patch("/", h.HandlerUpdateData)
 		r.Delete("/{userDataId:[0-9]+}", h.HandlerRemoveData)

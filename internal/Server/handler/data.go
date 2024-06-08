@@ -272,7 +272,43 @@ func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 
 	resp, err = h.service.ChangeData(r.Context(), userId, LastTimeUpdate)
 }
+func (h *Handler) HandlerGetFile(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var resp []byte
 
+	defer func() {
+		if err != nil {
+			deferHandler(err, w)
+			return
+		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
+	}()
+
+	userId, err := getUserId(r)
+	if err != nil {
+		return
+	}
+
+	strUserDataId := chi.URLParam(r, "userDataId")
+
+	userDataId, err := strconv.Atoi(strUserDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusBadRequest, "UserDataId is invalid")
+		logger.Log.Error("UserDataId is invalid", zap.Error(err))
+		return
+	}
+
+	resp, err = h.service.GetFileChunks(r.Context(), userId, int64(userDataId), r)
+	if err != nil {
+		return
+	}
+
+}
 func (h *Handler) HandlerGetData(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -305,6 +341,46 @@ func (h *Handler) HandlerGetData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err = h.service.GetData(r.Context(), userId, int64(userDataId))
+	if err != nil {
+		return
+	}
+}
+func (h *Handler) HandlerGetFileSize(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var resp []byte
+
+	defer func() {
+		if err != nil {
+			deferHandler(err, w)
+			return
+		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
+	}()
+
+	userId, err := getUserId(r)
+	if err != nil {
+		return
+	}
+
+	strUserDataId := chi.URLParam(r, "userDataId")
+
+	userDataId, err := strconv.Atoi(strUserDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusBadRequest, "UserDataId is invalid")
+		logger.Log.Error("UserDataId is invalid", zap.Error(err))
+		return
+	}
+	if userDataId == 0 {
+		err = customErrors.NewCustomError(nil, http.StatusBadRequest, "UserDataId is empty")
+		logger.Log.Error("UserDataId is empty", zap.Error(err))
+		return
+	}
+	resp, err = h.service.GetFileSize(r.Context(), userId, int64(userDataId))
 	if err != nil {
 		return
 	}

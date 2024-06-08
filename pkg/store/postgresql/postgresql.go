@@ -103,7 +103,7 @@ func (db *Database) getDataUserByUserId(ctx context.Context, userId int64, userD
 	var data store.UsersData
 
 	err := row.Scan(
-		&userDataId,
+		&data.UserDataId,
 		&data.DataId,
 		&data.UserId,
 		&data.DataType,

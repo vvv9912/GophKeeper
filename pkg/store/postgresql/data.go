@@ -168,6 +168,50 @@ func (db *Database) ChangeData(ctx context.Context, userId int64, lastTimeUpdate
 	return data, nil
 }
 
+func (db *Database) GetFileSize(ctx context.Context, userId int64, userDataId int64) (int64, error) {
+	//q := `SELECT EXISTS(SELECT 1 FROM users_data WHERE user_id = $1 AND user_data_id = $2)`
+	//
+	//row := db.db.QueryRowContext(ctx, q, userId, userDataId)
+	//var exist bool
+	//if err := row.Scan(&exist); err != nil {
+	//	err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get file size failed, not found userDataId")
+	//	return 0, err
+	//}
+	//if !exist {
+	//	return 0, nil
+	//}
+
+	metaData, err := db.GetMetaData(ctx, userId, userDataId)
+	if err != nil {
+		return 0, err
+	}
+	return metaData.Size, nil
+}
+
+func (db *Database) GetMetaData(ctx context.Context, userId, userDataId int64) (*store.MetaData, error) {
+	q1 := `SELECT data_id from users_data where user_id = $1 AND user_data_id = $2`
+	var dataId int64
+	row := db.db.QueryRowContext(ctx, q1, userId, userDataId)
+	if err := row.Scan(&dataId); err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get file size failed, not found userDataId")
+		return nil, err
+	}
+
+	q2 := `SELECT meta_data FROM data WHERE  data_id = $1 `
+	var metaData []byte
+	if err := db.db.QueryRowContext(ctx, q2, dataId).Scan(&metaData); err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get file size failed")
+		return nil, err
+	}
+
+	var MetaData store.MetaData
+	if err := json.Unmarshal(metaData, &MetaData); err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get file size failed")
+		return nil, err
+	}
+	return &MetaData, nil
+}
+
 func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error) {
 	usersData, err := db.getDataUserByUserId(ctx, userId, usersDataId)
 	if err != nil {

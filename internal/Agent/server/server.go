@@ -16,6 +16,8 @@ var (
 	pathCredentials = "/api/data/credentials"
 	pathCreditCard  = "/api/data/creditCard"
 	pathFileChunks  = "/api/data/fileChunks"
+	//pathGetFileChunks = "/api/data/GetFile"
+	pathGetFileSize = "/api/data/fileSize"
 )
 
 type AgentServer struct {

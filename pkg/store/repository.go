@@ -19,6 +19,7 @@ type Data interface {
 	UpdateData(ctx context.Context, updateData *UpdateUsersData, data []byte) error
 	RemoveData(ctx context.Context, userId, usersDataId int64) error
 	CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name, description, hash string, metaData []byte) (int64, error)
+	GetMetaData(ctx context.Context, userId, userDataId int64) (*MetaData, error)
 }
 
 type DataClient interface {
