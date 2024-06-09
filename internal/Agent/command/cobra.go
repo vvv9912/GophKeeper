@@ -91,7 +91,15 @@ func (c *Cobra) Start() error {
 		Run:     c.UpdateCredentials,
 		Aliases: []string{"updatecredentials"},
 	}
-	//c2 := &command.Command{}
+
+	UpdateCreditCard := &cobra.Command{
+		Use:     "updateCreditCard",
+		Short:   "Update credit card",
+		Example: "updateCreditCard {UserDataId} {ExpireAt} {CardNumber} {CVV}",
+		Args:    cobra.MaximumNArgs(5),
+		Run:     c.UpdateCreditCard,
+		Aliases: []string{"updatecreditcard"},
+	}
 
 	rootCmd.AddCommand(signIn)
 	rootCmd.AddCommand(signUp)
@@ -101,6 +109,7 @@ func (c *Cobra) Start() error {
 	rootCmd.AddCommand(CreateCredentials)
 	rootCmd.AddCommand(CreateCreditCard)
 	rootCmd.AddCommand(UpdateCredentials)
+	rootCmd.AddCommand(UpdateCreditCard)
 	//rootCmd.AddCommand(c2)
 	if err := rootCmd.Execute(); err != nil {
 		logger.Log.Error("Root execute err", zap.Error(err))

@@ -222,8 +222,68 @@ func (c *Cobra) UpdateCredentials(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logger.Log.Error("CreateCredentials failed", zap.Error(err))
 	}
+
 	fmt.Println(string(resp))
-	fmt.Println("Credentials created successfully")
+	fmt.Println("Credentials updated successfully")
+}
+
+func (c *Cobra) UpdateCreditCard(cmd *cobra.Command, args []string) {
+
+	var (
+		UserDataId string
+		NameBank   string
+		ExpAt      string
+		CardNumber string
+		Cvv        string
+	)
+	if len(args) == 5 {
+		UserDataId = args[0]
+		NameBank = args[1]
+		CardNumber = args[2]
+		ExpAt = args[3]
+		Cvv = args[4]
+	}
+	var creditCard model.CreditCard
+	creditCard.Name = NameBank
+	cardNum, err := strconv.ParseInt(CardNumber, 10, 64)
+	if err != nil {
+		logger.Log.Error("Error: Invalid number of arguments", zap.Error(err))
+		return
+	}
+	creditCard.CardNumber = cardNum
+
+	expAt, err := strconv.Atoi(ExpAt)
+	if err != nil {
+		logger.Log.Error("Error: Invalid number of arguments", zap.Error(err))
+		return
+	}
+	creditCard.ExpireAt = expAt
+
+	cvv, err := strconv.ParseInt(Cvv, 10, 8)
+	if err != nil {
+		logger.Log.Error("Error: Invalid number of arguments", zap.Error(err))
+		return
+	}
+	creditCard.CVV = int8(cvv)
+
+	data, err := json.Marshal(creditCard)
+	if err != nil {
+		logger.Log.Error("Marshal json failed", zap.Error(err))
+		return
+	}
+
+	userDataId, err := strconv.Atoi(UserDataId)
+	if err != nil {
+		logger.Log.Error("Error: Invalid number of arguments", zap.Error(err))
+		return
+	}
+	resp, err := c.s.UpdateDataCreditCard(cmd.Context(), int64(userDataId), data)
+	if err != nil {
+		logger.Log.Error("CreateCredentials failed", zap.Error(err))
+	}
+
+	fmt.Println(string(resp))
+	fmt.Println("CreditCard update successfully")
 }
 
 //func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
