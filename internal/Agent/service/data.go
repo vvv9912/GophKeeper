@@ -267,20 +267,30 @@ func copyFile(src, newPath string, newNameFile string) error {
 }
 
 // todo обновление только файла
-//func (s *Service) UpdateBinaryFile(ctx context.Context, userDataId int64, name, description string) error {
-//	//if err := s.setJwtToken(ctx); err != nil {
-//	//	return err
-//	//}
 //
-//	return s.StorageData.UpdateDataFile(ctx, userDataId, name, description)
-//}
-
-//func (s *Service) UpdateDataCreditCard(ctx context.Context, userDataId int64, name, description string) error {
-//	if err := s.setJwtToken(ctx); err != nil {
-//		return err
+//	func (s *Service) UpdateBinaryFile(ctx context.Context, userDataId int64, name, description string) error {
+//		//if err := s.setJwtToken(ctx); err != nil {
+//		//	return err
+//		//}
+//
+//		return s.StorageData.UpdateDataFile(ctx, userDataId, name, description)
 //	}
-//	return s.StorageData.UpdateDataCreditCard(ctx, userDataId, name, description)
-//}
+
+func (s *Service) UpdateDataCreditCard(ctx context.Context, userDataId int64, data []byte) ([]byte, error) {
+	if err := s.setJwtToken(ctx); err != nil {
+		return nil, err
+	}
+	resp, err := s.DataInterface.PostUpdateData(ctx, userDataId, data)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(resp)
+	err = s.StorageData.UpdateData(ctx, userDataId, data, resp.Hash, resp.UpdateAt)
+	if err != nil {
+		return nil, err
+	}
+	return []byte("Data updated"), nil
+}
 
 //func (s *Service) UpdateDataCredentials(ctx context.Context, userDataId int64, name, description string) error {
 //	if err := s.setJwtToken(ctx); err != nil {

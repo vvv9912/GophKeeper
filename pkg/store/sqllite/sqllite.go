@@ -325,3 +325,92 @@ func (db *Database) createBinaryFile(ctx context.Context, tx *sql.Tx, data []byt
 	}
 	return nil
 }
+
+func (db *Database) UpdateData(ctx context.Context, dataId int64, data []byte, hash string, updateAt *time.Time) error {
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		} else {
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		}
+	}()
+
+	err = db.updateData(ctx, tx, dataId, data, hash, updateAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// updateData - обновление пользовательских данных
+func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userDataId int64, data []byte, hash string, updateAt *time.Time) error {
+
+	queryBlock1 := "SELECT data_id FROM users_data WHERE user_data_id = ? "
+
+	// Изменение данных в таблице users_data
+	query1 := "UPDATE users_data SET  hash=?, update_at=? WHERE user_data_id = ?"
+	// Изменение данных в таблице data
+	query2 := "UPDATE data SET encrypt_data = ? where data_id=?"
+
+	// Получим dataId и заблокируем на изменение табилцу
+	var dataId int64
+	err := tx.QueryRowContext(ctx, queryBlock1, userDataId).Scan(&dataId)
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+
+	//// Заблокируем таблицу data
+	//_, err = tx.QueryContext(ctx, queryBlock2, dataId)
+	//if err != nil {
+	//	logger.Log.Error("Error while querying data", zap.Error(err))
+	//	return err
+	//}
+
+	// Вставляем новые данные
+	res, err := tx.ExecContext(ctx, query2, data, dataId)
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+
+	nr, err := res.RowsAffected()
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+	if nr == 0 {
+		//todo add err in repo
+		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
+	}
+
+	res, err = tx.ExecContext(ctx, query1, hash, updateAt, userDataId)
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+
+	nr, err = res.RowsAffected()
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+	if nr == 0 {
+		//todo add err in repo
+		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
+	}
+
+	// Возвращаем updateAt
+	return nil
+}

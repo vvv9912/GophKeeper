@@ -429,6 +429,45 @@ func (a *AgentServer) CheckUpdate(ctx context.Context, userDataid int64, updateA
 	return response.Status, err
 }
 
+// PostUpdateData - обновление данных (кроме бинарных)
+func (a *AgentServer) PostUpdateData(ctx context.Context, userDataId int64, data []byte) (*RespData, error) {
+	req := a.client.R()
+
+	req.SetHeaders(map[string]string{
+		"Content-Type":  "application/json",
+		"Authorization": "Bearer " + a.JWTToken,
+	})
+
+	reqData := ReqData{
+		Data: data,
+	}
+
+	resp, err := req.SetContext(ctx).SetBody(reqData).Post(a.host + pathUpdateData + "/" + strconv.Itoa(int(userDataId)))
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return nil, err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		var respError RespError
+		err = json.Unmarshal(resp.Body(), &respError)
+		if err != nil {
+			logger.Log.Error("Bad resp", zap.Error(err), zap.Int("status_code", resp.StatusCode()))
+			return nil, err
+		}
+
+		return nil, errors.New(respError.Message)
+	}
+	var respData RespData
+	err = json.Unmarshal(resp.Body(), &respData)
+	if err != nil {
+		logger.Log.Error("Bad resp", zap.Error(err))
+		return nil, err
+	}
+
+	return &respData, nil
+}
+
 //
 //func (a *AgentServer) getCredentials(ctx context.Context, userDataId int64) ([]byte, error) {
 //	req := a.client.R()

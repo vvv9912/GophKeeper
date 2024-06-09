@@ -187,6 +187,44 @@ func (c *Cobra) GetData(cmd *cobra.Command, args []string) {
 	fmt.Println(string(resp))
 
 }
+func (c *Cobra) UpdateCredentials(cmd *cobra.Command, args []string) {
+	var (
+		UserDataId string
+		Login      string
+		Password   string
+	)
+	if len(args) == 3 {
+		UserDataId = args[0]
+		Login = args[1]
+		Password = args[2]
+
+	} else {
+		fmt.Println("Error: Invalid number of arguments")
+		return
+	}
+
+	var cred model.Credentials
+
+	cred.Login = Login
+	cred.Password = Password
+
+	credential, err := json.Marshal(cred)
+	if err != nil {
+		logger.Log.Error("Marshal json failed", zap.Error(err))
+		return
+	}
+	userDataId, err := strconv.Atoi(UserDataId)
+	if err != nil {
+		logger.Log.Error("Error: Invalid number of arguments", zap.Error(err))
+		return
+	}
+	resp, err := c.s.UpdateDataCreditCard(cmd.Context(), int64(userDataId), credential)
+	if err != nil {
+		logger.Log.Error("CreateCredentials failed", zap.Error(err))
+	}
+	fmt.Println(string(resp))
+	fmt.Println("Credentials created successfully")
+}
 
 //func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
 //	var (

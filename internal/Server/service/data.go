@@ -329,21 +329,44 @@ func (s *Service) GetData(ctx context.Context, userId int64, userDataId int64) (
 	return response, nil
 }
 
-func (s *Service) UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error {
+func (s *Service) UpdateData(ctx context.Context, userId int64, userDataId int64, data []byte) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
-		return customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
+		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
 	}
-	usersData.UserId = userId
+	hash := ShaHash.Sha256Hash(data)
 
 	// todo проверка, если данные уже обновлены с другого устр-ва
-	err := s.StoreData.UpdateData(ctx, usersData, data)
+	userData, err := s.StoreData.UpdateData(ctx, userId, userDataId, data, hash)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+
+	resp, err := json.Marshal(userData)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Marshal data error")
+		return nil, err
+	}
+
+	return resp, nil
 
 }
+
+//	func (s *Service) UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error {
+//		if userId == 0 {
+//			logger.Log.Error("userId is empty")
+//			return customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
+//		}
+//		usersData.UserId = userId
+//
+//		// todo проверка, если данные уже обновлены с другого устр-ва
+//		err := s.StoreData.UpdateData(ctx, usersData, data)
+//		if err != nil {
+//			return err
+//		}
+//		return nil
+//
+// }
 func (s *Service) RemoveData(ctx context.Context, userId, userDataId int64) error {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")

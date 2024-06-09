@@ -2,11 +2,13 @@ package postgresql
 
 import (
 	"GophKeeper/pkg/customErrors"
+	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -218,7 +220,27 @@ func (db *Database) GetMetaData(ctx context.Context, userId, userDataId int64) (
 }
 
 func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error) {
-	usersData, err := db.getDataUserByUserId(ctx, userId, usersDataId)
+
+	tx, err := db.db.Begin()
+	if err != nil {
+		logger.Log.Error("Error while begin transaction", zap.Error(err))
+		return nil, nil, err
+	}
+	defer func() {
+		if err != nil {
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		} else {
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		}
+	}()
+
+	usersData, err := db.getDataUserByUserId(ctx, tx, userId, usersDataId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = customErrors.NewCustomError(err, http.StatusNotFound, "get data failed")
@@ -237,13 +259,38 @@ func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64
 	return usersData, data, nil
 }
 
-func (db *Database) UpdateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error {
-	err := db.updateData(ctx, updateData, data)
+func (db *Database) UpdateData(ctx context.Context, userId, userDataId int64, data []byte, hash string) (*store.UsersData, error) {
+	tx, err := db.db.Begin()
+	if err != nil {
+		logger.Log.Error("Error while begin transaction", zap.Error(err))
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		} else {
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		}
+	}()
+
+	err = db.updateData(ctx, tx, userId, userDataId, data, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "update data failed")
-		return err
+		return nil, err
 	}
-	return nil
+	usersData, err := db.getDataUserByUserId(ctx, tx, userId, userDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "update data failed")
+		return nil, err
+	}
+
+	return usersData, nil
 }
 
 func (db *Database) RemoveData(ctx context.Context, userId, usersDataId int64) error {

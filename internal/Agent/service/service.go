@@ -14,7 +14,7 @@ import (
 type AgentService interface{}
 
 func NewServiceAgent(db *sqlx.DB) *Service {
-
+	//todo config
 	cert1, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")
 	if err != nil {
 		panic(err)
@@ -50,6 +50,7 @@ type DataInterface interface {
 	GetListData(ctx context.Context) ([]byte, error)
 	Ping(ctx context.Context) error
 	CheckUpdate(ctx context.Context, userDataid int64, updateAt *time.Time) (bool, error)
+	PostUpdateData(ctx context.Context, userDataId int64, data []byte) (*server.RespData, error)
 }
 
 type StorageData interface {
@@ -62,6 +63,7 @@ type StorageData interface {
 	GetMetaData(ctx context.Context, userDataId int64) (*store.MetaData, error)
 	GetData(ctx context.Context, usersDataId int64) (*store.UsersData, *store.DataFile, error)
 	GetInfoData(ctx context.Context, userDataId int64) (*store.UsersData, error)
+	UpdateData(ctx context.Context, dataId int64, data []byte, hash string, updateAt *time.Time) error
 }
 
 type Service struct {

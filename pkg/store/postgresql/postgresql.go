@@ -6,7 +6,6 @@ import (
 	"GophKeeper/pkg/store"
 	"context"
 	"database/sql"
-	"errors"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"net/http"
@@ -107,9 +106,9 @@ func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.D
 }
 
 // getDataByUserId - Получение информации о данных пользователя, которые не удалены
-func (db *Database) getDataUserByUserId(ctx context.Context, userId int64, userDataId int64) (*store.UsersData, error) {
+func (db *Database) getDataUserByUserId(ctx context.Context, tx *sql.Tx, userId int64, userDataId int64) (*store.UsersData, error) {
 	query := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_data_id = $1 and is_deleted = false and user_id = $2 FOR UPDATE "
-	row := db.db.QueryRowContext(ctx, query, userDataId, userId)
+	row := tx.QueryRowContext(ctx, query, userDataId, userId)
 
 	var data store.UsersData
 
@@ -224,96 +223,6 @@ func (db *Database) changeAllData(ctx context.Context, userId int64, lastTimeUpd
 	return data, nil
 }
 
-// updateData - обновление пользовательских данных
-func (db *Database) updateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error {
-	//todo логика работы с транзакцийе
-	// Блокирующая транзацкция SELECT * FROM table_name WHERE condition FOR UPDATE;
-	tx, err := db.db.Begin()
-	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
-	}()
-
-	if err != nil {
-		logger.Log.Error("Error while begin transaction", zap.Error(err))
-		return err
-	}
-
-	// Блокировка таблицы users_data и получение dataid
-	queryBlock1 := "SELECT data_id FROM users_data WHERE user_id = $1 and user_data_id = $2 for update"
-	// Блокировка таблицы data
-	queryBlock2 := "SELECT data_id FROM data WHERE data_id = $1 for update"
-
-	// Изменение данных в таблице users_data
-	query1 := "UPDATE users_data SET name=$1, description=$2, hash=$3, update_at=$4 WHERE user_data_id = $6"
-	// Изменение данных в таблице data
-	query2 := "UPDATE data SET encrypt_data = $1 where data_id=$2"
-
-	// Получим dataId и заблокируем на изменение табилцу
-	var dataId int64
-	err = tx.QueryRowContext(ctx, queryBlock1, updateData.UserId, updateData.UserDataId).Scan(&dataId)
-	if err != nil {
-		logger.Log.Error("Error while querying data", zap.Error(err))
-		return err
-	}
-
-	//if dataId != updateData.DataId {
-	//	//todo add err in repo
-	//	err = customErrors.NewCustomError(nil, http.StatusBadRequest, "dataId != newData.DataId")
-	//	return err
-	//}
-
-	// Заблокируем таблицу data
-	_, err = tx.QueryContext(ctx, queryBlock2, dataId)
-	if err != nil {
-		logger.Log.Error("Error while querying data", zap.Error(err))
-		return err
-	}
-
-	res, err := tx.ExecContext(ctx, query2, data, dataId)
-	if err != nil {
-		logger.Log.Error("Error while querying data", zap.Error(err))
-		return err
-	}
-
-	nr, err := res.RowsAffected()
-	if err != nil {
-		logger.Log.Error("Error while querying data", zap.Error(err))
-		return err
-	}
-	if nr == 0 {
-		//todo add err in repo
-		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
-	}
-
-	res, err = tx.ExecContext(ctx, query1, updateData.Name, updateData.Description, updateData.Hash, updateData.UpdateAt, updateData.UserDataId)
-	if err != nil {
-		logger.Log.Error("Error while querying data", zap.Error(err))
-		return err
-	}
-
-	nr, err = res.RowsAffected()
-	if err != nil {
-		logger.Log.Error("Error while querying data", zap.Error(err))
-		return err
-	}
-	if nr == 0 {
-		//todo add err in repo
-		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
-	}
-
-	return nil
-}
-
 // removeData - удаление пользовательских данных
 func (db *Database) removeData(ctx context.Context, userId int64, usersDataId int64) error {
 
@@ -345,4 +254,9 @@ func (db *Database) deleteData(ctx context.Context, user_data_id int64) error {
 	// todo
 
 	return nil
+}
+
+func (db *Database) GetUsersData(ctx context.Context, userId int64) ([]store.UsersData, error) {
+	//todo
+	return nil, nil
 }

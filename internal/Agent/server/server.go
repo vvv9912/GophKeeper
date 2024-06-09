@@ -20,7 +20,7 @@ var (
 	pathGetFileSize = "/api/data/fileSize"
 	pathGetListData = "/api/data"
 	pathPing        = "/api/ping"
-
+	pathUpdateData  = "/api/data/update"
 	pathCheckUpdate = "/api/data/CheckUpdate"
 )
 
