@@ -49,6 +49,7 @@ type DataInterface interface {
 	GetData(ctx context.Context, userDataId int64) ([]byte, error)
 	GetListData(ctx context.Context) ([]byte, error)
 	Ping(ctx context.Context) error
+	CheckUpdate(ctx context.Context, userDataid int64, updateAt *time.Time) (bool, error)
 }
 
 type StorageData interface {
@@ -60,6 +61,7 @@ type StorageData interface {
 	CreateBinaryFile(ctx context.Context, data []byte, userDataId int64, name, description, hash string, createdAt *time.Time, UpdateAt *time.Time, metaData *store.MetaData) error
 	GetMetaData(ctx context.Context, userDataId int64) (*store.MetaData, error)
 	GetData(ctx context.Context, usersDataId int64) (*store.UsersData, *store.DataFile, error)
+	GetInfoData(ctx context.Context, userDataId int64) (*store.UsersData, error)
 }
 
 type Service struct {

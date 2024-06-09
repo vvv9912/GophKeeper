@@ -395,6 +395,40 @@ func (a *AgentServer) GetListData(ctx context.Context) ([]byte, error) {
 	return resp.Body(), err
 }
 
+func (a *AgentServer) CheckUpdate(ctx context.Context, userDataid int64, updateAt *time.Time) (bool, error) {
+
+	req := a.client.R()
+	req.SetHeaders(map[string]string{
+		"Authorization":    "Bearer " + a.JWTToken,
+		"Last-Time-Update": updateAt.Format("2006-01-02 15:04:05.999999"),
+	})
+	resp, err := req.SetContext(ctx).Post(a.host + pathCheckUpdate + "/" + strconv.Itoa(int(userDataid)))
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return false, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		var respError RespError
+		err = json.Unmarshal(resp.Body(), &respError)
+		if err != nil {
+			return false, err
+		}
+		return false, errors.New(respError.Message)
+	}
+
+	var response struct {
+		Status bool `json:"status"`
+	}
+
+	err = json.Unmarshal(resp.Body(), &response)
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return false, err
+	}
+
+	return response.Status, err
+}
+
 //
 //func (a *AgentServer) getCredentials(ctx context.Context, userDataId int64) ([]byte, error) {
 //	req := a.client.R()

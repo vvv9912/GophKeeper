@@ -187,6 +187,23 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 	return resp, nil
 }
 
+func (s *Service) CheckNewData(ctx context.Context, userDataId int64) (bool, error) {
+	data, err := s.StorageData.GetInfoData(ctx, userDataId)
+	if err != nil {
+		return false, err
+	}
+
+	if err := s.setJwtToken(ctx); err != nil {
+		return false, err
+	}
+
+	ok, err := s.CheckUpdate(ctx, userDataId, data.UpdateAt)
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
+}
+
 func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64) (*store.UsersData, *store.DataFile, error) {
 
 	// Получение файла из хранилища

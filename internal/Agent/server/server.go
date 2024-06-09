@@ -20,6 +20,8 @@ var (
 	pathGetFileSize = "/api/data/fileSize"
 	pathGetListData = "/api/data"
 	pathPing        = "/api/ping"
+
+	pathCheckUpdate = "/api/data/CheckUpdate"
 )
 
 type AgentServer struct {

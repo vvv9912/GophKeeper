@@ -159,8 +159,13 @@ func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byt
 	return userData, nil
 }
 
-func (db *Database) ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error) {
-	data, err := db.changeData(ctx, userId, lastTimeUpdate)
+func (db *Database) ChangeData(ctx context.Context, userId int64, userDataId int64, lastTimeUpdate time.Time) (bool, error) {
+
+	return db.changeData(ctx, userId, userDataId, lastTimeUpdate)
+}
+
+func (db *Database) ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error) {
+	data, err := db.changeAllData(ctx, userId, lastTimeUpdate)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get change data failed")
 		return nil, err

@@ -262,6 +262,52 @@ func (h *Handler) HandlerGetListData(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (h *Handler) HandlerCheckUpdateData(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var resp []byte
+	defer func() {
+		if err != nil {
+			deferHandler(err, w)
+			return
+		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
+	}()
+
+	userId, err := getUserId(r)
+	if err != nil {
+		return
+	}
+	strLastTime := r.Header.Get("Last-Time-Update")
+	if strLastTime == "" {
+		err = customErrors.NewCustomError(nil, http.StatusBadRequest, "Last-Time-Update header is required")
+		logger.Log.Error("Last-Time-Update header is required", zap.Error(err))
+		return
+	}
+
+	LastTimeUpdate, err := time.Parse("2006-01-02 15:04:05.999999", strLastTime)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusBadRequest, "Last-Time-Update header is invalid")
+		logger.Log.Error("Last-Time-Update header is invalid", zap.Error(err))
+	}
+
+	strUserDataId := chi.URLParam(r, "userDataId")
+
+	userDataId, err := strconv.Atoi(strUserDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusBadRequest, "UserDataId is invalid")
+		logger.Log.Error("UserDataId is invalid", zap.Error(err))
+		return
+	}
+
+	resp, err = h.service.ChangeData(r.Context(), userId, int64(userDataId), LastTimeUpdate)
+
+}
+
 func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -296,7 +342,7 @@ func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Error("Last-Time-Update header is invalid", zap.Error(err))
 	}
 
-	resp, err = h.service.ChangeData(r.Context(), userId, LastTimeUpdate)
+	resp, err = h.service.ChangeAllData(r.Context(), userId, LastTimeUpdate)
 }
 func (h *Handler) HandlerGetFile(w http.ResponseWriter, r *http.Request) {
 	var err error

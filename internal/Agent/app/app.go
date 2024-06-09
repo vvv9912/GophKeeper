@@ -43,6 +43,8 @@ func init() {
 		panic(err)
 		return
 	}
+	agent.CheckNewData(ctx, 15)
+
 	fmt.Println("Cobra off")
 	fmt.Println("next")
 	return

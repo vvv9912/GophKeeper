@@ -183,12 +183,29 @@ func (s *Service) createData(ctx context.Context, userId int64, data []byte, nam
 	hash := ShaHash.Sha256Hash(data)
 	return hash, err
 }
-func (s *Service) ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error) {
+
+func (s *Service) ChangeData(ctx context.Context, userId int64, userDataId int64, lastTimeUpdate time.Time) ([]byte, error) {
+	ok, _ := s.StoreData.ChangeData(ctx, userId, userDataId, lastTimeUpdate)
+	resp := struct {
+		Status bool `json:"status"`
+	}{
+		Status: ok,
+	}
+
+	response, err := json.Marshal(resp)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Marshal data error")
+		return nil, err
+	}
+	return []byte(response), nil
+}
+
+func (s *Service) ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
 	}
-	data, err := s.StoreData.ChangeData(ctx, userId, lastTimeUpdate)
+	data, err := s.StoreData.ChangeAllData(ctx, userId, lastTimeUpdate)
 	if err != nil {
 		return nil, err
 	}

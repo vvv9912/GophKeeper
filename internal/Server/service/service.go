@@ -30,7 +30,7 @@ type Data interface {
 	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
 	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
 	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
-	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
+	ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
 	GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
 	UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error
 	RemoveData(ctx context.Context, userId, userDataId int64) error
@@ -48,7 +48,8 @@ type StoreData interface {
 	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (*store.UsersData, error)
 	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (*store.UsersData, error)
 	CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name, description, hash string, metaData *store.MetaData) (*store.UsersData, error)
-	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error)
+	ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error)
+	ChangeData(ctx context.Context, userId int64, userDataId int64, lastTimeUpdate time.Time) (bool, error)
 	GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error)
 	UpdateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error
 	RemoveData(ctx context.Context, userId, usersDataId int64) error

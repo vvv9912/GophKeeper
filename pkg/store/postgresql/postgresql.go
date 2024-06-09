@@ -169,8 +169,21 @@ func (db *Database) getListData(ctx context.Context, userId int64) ([]store.User
 	return data, err
 }
 
+// changeData - получение информации об изменненнu данных
+func (db *Database) changeData(ctx context.Context, userId int64, userDataId int64, lastTimeUpdate time.Time) (bool, error) {
+	q := "SELECT EXISTS(SELECT 1 FROM users_data WHERE user_id = $1 AND user_data_id = $2 AND update_at > $3)"
+	var exist bool
+	err := db.db.QueryRowContext(ctx, q, userId, userDataId, lastTimeUpdate).Scan(&exist)
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return false, err
+	}
+
+	return exist, nil
+}
+
 // changeData - получение информации об изменненных данных
-func (db *Database) changeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error) {
+func (db *Database) changeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error) {
 
 	query := "SELECT user_data_id, name, description,data_type, hash, update_at,is_deleted FROM users_data WHERE user_id = $1 and update_at > $2 FOR UPDATE "
 

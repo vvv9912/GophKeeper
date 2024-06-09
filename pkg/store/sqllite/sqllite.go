@@ -186,6 +186,19 @@ func (db *Database) GetMetaData(ctx context.Context, userDataId int64) (*store.M
 	return &MetaData, nil
 }
 
+func (db *Database) GetInfoData(ctx context.Context, userDataId int64) (*store.UsersData, error) {
+	usersData, err := db.getDataUserByUserId(ctx, userDataId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = customErrors.NewCustomError(err, http.StatusNotFound, "get data failed")
+			return nil, err
+		}
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")
+		return nil, err
+	}
+	return usersData, nil
+}
+
 func (db *Database) GetData(ctx context.Context, usersDataId int64) (*store.UsersData, *store.DataFile, error) {
 	usersData, err := db.getDataUserByUserId(ctx, usersDataId)
 	if err != nil {
