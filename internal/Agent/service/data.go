@@ -156,34 +156,35 @@ func (s *Service) PingServer(ctx context.Context) bool {
 
 func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error) {
 	if !s.PingServer(ctx) {
-		fmt.Println("Сервер недоступен")
-		usersData, dataFile, err := s.GetDataFromAgentStorage(ctx, userDataId)
+
+		resp, err := s.GetDataFromAgentStorage(ctx, userDataId)
 		if err != nil {
 			return nil, err
 		}
-
-		if usersData.DataType == sqllite.TypeFile {
-			metaData, err := s.GetMetaData(ctx, userDataId)
-			if err != nil {
-				return nil, err
-			}
-			resp := fmt.Sprintf("Файл сохранен %s/%s; Название оригинальное %s", metaData.PathSave, metaData.FileName, string(dataFile.EncryptData))
-			return []byte(resp), nil
-		}
-		resp := fmt.Sprintf("Данные %s", string(dataFile.EncryptData))
-		return []byte(resp), err
+		return resp, err
 	}
 
 	if err := s.setJwtToken(ctx); err != nil {
 		return nil, err
 	}
 
+	// Проверяем данные Новые ли они
+	ok, err := s.CheckNewData(ctx, userDataId)
+	if !ok {
+		// Если не новые скачиваем из локального хранилища
+		resp, err := s.GetDataFromAgentStorage(ctx, userDataId)
+		if err != nil {
+			return nil, err
+		}
+		return resp, err
+	}
 	// Получение файла из сервера
 	resp, err := s.DataInterface.GetData(ctx, userDataId)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println(string(resp))
+
 	return resp, nil
 }
 
@@ -204,15 +205,25 @@ func (s *Service) CheckNewData(ctx context.Context, userDataId int64) (bool, err
 	return ok, nil
 }
 
-func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64) (*store.UsersData, *store.DataFile, error) {
+func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64) ([]byte, error) {
 
+	fmt.Println("Сервер недоступен")
 	// Получение файла из хранилища
-	usersData, data, err := s.StorageData.GetData(ctx, userDataId)
+	usersData, dataFile, err := s.StorageData.GetData(ctx, userDataId)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return usersData, data, nil
+	if usersData.DataType == sqllite.TypeFile {
+		metaData, err := s.GetMetaData(ctx, userDataId)
+		if err != nil {
+			return nil, err
+		}
+		resp := fmt.Sprintf("Файл сохранен %s/%s; Название оригинальное %s", metaData.PathSave, metaData.FileName, string(dataFile.EncryptData))
+		return []byte(resp), nil
+	}
+	resp := fmt.Sprintf("Данные %s", string(dataFile.EncryptData))
+	return []byte(resp), err
 }
 func (s *Service) GetListData(ctx context.Context) ([]byte, error) {
 	if err := s.setJwtToken(ctx); err != nil {
@@ -283,3 +294,10 @@ func copyFile(src, newPath string, newNameFile string) error {
 //	}
 //	return s.StorageData.UpdateDataFile(ctx, userDataId, name, description)
 //}
+
+//func (s *Service) UpdateDataCreditCard(ctx context.Context, userDataId int64, name, description string) error {
+//	if err := s.setJwtToken(ctx); err != nil {
+//		return err
+//	}
+//	return s.StorageData.UpdateDataCreditCard(ctx, userDataId, name, description)
+//}.
