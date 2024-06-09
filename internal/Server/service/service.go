@@ -35,6 +35,7 @@ type Data interface {
 	UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error
 	RemoveData(ctx context.Context, userId, userDataId int64) error
 	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
+	GetListData(ctx context.Context, userId int64) ([]byte, error)
 
 	CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string) (*RespData, error)
 	GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
@@ -53,6 +54,7 @@ type StoreData interface {
 	RemoveData(ctx context.Context, userId, usersDataId int64) error
 	GetFileSize(ctx context.Context, userId int64, userDataId int64) (int64, error)
 	GetMetaData(ctx context.Context, userId, userDataId int64) (*store.MetaData, error)
+	GetListData(ctx context.Context, userId int64) ([]store.UsersData, error)
 }
 
 // Service - структура сервисного слоя.

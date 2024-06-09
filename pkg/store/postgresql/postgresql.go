@@ -18,6 +18,11 @@ var (
 	TypeCreditCardData = 2
 	TypeFile           = 3
 )
+var DataType = map[int]string{
+	1: "Credentials",
+	2: "CreditCardData",
+	3: "File",
+}
 
 type Database struct {
 	db *sqlx.DB
@@ -121,6 +126,41 @@ func (db *Database) getDataUserByUserId(ctx context.Context, userId int64, userD
 	}
 
 	return &data, err
+}
+
+// getDataByUserId - Получение информации о данных пользователя
+func (db *Database) getListData(ctx context.Context, userId int64) ([]store.UsersData, error) {
+	query := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE is_deleted = false and user_id = $1 FOR UPDATE "
+	rows, err := db.db.QueryContext(ctx, query, userId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")
+		logger.Log.Error("Error getting data", zap.Error(err))
+		return nil, err
+	}
+	var data []store.UsersData
+
+	for rows.Next() {
+		var d store.UsersData
+		err = rows.Scan(
+			&d.UserDataId,
+			&d.DataId,
+			&d.UserId,
+			&d.DataType,
+			&d.Name,
+			&d.Description,
+			&d.Hash,
+			&d.CreatedAt,
+			&d.UpdateAt,
+			&d.IsDeleted,
+		)
+		if err != nil {
+			logger.Log.Error("Error getting data", zap.Error(err))
+			return nil, err
+		}
+		data = append(data, d)
+	}
+
+	return data, err
 }
 
 // changeData - получение информации об изменненных данных

@@ -235,6 +235,32 @@ func (h *Handler) HandlerPostCrateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+func (h *Handler) HandlerGetListData(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var resp []byte
+	defer func() {
+		if err != nil {
+			deferHandler(err, w)
+			return
+		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
+	}()
+
+	userId, err := getUserId(r)
+	if err != nil {
+		return
+	}
+	resp, err = h.service.GetListData(r.Context(), userId)
+	if err != nil {
+		return
+	}
+
+}
 
 func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 	var err error

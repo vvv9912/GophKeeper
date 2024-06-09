@@ -22,7 +22,13 @@ func (s *Service) CreateCredentials(ctx context.Context, data *server.ReqData) e
 
 	return s.StorageData.CreateCredentials(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash)
 }
-func (s *Service) CreateFile(ctx context.Context, path string, name, description string) error {
+
+// binary file
+func (s *Service) CreateFile(ctx context.Context, path string, name, description string, ch chan<- string) error {
+	if err := s.setJwtToken(ctx); err != nil {
+		return err
+	}
+
 	r := NewReader(path)
 	n, err := r.NumChunk()
 	if err != nil {
@@ -50,31 +56,37 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	}
 
 	for i := 1; i <= n; i++ {
+
 		data, err := r.ReadFile(i)
 		if err != nil {
 			return err
 		}
-		g, _ := generateKey()
-		encrypt, err := encryptData(data, g)
-		if err != nil {
-			return err
-		}
-		_ = encrypt
-		fmt.Println("Old uuid-chunk:", uuidChunk, "Num chunk:", n)
-		ennd := r.SizeChunk * (i)
+
+		//g, _ := generateKey()
+		//
+		//encrypt, err := encryptData(data, g)
+		//if err != nil {
+		//	return err
+		//}
+		//_ = encrypt
+
+		maxChunk := r.SizeChunk * (i)
 		if i == n {
-			ennd = int(r.Size())
+			maxChunk = int(r.Size())
 		}
-		uuidChunk, err = s.PostCrateFileStartChunks(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), ennd, int(r.Size()), reqDataJson)
+		uuidChunk, err = s.PostCrateFileStartChunks(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson)
 		if err != nil {
+			logger.Log.Error("PostCrateFileStartChunks failed", zap.Error(err))
 			return err
 		}
-		fmt.Println("New uuid-chunk:", uuidChunk, "Num chunk:", n)
+
+		ch <- fmt.Sprintf("Передано кБайт %0.1f из %0.1f", float64(maxChunk)/1024.0, float64(r.Size())/1024)
+
 	}
 	return nil
 }
 
-// binary file
+// todo :text
 func (s *Service) CreateFileData(ctx context.Context, data *server.ReqData) error {
 
 	if err := s.setJwtToken(ctx); err != nil {
@@ -107,7 +119,12 @@ func (s *Service) setJwtToken(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		if jwt == "" {
+			fmt.Println("jwt is empty")
+			return fmt.Errorf("jwt is empty")
+		}
 		s.AuthService.SetJWTToken(jwt)
+		fmt.Println("jwt", jwt)
 	}
 
 	return nil
@@ -125,3 +142,24 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 	fmt.Println(string(resp))
 	return resp, nil
 }
+
+func (s *Service) GetListData(ctx context.Context) ([]byte, error) {
+	if err := s.setJwtToken(ctx); err != nil {
+		return nil, err
+	}
+
+	resp, err := s.DataInterface.GetListData(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+
+}
+
+//// todo обновление только файла
+//func (s *Service) UpdateDataFile(ctx context.Context, userDataId int64, name, description string) error {
+//	if err := s.setJwtToken(ctx); err != nil {
+//		return err
+//	}
+//	return s.StorageData.UpdateDataFile(ctx, userDataId, name, description)
+//}

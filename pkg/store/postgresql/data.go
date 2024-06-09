@@ -249,3 +249,12 @@ func (db *Database) RemoveData(ctx context.Context, userId, usersDataId int64) e
 	}
 	return nil
 }
+
+func (db *Database) GetListData(ctx context.Context, userId int64) ([]store.UsersData, error) {
+	data, err := db.getListData(ctx, userId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "remove all data failed")
+		return nil, err
+	}
+	return data, nil
+}

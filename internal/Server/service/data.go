@@ -5,6 +5,7 @@ import (
 	"GophKeeper/pkg/customErrors"
 	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store"
+	"GophKeeper/pkg/store/postgresql"
 	"context"
 	"encoding/json"
 	"errors"
@@ -332,6 +333,51 @@ func (s *Service) RemoveData(ctx context.Context, userId, userDataId int64) erro
 
 }
 
+func (s *Service) GetListData(ctx context.Context, userId int64) ([]byte, error) {
+	if userId == 0 {
+		logger.Log.Error("userId is empty")
+		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
+	}
+
+	data, err := s.StoreData.GetListData(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	var resp []struct {
+		Id          int64  `json:"id"`
+		DataType    string `json:"dataType,omitempty"`
+		Name        string `json:"name,omitempty"`
+		Description string `json:"description"`
+	}
+
+	for _, val := range data {
+		dataType, ok := postgresql.DataType[val.DataType]
+		if !ok {
+			dataType = "Unknown"
+		}
+
+		resp = append(resp, struct {
+			Id          int64  `json:"id"`
+			DataType    string `json:"dataType,omitempty"`
+			Name        string `json:"name,omitempty"`
+			Description string `json:"description"`
+		}{
+			Id:          val.DataId,
+			DataType:    dataType,
+			Name:        val.Name,
+			Description: val.Description,
+		})
+	}
+
+	response, err := json.Marshal(resp)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Marshal data error")
+		logger.Log.Error("Marshal data error", zap.Error(err))
+		return nil, err
+	}
+	return response, nil
+}
+
 func (s *Service) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
 	return s.SaveFiles.UploadFile(additionalPath, r)
 }
@@ -346,4 +392,8 @@ func (s *Service) UploadFile(additionalPath string, r *http.Request) (bool, *Tmp
 
 //func (s *Service) GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
 //	return s.SaveFiles.GetFileSize(ctx, userId, userDataId)
+//}
+
+//func (s *Service) GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error) {
+//	return s.SaveFiles.GetFileChunks(ctx, userId, userDataId, r)
 //}

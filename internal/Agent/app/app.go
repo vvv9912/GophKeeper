@@ -1,6 +1,7 @@
 package app
 
 import (
+	"GophKeeper/internal/Agent/command"
 	"GophKeeper/internal/Agent/server"
 	"GophKeeper/internal/Agent/service"
 	"GophKeeper/pkg/logger"
@@ -27,29 +28,32 @@ func init() {
 	ctx := context.Background()
 	db, err := sqlx.Open("sqlite", "clientdb.db")
 	if err != nil {
+		panic(err)
 		return
 	}
 	err = store.MigrateSQLITE(db)
 	if err != nil {
+		panic(err)
 		return
 	}
 	agent := service.NewServiceAgent(db)
-
-	//cob := command.NewCobra(agent)
-	//if err := cob.Start(); err != nil {
-	//	panic(err)
-	//	return
-	//}
-
+	fmt.Println("Cobra start")
+	cob := command.NewCobra(agent)
+	if err := cob.Start(); err != nil {
+		panic(err)
+		return
+	}
+	fmt.Println("Cobra off")
 	fmt.Println("next")
+	return
 	s, err := agent.SignIn(ctx, "sadds", "asddsa")
 	if err != nil {
 		return
 	}
 
-	agent.GetData(ctx, 4)
+	agent.GetData(ctx, 1)
 	return
-	agent.CreateFile(ctx, "/home/vlad/Загрузки/customify.0.4.4.zip", " file zip", "test description")
+	//agent.CreateFile(ctx, "/home/vlad/Загрузки/customify.0.4.4.zip", " file zip", "test description")
 	return
 	agent.CreateCredentials(ctx, &server.ReqData{
 		Name:        "testName",

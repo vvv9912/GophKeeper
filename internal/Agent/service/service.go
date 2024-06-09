@@ -45,6 +45,7 @@ type DataInterface interface {
 	PostCreditCard(ctx context.Context, data *server.ReqData) (*server.RespData, error)
 	PostCrateFileStartChunks(ctx context.Context, data []byte, fileName string, uuidChunk string, nStart int, nEnd int, maxSize int, reqData []byte) (string, error)
 	GetData(ctx context.Context, userDataId int64) ([]byte, error)
+	GetListData(ctx context.Context) ([]byte, error)
 }
 
 type StorageData interface {

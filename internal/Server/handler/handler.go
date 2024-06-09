@@ -30,6 +30,7 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 	apiR.Route("/data", func(r chi.Router) {
 		r.Use(mw.MiddlewareAuth)
 		//_ = mw
+		r.Get("/", h.HandlerGetListData)
 
 		r.Post("/credentials", h.HandlerPostCredentials)
 		r.Post("/file", h.HandlerPostCrateFile)

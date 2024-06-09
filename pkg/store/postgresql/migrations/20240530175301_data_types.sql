@@ -5,7 +5,7 @@ CREATE TABLE if not exists data_types (
     type text not null
 );
 INSERT INTO data_types (type)
-VALUES ('credentials'), ('credit_card_data'), ('file');
+VALUES ('credentials'), ('credit_card_data'), ('binary_file'), ('text_file');
 -- +goose StatementEnd
 
 -- +goose Down

@@ -18,6 +18,7 @@ var (
 	pathFileChunks  = "/api/data/fileChunks"
 	//pathGetFileChunks = "/api/data/GetFile"
 	pathGetFileSize = "/api/data/fileSize"
+	pathGetListData = "/api/data"
 )
 
 type AgentServer struct {

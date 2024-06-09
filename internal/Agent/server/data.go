@@ -53,6 +53,7 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 	return &respData, nil
 }
 
+// Передача бинарного файла
 func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte, fileName string, uuidChunk string, nStart int, nEnd int, maxSize int, reqData []byte) (string, error) {
 	req := a.client.R()
 
@@ -62,6 +63,7 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 	// Добавление файла в форму
 	fileWriter, err := writer.CreateFormFile("file", fileName)
 	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
 		return "", err
 	}
 
@@ -91,7 +93,6 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 				ContentType: writer.FormDataContentType(),
 				Reader:      bytes.NewReader(data)},
 		).Post(a.host + pathFileChunks)
-
 	} else {
 		// Последний чанк, передаем информацию о файле
 
@@ -118,6 +119,7 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 		var respError RespError
 		err = json.Unmarshal(resp.Body(), &respError)
 		if err != nil {
+			logger.Log.Error("Bad resp", zap.Error(err), zap.Int("status_code", resp.StatusCode()))
 			return "", err
 		}
 
@@ -130,6 +132,7 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 	return uuidChunk, nil
 }
 
+// Передача любых текстовых данных
 func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) (*RespData, error) {
 
 	req := a.client.R()
@@ -360,6 +363,26 @@ func (a *AgentServer) getFileChunks(ctx context.Context, userDataId int64, fileS
 		return nil, errors.New(respError.Message)
 	}
 
+	return resp.Body(), err
+}
+func (a *AgentServer) GetListData(ctx context.Context) ([]byte, error) {
+	req := a.client.R()
+	req.SetHeaders(map[string]string{
+		"Authorization": "Bearer " + a.JWTToken,
+	})
+	resp, err := req.SetContext(ctx).Get(a.host + pathGetListData)
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return nil, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		var respError RespError
+		err = json.Unmarshal(resp.Body(), &respError)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New(respError.Message)
+	}
 	return resp.Body(), err
 }
 
