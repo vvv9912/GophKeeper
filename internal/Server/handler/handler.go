@@ -45,6 +45,7 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 		r.Get("/fileChunks/{userDataId:[0-9]+}", h.HandlerGetFile)
 		r.Post("/CheckUpdate/{userDataId:[0-9]+}", h.HandlerCheckUpdateData)
 		r.Post("/update/{userDataId:[0-9]+}", h.HandlerUpdateData)
+		r.Post("/updateBinary/{userDataId:[0-9]+}", h.HandlerUpdateBinaryFile)
 
 		r.Patch("/", h.HandlerUpdateData)
 		r.Delete("/{userDataId:[0-9]+}", h.HandlerRemoveData)

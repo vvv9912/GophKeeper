@@ -310,3 +310,51 @@ func (db *Database) GetListData(ctx context.Context, userId int64) ([]store.User
 	}
 	return data, nil
 }
+
+// UpdateBinaryFile - Создание произвольных данных.
+func (db *Database) UpdateBinaryFile(ctx context.Context, userId int64, userDataId int64, data []byte, hash string, metaData []byte) (*store.UsersData, error) {
+	tx, err := db.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if err != nil {
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		} else {
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		}
+	}()
+
+	err = db.updateData(ctx, tx, userId, userDataId, data, hash)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "update data failed")
+		return nil, err
+	}
+	usersData, err := db.getDataUserByUserId(ctx, tx, userId, userDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "update data failed")
+		return nil, err
+	}
+	if err := db.updateMetaData(ctx, tx, usersData.DataId, metaData); err != nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "update data failed")
+		return nil, err
+	}
+
+	return usersData, nil
+}
+
+//func (db *Database) RemoveAllData(ctx context.Context, userId int64) error {
+//	err := db.removeAllData(ctx, userId)
+//	if err != nil {
+//		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "remove all data failed")
+//		return err
+//	}
+//	return nil
+//}

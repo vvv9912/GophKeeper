@@ -222,6 +222,86 @@ func (db *Database) changeAllData(ctx context.Context, userId int64, lastTimeUpd
 
 	return data, nil
 }
+func (db *Database) updateMetaData(ctx context.Context, tx *sql.Tx, dataId int64, meta []byte) error {
+	q := "UPDATE data SET meta_data = $1 where data_id = $2"
+
+	_, err := tx.ExecContext(ctx, q, meta, dataId)
+	if err != nil {
+		logger.Log.Error("Error updating meta data", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// updateData - обновление пользовательских данных
+func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userId, userDataId int64, data []byte, hash string) error {
+	//todo логика работы с транзакцийе
+	// Блокирующая транзацкция SELECT * FROM table_name WHERE condition FOR UPDATE;
+
+	//// Блокировка таблицы users_data и получение dataid
+	//queryBlock1 := "SELECT data_id FROM users_data WHERE user_id = $1 and user_data_id = $2 FOR UPDATE "
+	//// Блокировка таблицы data
+	//queryBlock2 := "SELECT data_id FROM data WHERE data_id = $1 FOR UPDATE "
+	// Блокировка таблицы users_data и получение dataid
+	queryBlock1 := "SELECT data_id FROM users_data WHERE user_id = $1 and user_data_id = $2 FOR UPDATE "
+
+	// Изменение данных в таблице users_data
+	query1 := "UPDATE users_data SET  hash=$1, update_at=$2 WHERE user_data_id = $3"
+	// Изменение данных в таблице data
+	query2 := "UPDATE data SET encrypt_data = $1 where data_id=$2"
+
+	// Получим dataId и заблокируем на изменение табилцу
+	var dataId int64
+	err := tx.QueryRowContext(ctx, queryBlock1, userId, userDataId).Scan(&dataId)
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+
+	//// Заблокируем таблицу data
+	//_, err = tx.QueryContext(ctx, queryBlock2, dataId)
+	//if err != nil {
+	//	logger.Log.Error("Error while querying data", zap.Error(err))
+	//	return err
+	//}
+
+	// Вставляем новые данные
+	res, err := tx.ExecContext(ctx, query2, data, dataId)
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+
+	nr, err := res.RowsAffected()
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+	if nr == 0 {
+		//todo add err in repo
+		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
+	}
+	updateAt := time.Now().UTC()
+
+	res, err = tx.ExecContext(ctx, query1, hash, updateAt, userDataId)
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+
+	nr, err = res.RowsAffected()
+	if err != nil {
+		logger.Log.Error("Error while querying data", zap.Error(err))
+		return err
+	}
+	if nr == 0 {
+		//todo add err in repo
+		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
+	}
+
+	// Возвращаем updateAt
+	return nil
+}
 
 // removeData - удаление пользовательских данных
 func (db *Database) removeData(ctx context.Context, userId int64, usersDataId int64) error {
@@ -246,6 +326,19 @@ func (db *Database) removeData(ctx context.Context, userId int64, usersDataId in
 	}
 
 	return nil
+}
+
+// createData - добавление пользовательских данных.
+func (db *Database) updateDataWithMeta(ctx context.Context, tx *sql.Tx, data []byte, metaData []byte) (int64, error) {
+	query := "UPDATE data SET encrypt_data = $1, meta_data = $2 WHERE data_id = $3 RETURNING data_id"
+	var id int64
+	err := tx.QueryRowContext(ctx, query, data, metaData).Scan(&id)
+	if err != nil {
+		logger.Log.Error("Add data")
+		return 0, err
+	}
+
+	return id, nil
 }
 
 // deleteData - удаление пользовательских данных

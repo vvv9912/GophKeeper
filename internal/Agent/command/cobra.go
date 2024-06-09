@@ -43,7 +43,7 @@ func (c *Cobra) Start() error {
 		Short:   "Create file",
 		Example: "createFile {Path} {Name} {Description}",
 		Args:    cobra.MaximumNArgs(3),
-		Run:     c.CreateFile,
+		Run:     c.CreateBinaryFile,
 		Aliases: []string{"createfile"},
 	}
 
@@ -101,6 +101,15 @@ func (c *Cobra) Start() error {
 		Aliases: []string{"updatecreditcard"},
 	}
 
+	UpdateBinaryFile := &cobra.Command{
+		Use:     "updateBinaryFile",
+		Short:   "Update binary file",
+		Example: "updateBinaryFile {UserDataId} {Path} ",
+		Args:    cobra.MaximumNArgs(2),
+		Run:     c.UpdateBinaryFile,
+		Aliases: []string{"updatebinaryfile"},
+	}
+
 	rootCmd.AddCommand(signIn)
 	rootCmd.AddCommand(signUp)
 	rootCmd.AddCommand(CreateFile)
@@ -110,6 +119,7 @@ func (c *Cobra) Start() error {
 	rootCmd.AddCommand(CreateCreditCard)
 	rootCmd.AddCommand(UpdateCredentials)
 	rootCmd.AddCommand(UpdateCreditCard)
+	rootCmd.AddCommand(UpdateBinaryFile)
 	//rootCmd.AddCommand(c2)
 	if err := rootCmd.Execute(); err != nil {
 		logger.Log.Error("Root execute err", zap.Error(err))

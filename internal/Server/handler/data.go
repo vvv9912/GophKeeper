@@ -577,3 +577,90 @@ func (h *Handler) HandlerRemoveData(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+// HandlerPostCrateFile2 - загрузка чанками
+func (h *Handler) HandlerUpdateBinaryFile(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var resp []byte
+
+	defer func() {
+		if err != nil {
+			deferHandler(err, w)
+			return
+		}
+		_, err = w.Write(resp)
+		if err != nil {
+			logger.Log.Error("Error writing response", zap.Error(err))
+		}
+		w.WriteHeader(http.StatusOK)
+
+	}()
+
+	userId, err := getUserId(r)
+	if err != nil {
+		return
+	}
+
+	strUserDataId := chi.URLParam(r, "userDataId")
+
+	userDataId, err := strconv.Atoi(strUserDataId)
+	if err != nil {
+		err = customErrors.NewCustomError(err, http.StatusBadRequest, "UserDataId is invalid")
+		logger.Log.Error("UserDataId is invalid", zap.Error(err))
+		return
+	}
+	// Валидация файла
+	// Считывание файл по ключу
+	_, header, err := r.FormFile("file")
+	if err != nil {
+		return
+	}
+
+	err = validateFile(header)
+	if err != nil {
+		return
+	}
+
+	additionPath := path.Join("files", strconv.Itoa(int(userId)))
+	ok, tmpFile, err := h.service.UploadFile(additionPath, r)
+	if err != nil {
+		return
+	}
+	if tmpFile == nil {
+		return
+	}
+
+	w.Header().Set("Uuid-chunk", tmpFile.Uuid)
+	w.Header().Set("Content-Type", "multipart/form-data")
+	resp = []byte(`{"status":"ok"}`)
+
+	if ok {
+
+		//todo
+		// Считывание тела по ключу
+
+		headerInfo := r.FormValue("info")
+		if err != nil {
+			return
+		}
+
+		var Cred ReqData
+		err = json.Unmarshal([]byte(headerInfo), &Cred)
+		if err != nil {
+			logger.Log.Error("Unmarshal json failed", zap.Error(err))
+			err = customErrors.NewCustomError(err, http.StatusBadRequest, "Error reading request body")
+			return
+		}
+
+		response, err := h.service.UpdateBinaryFile(r.Context(), userId, int64(userDataId), tmpFile, Cred.Data)
+		if err != nil {
+			return
+		}
+		resp, err = json.Marshal(response)
+		if err != nil {
+			logger.Log.Error("Marshal response failed", zap.Error(err))
+			err = customErrors.NewCustomError(err, http.StatusInternalServerError, "Error reading request body")
+			return
+		}
+	}
+}

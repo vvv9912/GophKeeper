@@ -16,7 +16,7 @@ import (
 //	func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
 //		c.s.AuthService
 //	}
-func (c *Cobra) CreateFile(cmd *cobra.Command, args []string) {
+func (c *Cobra) CreateBinaryFile(cmd *cobra.Command, args []string) {
 	var (
 		Path        string
 		Name        string
@@ -46,10 +46,12 @@ func (c *Cobra) CreateFile(cmd *cobra.Command, args []string) {
 	}()
 	defer close(ch)
 	err := c.s.CreateFile(cmd.Context(), Path, Name, Description, ch)
-	time.Sleep(1 * time.Second)
+
 	if err != nil {
 		fmt.Println(err)
 	}
+	//todo waitGroup?
+	time.Sleep(1 * time.Second)
 }
 
 func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
@@ -218,7 +220,7 @@ func (c *Cobra) UpdateCredentials(cmd *cobra.Command, args []string) {
 		logger.Log.Error("Error: Invalid number of arguments", zap.Error(err))
 		return
 	}
-	resp, err := c.s.UpdateDataCreditCard(cmd.Context(), int64(userDataId), credential)
+	resp, err := c.s.UpdateData(cmd.Context(), int64(userDataId), credential)
 	if err != nil {
 		logger.Log.Error("CreateCredentials failed", zap.Error(err))
 	}
@@ -277,13 +279,56 @@ func (c *Cobra) UpdateCreditCard(cmd *cobra.Command, args []string) {
 		logger.Log.Error("Error: Invalid number of arguments", zap.Error(err))
 		return
 	}
-	resp, err := c.s.UpdateDataCreditCard(cmd.Context(), int64(userDataId), data)
+	resp, err := c.s.UpdateData(cmd.Context(), int64(userDataId), data)
 	if err != nil {
 		logger.Log.Error("CreateCredentials failed", zap.Error(err))
 	}
 
 	fmt.Println(string(resp))
 	fmt.Println("CreditCard update successfully")
+}
+func (c *Cobra) UpdateBinaryFile(cmd *cobra.Command, args []string) {
+	var (
+		UserDataId string
+		Path       string
+	)
+	fmt.Println(args)
+	if len(args) == 2 {
+		UserDataId = args[0]
+		Path = args[1]
+	} else {
+		fmt.Println("Error: Invalid number of arguments")
+		return
+	}
+	ch := make(chan string)
+	go func() {
+		{
+			for {
+				val, ok := <-ch
+				if ok {
+					fmt.Println(val)
+				} else {
+					fmt.Println("Канал закрыт")
+				}
+			}
+		}
+	}()
+	defer close(ch)
+	userDataId, err := strconv.Atoi(UserDataId)
+	if err != nil {
+		logger.Log.Error("Error: Invalid number of arguments", zap.Error(err))
+		return
+	}
+
+	err = c.s.UpdateBinaryFile(cmd.Context(), Path, int64(userDataId), ch)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	//todo waitGroup?
+	time.Sleep(1 * time.Second)
+	fmt.Println("File updated successfully")
 }
 
 //func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {

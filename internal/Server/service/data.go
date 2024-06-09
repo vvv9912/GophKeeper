@@ -434,6 +434,54 @@ func (s *Service) UploadFile(additionalPath string, r *http.Request) (bool, *Tmp
 	return s.SaveFiles.UploadFile(additionalPath, r)
 }
 
+// CreateFile - Создание произвольных данных.
+func (s *Service) UpdateBinaryFile(ctx context.Context, userId int64, userDataId int64, tmpFile *TmpFile, encryptedData []byte) (*RespData, error) {
+
+	// Создаем путь
+	pathStorage := path.Join("storage", strconv.Itoa(int(userId)))
+
+	if err := createPathIfNotExists(pathStorage); err != nil {
+		return nil, err
+	}
+
+	if err := moveFile(tmpFile.PathFileSave, path.Join(pathStorage, tmpFile.Uuid)); err != nil {
+		return nil, err
+	}
+
+	// Структура с метаданными
+	metaData := &store.MetaData{
+		FileName: tmpFile.Uuid,
+		PathSave: pathStorage,
+		Size:     tmpFile.Size,
+	}
+
+	data, err := json.Marshal(metaData)
+	if err != nil {
+		return nil, err
+	}
+	// считаем хэш метаднныех
+	hash := ShaHash.Sha256Hash(data)
+	if err != nil {
+		err := customErrors.NewCustomError(err, http.StatusInternalServerError, "Hash error")
+		return nil, err
+	}
+
+	// Сохраняем структуру с описанием файла.
+	userData, err := s.StoreData.UpdateBinaryFile(ctx, userId, userDataId, encryptedData, hash, data)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &RespData{
+		UserDataId: userData.UserDataId,
+		Hash:       hash,
+		CreatedAt:  userData.CreatedAt,
+		UpdateAt:   userData.UpdateAt,
+	}
+	return resp, nil
+
+}
+
 //func (s *Service) createFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
 //	return s.SaveFiles.CreateFile(additionalPath, r)
 //}

@@ -40,17 +40,24 @@ func (s *Service) SignUp(ctx context.Context, username, password string) (string
 
 	return user.JWT, err
 }
-func (s *Service) setJwtToken(ctx context.Context) error {
 
+// setJwtToken - выставляем токен для будущих запросов
+func (s *Service) setJwtToken(ctx context.Context) error {
+	// Проверка на пустой токен
 	if s.AuthService.GetJWTToken() == "" {
+
+		// Получаем токен из локального хранилища
 		jwt, err := s.StorageData.GetJWTToken(ctx)
 		if err != nil {
 			return err
 		}
+
 		if jwt == "" {
 			fmt.Println("jwt is empty")
 			return fmt.Errorf("jwt is empty")
 		}
+
+		// Выставляем в структуре AuthServer JWT token
 		s.AuthService.SetJWTToken(jwt)
 		fmt.Println("jwt", jwt)
 	}

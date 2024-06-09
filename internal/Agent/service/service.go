@@ -51,6 +51,7 @@ type DataInterface interface {
 	Ping(ctx context.Context) error
 	CheckUpdate(ctx context.Context, userDataid int64, updateAt *time.Time) (bool, error)
 	PostUpdateData(ctx context.Context, userDataId int64, data []byte) (*server.RespData, error)
+	PostUpdateBinaryFile(ctx context.Context, data []byte, fileName string, uuidChunk string, nStart int, nEnd int, maxSize int, reqData []byte, userDataId int64) (string, *server.RespData, error)
 }
 
 type StorageData interface {
@@ -64,6 +65,7 @@ type StorageData interface {
 	GetData(ctx context.Context, usersDataId int64) (*store.UsersData, *store.DataFile, error)
 	GetInfoData(ctx context.Context, userDataId int64) (*store.UsersData, error)
 	UpdateData(ctx context.Context, dataId int64, data []byte, hash string, updateAt *time.Time) error
+	UpdateDataBinary(ctx context.Context, userDataId int64, data []byte, hash string, updateAt *time.Time, metaData []byte) error
 }
 
 type Service struct {

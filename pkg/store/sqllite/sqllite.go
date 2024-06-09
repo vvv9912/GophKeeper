@@ -326,7 +326,7 @@ func (db *Database) createBinaryFile(ctx context.Context, tx *sql.Tx, data []byt
 	return nil
 }
 
-func (db *Database) UpdateData(ctx context.Context, dataId int64, data []byte, hash string, updateAt *time.Time) error {
+func (db *Database) UpdateData(ctx context.Context, userDataId int64, data []byte, hash string, updateAt *time.Time) error {
 	tx, err := db.db.Begin()
 	if err != nil {
 		return err
@@ -346,7 +346,38 @@ func (db *Database) UpdateData(ctx context.Context, dataId int64, data []byte, h
 		}
 	}()
 
-	err = db.updateData(ctx, tx, dataId, data, hash, updateAt)
+	err = db.updateData(ctx, tx, userDataId, data, hash, updateAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (db *Database) UpdateDataBinary(ctx context.Context, userDataId int64, data []byte, hash string, updateAt *time.Time, metaData []byte) error {
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		} else {
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
+		}
+	}()
+
+	err = db.updateData(ctx, tx, userDataId, data, hash, updateAt)
+	if err != nil {
+		return err
+	}
+
+	err = db.updateMetaData(ctx, tx, userDataId, metaData)
 	if err != nil {
 		return err
 	}
@@ -412,5 +443,16 @@ func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userDataId int64
 	}
 
 	// Возвращаем updateAt
+	return nil
+}
+func (db *Database) updateMetaData(ctx context.Context, tx *sql.Tx, userDataId int64, metaData []byte) error {
+
+	q := "UPDATE data SET meta_data = ? where data_id = ?"
+
+	_, err := tx.ExecContext(ctx, q, metaData, userDataId)
+	if err != nil {
+		logger.Log.Error("Error updating meta data", zap.Error(err))
+		return err
+	}
 	return nil
 }

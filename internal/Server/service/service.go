@@ -59,6 +59,7 @@ type StoreData interface {
 	GetFileSize(ctx context.Context, userId int64, userDataId int64) (int64, error)
 	GetMetaData(ctx context.Context, userId, userDataId int64) (*store.MetaData, error)
 	GetListData(ctx context.Context, userId int64) ([]store.UsersData, error)
+	UpdateBinaryFile(ctx context.Context, userId int64, userDataId int64, data []byte, hash string, metaData []byte) (*store.UsersData, error)
 }
 
 // Service - структура сервисного слоя.

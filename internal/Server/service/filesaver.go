@@ -129,11 +129,13 @@ func (s *SaveFiles) UploadFile(additionalPath string, r *http.Request) (bool, *T
 	}
 	defer file.Close()
 
+	// Сохраняем файл
 	fileSize, err := s.saveFile(chunk.PathFileSave, file)
 	if err != nil {
 		return false, nil, err
 	}
 
+	// Проверяем полностью ли загружен файл
 	fileUpload, err := s.FileUploadCompleted(fileSize, r)
 	if err != nil {
 		return false, nil, err

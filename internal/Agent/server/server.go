@@ -17,11 +17,12 @@ var (
 	pathCreditCard  = "/api/data/creditCard"
 	pathFileChunks  = "/api/data/fileChunks"
 	//pathGetFileChunks = "/api/data/GetFile"
-	pathGetFileSize = "/api/data/fileSize"
-	pathGetListData = "/api/data"
-	pathPing        = "/api/ping"
-	pathUpdateData  = "/api/data/update"
-	pathCheckUpdate = "/api/data/CheckUpdate"
+	pathGetFileSize  = "/api/data/fileSize"
+	pathGetListData  = "/api/data"
+	pathPing         = "/api/ping"
+	pathUpdateData   = "/api/data/update"
+	pathCheckUpdate  = "/api/data/CheckUpdate"
+	pathUpdateBinary = "/api/data/updateBinary"
 )
 
 type AgentServer struct {
@@ -35,7 +36,7 @@ type AgentServer struct {
 func NewAgentServer(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey, host string) *AgentServer {
 	client := resty.New()
 
-	//todo
+	//todo config
 	client.SetTLSClientConfig(&tls.Config{
 		InsecureSkipVerify: true,
 	})

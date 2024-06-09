@@ -468,15 +468,90 @@ func (a *AgentServer) PostUpdateData(ctx context.Context, userDataId int64, data
 	return &respData, nil
 }
 
-//
-//func (a *AgentServer) getCredentials(ctx context.Context, userDataId int64) ([]byte, error) {
-//	req := a.client.R()
-//	req.SetHeaders(map[string]string{
-//		"Authorization": "Bearer " + a.JWTToken,
-//	})
-//	resp, err := req.SetContext(ctx).Get(a.host + pathCredentials + "/" + strconv.Itoa(int(userDataId)))
-//	if err != nil {
-//		logger.Log.Error("Bad req", zap.Error(err))
-//		return nil, err
-//	}
-//}
+// Передача бинарного файла
+func (a *AgentServer) PostUpdateBinaryFile(ctx context.Context, data []byte, fileName string, uuidChunk string, nStart int, nEnd int, maxSize int, reqData []byte, userDataId int64) (string, *RespData, error) {
+	req := a.client.R()
+
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+
+	// Добавление файла в форму
+	fileWriter, err := writer.CreateFormFile("file", fileName)
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return "", nil, err
+	}
+
+	// Записываем данные
+	_, err = fileWriter.Write(data)
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return "", nil, err
+	}
+	req.SetHeaders(map[string]string{
+		"Authorization": "Bearer " + a.JWTToken,
+		"Content-Range": fmt.Sprintf("bytes %d-%d/%d", nStart, nEnd, maxSize),
+	})
+
+	if uuidChunk != "" {
+		req.SetHeaders(map[string]string{
+			"Uuid-chunk": uuidChunk,
+		})
+	}
+
+	var resp *resty.Response
+	if nEnd != maxSize {
+		resp, err = req.SetContext(ctx).SetBody(&buf).SetMultipartFields(
+			&resty.MultipartField{
+				Param:       "file",
+				FileName:    fileName,
+				ContentType: writer.FormDataContentType(),
+				Reader:      bytes.NewReader(data)},
+		).Post(a.host + pathUpdateBinary + "/" + strconv.Itoa(int(userDataId)))
+	} else {
+		// Последний чанк, передаем информацию о файле
+
+		resp, err = req.SetContext(ctx).SetBody(&buf).SetMultipartFields(
+			&resty.MultipartField{
+				Param:       "file",
+				FileName:    fileName,
+				ContentType: writer.FormDataContentType(),
+				Reader:      bytes.NewReader(data)},
+			&resty.MultipartField{
+				Param:       "info",
+				ContentType: "application/json",
+				Reader:      bytes.NewReader(reqData),
+			},
+		).Post(a.host + pathUpdateBinary + "/" + strconv.Itoa(int(userDataId)))
+	}
+
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return "", nil, err
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		var respError RespError
+		err = json.Unmarshal(resp.Body(), &respError)
+		if err != nil {
+			logger.Log.Error("Bad resp", zap.Error(err), zap.Int("status_code", resp.StatusCode()))
+			return "", nil, err
+		}
+
+		return "", nil, errors.New(respError.Message)
+
+	}
+
+	uuidChunk = resp.Header().Get("Uuid-chunk")
+	if len(resp.Body()) == 0 {
+		return uuidChunk, nil, nil
+	}
+
+	var respData RespData
+	err = json.Unmarshal(resp.Body(), &respData)
+	if err != nil {
+		logger.Log.Error("Bad resp", zap.Error(err))
+		return "", nil, err
+	}
+	return uuidChunk, &respData, nil
+}
