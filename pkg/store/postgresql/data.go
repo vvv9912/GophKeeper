@@ -12,10 +12,10 @@ import (
 )
 
 // CreateCredentials - Создание пары логин/пароль.
-func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error) {
+func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (*store.UsersData, error) {
 	tx, err := db.db.Begin()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	defer func() {
@@ -35,22 +35,22 @@ func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credentials failed")
-		return 0, err
+		return nil, err
 	}
-	userDataId, err := db.createUserData(ctx, tx, userId, dataId, TypeCredentials, name, description, hash)
+	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeCredentials, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credentials failed")
-		return 0, err
+		return nil, err
 	}
 
-	return userDataId, nil
+	return userData, nil
 }
 
 // CreateCreditCard - Создание пары данные банковских карт.
-func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error) {
+func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (*store.UsersData, error) {
 	tx, err := db.db.Begin()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	defer func() {
@@ -70,22 +70,22 @@ func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []b
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credit card failed")
-		return 0, err
+		return nil, err
 	}
-	userDataId, err := db.createUserData(ctx, tx, userId, dataId, TypeCreditCardData, name, description, hash)
+	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeCreditCardData, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credit card failed")
-		return 0, err
+		return nil, err
 	}
 
-	return userDataId, nil
+	return userData, nil
 }
 
 // CreateFileData - Создание произвольных данных.
-func (db *Database) CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name, description, hash string, metaData *store.MetaData) (int64, error) {
+func (db *Database) CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name, description, hash string, metaData *store.MetaData) (*store.UsersData, error) {
 	tx, err := db.db.Begin()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	defer func() {
@@ -104,29 +104,29 @@ func (db *Database) CreateFileDataChunks(ctx context.Context, userId int64, data
 	m, err := json.Marshal(metaData)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "err json marshal metadata")
-		return 0, err
+		return nil, err
 	}
 
 	// возвращаем user_data_id
 	dataId, err := db.createDataWithMeta(ctx, tx, data, m)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
-		return 0, err
+		return nil, err
 	}
-	userDataId, err := db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
+	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
-		return 0, err
+		return nil, err
 	}
 
-	return userDataId, nil
+	return userData, nil
 }
 
 // CreateFileData - Создание произвольных данных.
-func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error) {
+func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (*store.UsersData, error) {
 	tx, err := db.db.Begin()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	defer func() {
@@ -148,15 +148,15 @@ func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byt
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
-		return 0, err
+		return nil, err
 	}
-	userDataId, err := db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
+	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
-		return 0, err
+		return nil, err
 	}
 
-	return userDataId, nil
+	return userData, nil
 }
 
 func (db *Database) ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error) {

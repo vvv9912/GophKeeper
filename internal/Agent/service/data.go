@@ -3,11 +3,19 @@ package service
 import (
 	"GophKeeper/internal/Agent/server"
 	"GophKeeper/pkg/logger"
+	"GophKeeper/pkg/store"
+	"GophKeeper/pkg/store/sqllite"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"io"
+	"os"
+	path2 "path"
 )
+
+var PathStorage = "Agent/storage"
 
 func (s *Service) CreateCredentials(ctx context.Context, data *server.ReqData) error {
 
@@ -20,7 +28,7 @@ func (s *Service) CreateCredentials(ctx context.Context, data *server.ReqData) e
 		return err
 	}
 
-	return s.StorageData.CreateCredentials(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash)
+	return s.StorageData.CreateCredentials(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash, resp.CreatedAt, resp.UpdateAt)
 }
 
 // binary file
@@ -54,6 +62,7 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 		logger.Log.Error("Marshal json failed", zap.Error(err))
 		return err
 	}
+	var resp *server.RespData
 
 	for i := 1; i <= n; i++ {
 
@@ -74,7 +83,7 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 		if i == n {
 			maxChunk = int(r.Size())
 		}
-		uuidChunk, err = s.PostCrateFileStartChunks(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson)
+		uuidChunk, resp, err = s.PostCrateFileStartChunks(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson)
 		if err != nil {
 			logger.Log.Error("PostCrateFileStartChunks failed", zap.Error(err))
 			return err
@@ -83,6 +92,31 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 		ch <- fmt.Sprintf("Передано кБайт %0.1f из %0.1f", float64(maxChunk)/1024.0, float64(r.Size())/1024)
 
 	}
+
+	// Копирование к себе в хранилище
+	NewNameFile := uuid.NewString()
+	if err := copyFile(path, PathStorage, NewNameFile); err != nil {
+		logger.Log.Error("copyFile failed", zap.Error(err))
+		return err
+	}
+
+	metaData := &store.MetaData{
+		FileName: NewNameFile,
+		Size:     r.size,
+		PathSave: PathStorage,
+	}
+
+	if resp == nil {
+		err := fmt.Errorf("resp is nil")
+		logger.Log.Error("resp is nil", zap.Error(err))
+		return err
+	}
+
+	if err := s.StorageData.CreateBinaryFile(ctx, data, resp.UserDataId, name, description, resp.Hash, resp.CreatedAt, resp.UpdateAt, metaData); err != nil {
+		logger.Log.Error("CreateBinaryFile failed", zap.Error(err))
+		return err
+	}
+
 	return nil
 }
 
@@ -97,7 +131,7 @@ func (s *Service) CreateFileData(ctx context.Context, data *server.ReqData) erro
 	if err != nil {
 		return err
 	}
-	return s.StorageData.CreateFileData(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash)
+	return s.StorageData.CreateFileData(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash, resp.CreatedAt, resp.UpdateAt)
 }
 
 func (s *Service) CreateCreditCard(ctx context.Context, data *server.ReqData) error {
@@ -110,31 +144,41 @@ func (s *Service) CreateCreditCard(ctx context.Context, data *server.ReqData) er
 	if err != nil {
 		return err
 	}
-	return s.StorageData.CreateCreditCard(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash)
+	return s.StorageData.CreateCreditCard(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash, resp.CreatedAt, resp.UpdateAt)
 }
-func (s *Service) setJwtToken(ctx context.Context) error {
 
-	if s.AuthService.GetJWTToken() == "" {
-		jwt, err := s.StorageData.GetJWTToken(ctx)
-		if err != nil {
-			return err
-		}
-		if jwt == "" {
-			fmt.Println("jwt is empty")
-			return fmt.Errorf("jwt is empty")
-		}
-		s.AuthService.SetJWTToken(jwt)
-		fmt.Println("jwt", jwt)
+func (s *Service) PingServer(ctx context.Context) bool {
+	if err := s.DataInterface.Ping(ctx); err != nil {
+		return false
 	}
-
-	return nil
+	return true
 }
 
 func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error) {
+	if !s.PingServer(ctx) {
+		fmt.Println("Сервер недоступен")
+		usersData, dataFile, err := s.GetDataFromAgentStorage(ctx, userDataId)
+		if err != nil {
+			return nil, err
+		}
+
+		if usersData.DataType == sqllite.TypeFile {
+			metaData, err := s.GetMetaData(ctx, userDataId)
+			if err != nil {
+				return nil, err
+			}
+			resp := fmt.Sprintf("Файл сохранен %s/%s; Название оригинальное %s", metaData.PathSave, metaData.FileName, string(dataFile.EncryptData))
+			return []byte(resp), nil
+		}
+		resp := fmt.Sprintf("Данные %s", string(dataFile.EncryptData))
+		return []byte(resp), err
+	}
+
 	if err := s.setJwtToken(ctx); err != nil {
 		return nil, err
 	}
 
+	// Получение файла из сервера
 	resp, err := s.DataInterface.GetData(ctx, userDataId)
 	if err != nil {
 		return nil, err
@@ -143,6 +187,16 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 	return resp, nil
 }
 
+func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64) (*store.UsersData, *store.DataFile, error) {
+
+	// Получение файла из хранилища
+	usersData, data, err := s.StorageData.GetData(ctx, userDataId)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return usersData, data, nil
+}
 func (s *Service) GetListData(ctx context.Context) ([]byte, error) {
 	if err := s.setJwtToken(ctx); err != nil {
 		return nil, err
@@ -155,8 +209,57 @@ func (s *Service) GetListData(ctx context.Context) ([]byte, error) {
 	return resp, nil
 
 }
+func copyFile(src, newPath string, newNameFile string) error {
 
-//// todo обновление только файла
+	if err := os.MkdirAll(newPath, os.ModePerm); err != nil {
+		return err
+	}
+
+	dst := path2.Join(newPath, newNameFile)
+
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// todo обновление только файла
+//func (s *Service) UpdateBinaryFile(ctx context.Context, userDataId int64, name, description string) error {
+//	//if err := s.setJwtToken(ctx); err != nil {
+//	//	return err
+//	//}
+//
+//	return s.StorageData.UpdateDataFile(ctx, userDataId, name, description)
+//}
+
+//func (s *Service) UpdateDataCreditCard(ctx context.Context, userDataId int64, name, description string) error {
+//	if err := s.setJwtToken(ctx); err != nil {
+//		return err
+//	}
+//	return s.StorageData.UpdateDataCreditCard(ctx, userDataId, name, description)
+//}
+
+//func (s *Service) UpdateDataCredentials(ctx context.Context, userDataId int64, name, description string) error {
+//	if err := s.setJwtToken(ctx); err != nil {
+//		return err
+//	}
+//	return s.StorageData.UpdateDataCredentials(ctx, userDataId, name, description)
+//}
+
 //func (s *Service) UpdateDataFile(ctx context.Context, userDataId int64, name, description string) error {
 //	if err := s.setJwtToken(ctx); err != nil {
 //		return err

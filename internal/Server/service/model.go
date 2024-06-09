@@ -1,8 +1,12 @@
 package service
 
+import "time"
+
 type RespData struct {
-	UserDataId int64  `json:"userDataId"`
-	Hash       string `json:"hash"`
+	UserDataId int64      `json:"userDataId"`
+	Hash       string     `json:"hash"`
+	CreatedAt  *time.Time `json:"createdAt"`
+	UpdateAt   *time.Time `json:"updateAt"`
 }
 
 type SaveFile struct {

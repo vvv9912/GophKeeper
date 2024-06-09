@@ -34,13 +34,15 @@ func (s *Service) CreateCredentials(ctx context.Context, userId int64, data []by
 	if err != nil {
 		return nil, err
 	}
-	userDataId, err := s.StoreData.CreateCredentials(ctx, userId, data, name, description, hash)
+	userData, err := s.StoreData.CreateCredentials(ctx, userId, data, name, description, hash)
 	if err != nil {
 		return nil, err
 	}
 	resp := &RespData{
-		UserDataId: userDataId,
+		UserDataId: userData.UserDataId,
 		Hash:       hash,
+		CreatedAt:  userData.CreatedAt,
+		UpdateAt:   userData.UpdateAt,
 	}
 
 	return resp, nil
@@ -52,13 +54,15 @@ func (s *Service) CreateCreditCard(ctx context.Context, userId int64, data []byt
 	if err != nil {
 		return nil, err
 	}
-	userDataId, err := s.StoreData.CreateCreditCard(ctx, userId, data, name, description, hash)
+	userData, err := s.StoreData.CreateCreditCard(ctx, userId, data, name, description, hash)
 	if err != nil {
 		return nil, err
 	}
 	resp := &RespData{
-		UserDataId: userDataId,
+		UserDataId: userData.UserDataId,
 		Hash:       hash,
+		CreatedAt:  userData.CreatedAt,
+		UpdateAt:   userData.UpdateAt,
 	}
 	return resp, nil
 }
@@ -115,13 +119,15 @@ func (s *Service) CreateFileChunks(ctx context.Context, userId int64, tmpFile *T
 	}
 
 	// Сохраняем структуру с описанием файла.
-	userDataId, err := s.StoreData.CreateFileDataChunks(ctx, userId, encryptedData, name, description, hash, metaData)
+	userData, err := s.StoreData.CreateFileDataChunks(ctx, userId, encryptedData, name, description, hash, metaData)
 	if err != nil {
 		return nil, err
 	}
 	resp := &RespData{
-		UserDataId: userDataId,
+		UserDataId: userData.UserDataId,
 		Hash:       hash,
+		CreatedAt:  userData.CreatedAt,
+		UpdateAt:   userData.UpdateAt,
 	}
 	return resp, nil
 
@@ -135,13 +141,16 @@ func (s *Service) CreateFile(ctx context.Context, userId int64, data []byte, nam
 	}
 
 	// Храним путь на файл.
-	userDataId, err := s.StoreData.CreateFileData(ctx, userId, data, name, description, hash)
+	userData, err := s.StoreData.CreateFileData(ctx, userId, data, name, description, hash)
 	if err != nil {
 		return nil, err
 	}
 	resp := &RespData{
-		UserDataId: userDataId,
+
+		UserDataId: userData.UserDataId,
 		Hash:       hash,
+		CreatedAt:  userData.CreatedAt,
+		UpdateAt:   userData.UpdateAt,
 	}
 	return resp, nil
 
@@ -240,8 +249,11 @@ func (s *Service) GetFileChunks(ctx context.Context, userId int64, userDataId in
 		err = customErrors.NewCustomError(nil, http.StatusBadRequest, "RangeMax more than totalSize.")
 		return nil, err
 	}
-
-	return s.getFile(ctx, path.Join(metaData.PathSave, metaData.FileName), rangeMin, rangeMax)
+	data, err := s.getFile(ctx, path.Join(metaData.PathSave, metaData.FileName), rangeMin, rangeMax)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 func (s *Service) getFile(ctx context.Context, pathFile string, byteStart int, byteEnd int) ([]byte, error) {
 	f, err := os.OpenFile(pathFile, os.O_RDONLY, 0644)

@@ -42,19 +42,25 @@ func (db *Database) createUser(ctx context.Context, login, password string) (int
 	return id, nil
 }
 
-func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userId int64, dataId int64, dataType int, name, description, hash string) (int64, error) {
+func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userId int64, dataId int64, dataType int, name, description, hash string) (*store.UsersData, error) {
 
-	query := "INSERT INTO users_data (data_id,user_id, data_type, name, description,hash) VALUES ($1, $2,$3,$4,$5,$6) RETURNING user_data_id"
+	query := "INSERT INTO users_data (data_id,user_id, data_type, name, description,hash) VALUES ($1, $2,$3,$4,$5,$6) RETURNING user_data_id,created_at,update_at"
 
-	var userDataId int64
+	var usersData store.UsersData
 
-	err := db.db.QueryRowContext(ctx, query, dataId, userId, dataType, name, description, hash).Scan(&userDataId)
+	err := db.db.QueryRowContext(ctx, query, dataId, userId, dataType, name, description, hash).Scan(&usersData.UserDataId, &usersData.CreatedAt, &usersData.UpdateAt)
 	if err != nil {
 		logger.Log.Error("Add credentials error", zap.String("name", name), zap.String("description", description), zap.String("hash", hash), zap.Int("data_type", dataType))
-		return 0, err
+		return nil, err
 	}
+	usersData.UserId = userId
+	usersData.DataId = dataId
+	usersData.DataType = dataType
+	usersData.Name = name
+	usersData.Description = description
+	usersData.Hash = hash
 
-	return userDataId, err
+	return &usersData, err
 }
 
 // createData - добавление пользовательских данных.

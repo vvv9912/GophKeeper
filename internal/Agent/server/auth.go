@@ -96,3 +96,24 @@ func (a *AgentServer) SignUp(ctx context.Context, login, password string) (*User
 	return &user, nil
 
 }
+
+func (a *AgentServer) Ping(ctx context.Context) error {
+
+	req := a.client.R()
+
+	resp, err := req.SetContext(ctx).Get(a.host + pathPing)
+	if err != nil {
+		logger.Log.Error("Bad req", zap.Error(err))
+		return err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		var respError RespError
+		err = json.Unmarshal(resp.Body(), &respError)
+		if err != nil {
+			return err
+		}
+		return errors.New(respError.Message)
+	}
+	return nil
+
+}

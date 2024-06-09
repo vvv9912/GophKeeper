@@ -19,6 +19,8 @@ func Initialize(level string) error {
 	cfg := zap.NewProductionConfig()
 	// устанавливаем уровень
 	cfg.Level = lvl
+	cfg.DisableStacktrace = true
+	cfg.DisableCaller = false
 	// создаём логер на основе конфигурации
 	zl, err := cfg.Build()
 	if err != nil {

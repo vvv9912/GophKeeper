@@ -55,12 +55,22 @@ func (c *Cobra) Start() error {
 		Run:     c.GetListData,
 		Aliases: []string{"listdata"},
 	}
+
+	GetData := &cobra.Command{
+		Use:     "getData",
+		Short:   "Get data",
+		Example: "getData",
+		Args:    cobra.MaximumNArgs(1),
+		Run:     c.GetData,
+		Aliases: []string{"getdata"},
+	}
 	//c2 := &command.Command{}
 
 	rootCmd.AddCommand(signIn)
 	rootCmd.AddCommand(signUp)
 	rootCmd.AddCommand(CreateFile)
 	rootCmd.AddCommand(ListData)
+	rootCmd.AddCommand(GetData)
 	//rootCmd.AddCommand(c2)
 	if err := rootCmd.Execute(); err != nil {
 		logger.Log.Error("Root execute err", zap.Error(err))

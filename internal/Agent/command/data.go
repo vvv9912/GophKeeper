@@ -1,10 +1,13 @@
 package command
 
 import (
+	"GophKeeper/pkg/logger"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
+	"strconv"
 	"time"
 )
 
@@ -58,6 +61,25 @@ func (c *Cobra) GetListData(cmd *cobra.Command, args []string) {
 	var out bytes.Buffer
 	err = json.Indent(&out, resp, "", "  ")
 	fmt.Println(out.String())
+}
+
+// Получение списка данных
+func (c *Cobra) GetData(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		fmt.Println("Error: Invalid number of arguments")
+		return
+	}
+	userDataId, err := strconv.Atoi(args[0])
+	if err != nil {
+		logger.Log.Error("Error: Invalid number of arguments", zap.Error(err))
+		return
+	}
+	resp, err := c.s.GetData(cmd.Context(), int64(userDataId))
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(resp))
+
 }
 
 //func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {

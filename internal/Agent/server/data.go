@@ -54,7 +54,7 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 }
 
 // Передача бинарного файла
-func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte, fileName string, uuidChunk string, nStart int, nEnd int, maxSize int, reqData []byte) (string, error) {
+func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte, fileName string, uuidChunk string, nStart int, nEnd int, maxSize int, reqData []byte) (string, *RespData, error) {
 	req := a.client.R()
 
 	var buf bytes.Buffer
@@ -64,14 +64,14 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 	fileWriter, err := writer.CreateFormFile("file", fileName)
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
-		return "", err
+		return "", nil, err
 	}
 
 	// Записываем данные
 	_, err = fileWriter.Write(data)
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
-		return "", err
+		return "", nil, err
 	}
 	req.SetHeaders(map[string]string{
 		"Authorization": "Bearer " + a.JWTToken,
@@ -112,7 +112,7 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
-		return "", err
+		return "", nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
@@ -120,16 +120,25 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 		err = json.Unmarshal(resp.Body(), &respError)
 		if err != nil {
 			logger.Log.Error("Bad resp", zap.Error(err), zap.Int("status_code", resp.StatusCode()))
-			return "", err
+			return "", nil, err
 		}
 
-		return "", errors.New(respError.Message)
+		return "", nil, errors.New(respError.Message)
 
 	}
 
 	uuidChunk = resp.Header().Get("Uuid-chunk")
+	if len(resp.Body()) == 0 {
+		return uuidChunk, nil, nil
+	}
 
-	return uuidChunk, nil
+	var respData RespData
+	err = json.Unmarshal(resp.Body(), &respData)
+	if err != nil {
+		logger.Log.Error("Bad resp", zap.Error(err))
+		return "", nil, err
+	}
+	return uuidChunk, &respData, nil
 }
 
 // Передача любых текстовых данных

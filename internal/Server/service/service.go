@@ -44,10 +44,10 @@ type Data interface {
 
 // StoreData - интерфейс для работы с БД данных пользователя.
 type StoreData interface {
-	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
-	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
-	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
-	CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name, description, hash string, metaData *store.MetaData) (int64, error)
+	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (*store.UsersData, error)
+	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (*store.UsersData, error)
+	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (*store.UsersData, error)
+	CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name, description, hash string, metaData *store.MetaData) (*store.UsersData, error)
 	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error)
 	GetData(ctx context.Context, userId int64, usersDataId int64) (*store.UsersData, *store.DataFile, error)
 	UpdateData(ctx context.Context, updateData *store.UpdateUsersData, data []byte) error

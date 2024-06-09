@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 )
 
 func (s *Service) SignIn(ctx context.Context, username, password string) (string, error) {
@@ -38,4 +39,21 @@ func (s *Service) SignUp(ctx context.Context, username, password string) (string
 	}
 
 	return user.JWT, err
+}
+func (s *Service) setJwtToken(ctx context.Context) error {
+
+	if s.AuthService.GetJWTToken() == "" {
+		jwt, err := s.StorageData.GetJWTToken(ctx)
+		if err != nil {
+			return err
+		}
+		if jwt == "" {
+			fmt.Println("jwt is empty")
+			return fmt.Errorf("jwt is empty")
+		}
+		s.AuthService.SetJWTToken(jwt)
+		fmt.Println("jwt", jwt)
+	}
+
+	return nil
 }

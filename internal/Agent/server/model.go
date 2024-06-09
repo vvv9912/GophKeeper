@@ -1,6 +1,9 @@
 package server
 
-import "GophKeeper/pkg/store"
+import (
+	"GophKeeper/pkg/store"
+	"time"
+)
 
 type Auth struct {
 	Login    string `json:"login" `
@@ -23,8 +26,10 @@ type ReqData struct {
 }
 
 type RespData struct {
-	UserDataId int64  `json:"userDataId"`
-	Hash       string `json:"hash"`
+	UserDataId int64      `json:"userDataId"`
+	Hash       string     `json:"hash"`
+	CreatedAt  *time.Time `json:"createdAt"`
+	UpdateAt   *time.Time `json:"updateAt"`
 }
 
 type DataFileInfo struct {

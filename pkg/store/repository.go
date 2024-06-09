@@ -28,4 +28,6 @@ type DataClient interface {
 	CreateCreditCard(ctx context.Context, data []byte, userDataId int64, name, description, hash string) error
 	GetJWTToken(ctx context.Context) (string, error)
 	SetJWTToken(ctx context.Context, JWTToken string) error
+
+	CreateBinaryFile(ctx context.Context, data []byte, userDataId int64, name, description, hash string, metaData *MetaData) error
 }
