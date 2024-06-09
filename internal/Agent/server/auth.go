@@ -101,19 +101,16 @@ func (a *AgentServer) Ping(ctx context.Context) error {
 
 	req := a.client.R()
 
-	resp, err := req.SetContext(ctx).Get(a.host + pathPing)
+	resp, err := req.SetContext(ctx).Post(a.host + pathPing)
 	if err != nil {
 		logger.Log.Error("Bad req", zap.Error(err))
 		return err
 	}
 	if resp.StatusCode() != http.StatusOK {
-		var respError RespError
-		err = json.Unmarshal(resp.Body(), &respError)
-		if err != nil {
-			return err
-		}
-		return errors.New(respError.Message)
+
+		return errors.New("Server not available")
 	}
+
 	return nil
 
 }

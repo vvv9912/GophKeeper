@@ -22,7 +22,7 @@ func (s *Service) CreateCredentials(ctx context.Context, data *server.ReqData) e
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}
-
+	//todo шифруем data
 	resp, err := s.DataInterface.PostCredentials(ctx, data)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}
-
+	//todo шифруем data
 	r := NewReader(path)
 	n, err := r.NumChunk()
 	if err != nil {
@@ -126,7 +126,7 @@ func (s *Service) CreateFileData(ctx context.Context, data *server.ReqData) erro
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}
-
+	//todo шифруем data
 	resp, err := s.DataInterface.PostCrateFile(ctx, data)
 	if err != nil {
 		return err
@@ -156,7 +156,7 @@ func (s *Service) PingServer(ctx context.Context) bool {
 
 func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error) {
 	if !s.PingServer(ctx) {
-
+		fmt.Println("Сервер недоступен")
 		resp, err := s.GetDataFromAgentStorage(ctx, userDataId)
 		if err != nil {
 			return nil, err
@@ -168,7 +168,7 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 		return nil, err
 	}
 
-	// Проверяем данные Новые ли они
+	// Проверяем Новые ли данные
 	ok, err := s.CheckNewData(ctx, userDataId)
 	if !ok {
 		// Если не новые скачиваем из локального хранилища
@@ -178,6 +178,7 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 		}
 		return resp, err
 	}
+
 	// Получение файла из сервера
 	resp, err := s.DataInterface.GetData(ctx, userDataId)
 	if err != nil {
@@ -207,7 +208,7 @@ func (s *Service) CheckNewData(ctx context.Context, userDataId int64) (bool, err
 
 func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64) ([]byte, error) {
 
-	fmt.Println("Сервер недоступен")
+	fmt.Println("Скачиваем данные из локального хранилища")
 	// Получение файла из хранилища
 	usersData, dataFile, err := s.StorageData.GetData(ctx, userDataId)
 	if err != nil {

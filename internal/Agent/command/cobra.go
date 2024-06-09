@@ -47,6 +47,24 @@ func (c *Cobra) Start() error {
 		Aliases: []string{"createfile"},
 	}
 
+	CreateCredentials := &cobra.Command{
+		Use:     "createCredentials",
+		Short:   "Create credentials",
+		Example: "createCredentials {Name} {Description} {Login} {Password} ",
+		Args:    cobra.MaximumNArgs(4),
+		Run:     c.CreateCredentials,
+		Aliases: []string{"createcredentials"},
+	}
+
+	CreateCreditCard := &cobra.Command{
+		Use:     "createCreditCard",
+		Short:   "Create credit card",
+		Example: "createCreditCard {Name} {Description} {Name} {ExpireAt} {CardNumber} {CVV}",
+		Args:    cobra.MaximumNArgs(6),
+		Run:     c.CreateCreditCard,
+		Aliases: []string{"createcreditcard"},
+	}
+
 	ListData := &cobra.Command{
 		Use:     "listData",
 		Short:   "List data",
@@ -71,6 +89,8 @@ func (c *Cobra) Start() error {
 	rootCmd.AddCommand(CreateFile)
 	rootCmd.AddCommand(ListData)
 	rootCmd.AddCommand(GetData)
+	rootCmd.AddCommand(CreateCredentials)
+	rootCmd.AddCommand(CreateCreditCard)
 	//rootCmd.AddCommand(c2)
 	if err := rootCmd.Execute(); err != nil {
 		logger.Log.Error("Root execute err", zap.Error(err))

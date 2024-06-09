@@ -21,6 +21,8 @@ func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 	mw := middleware.Mw{services.Auth}
 
 	apiR := r.Route("/api", func(r chi.Router) {})
+
+	apiR.Post("/ping", HandlerPing)
 	// /api/signIn
 	apiR.Post("/signIn", h.HandlerSignIn)
 	// /api/signIn
