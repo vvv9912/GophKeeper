@@ -110,14 +110,6 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 		if err != nil {
 			return err
 		}
-		// Шифруем каждый чанк отдельно //todo Сначала зашифровать файл и уже его передавать
-		//g, _ := generateKey()
-		//
-		//encrypt, err := encryptData(data, g)
-		//if err != nil {
-		//	return err
-		//}
-		//_ = encrypt
 
 		maxChunk := r.SizeChunk * (i)
 		if i == n {
@@ -372,6 +364,11 @@ func (s *Service) UpdateData(ctx context.Context, userDataId int64, data []byte)
 		return nil, err
 	}
 	//todo шифруем data
+	data, err := s.Encrypter.Encrypt(data)
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := s.DataInterface.PostUpdateData(ctx, userDataId, data)
 	if err != nil {
 		return nil, err
@@ -390,15 +387,30 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}
-	//todo шифруем data
-	r := NewReader(path)
+	// Создаеим новый шифрованный файл
+	newNameFile := uuid.NewString()
+	err := s.Encrypter.EncryptFile(path, path2.Join(PathTmp, newNameFile))
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		os.Remove(path2.Join(PathTmp, newNameFile))
+	}()
+
+	r := NewReader(path2.Join(PathTmp, newNameFile))
 	n, err := r.NumChunk()
 	if err != nil {
 		return err
 	}
+
+	// Оригинальное название файла
+	_, originalFileName := path2.Split(path)
+
 	var uuidChunk string
 
-	dataInfo := server.DataFileInfo{OriginalFileName: r.NameFile}
+	dataInfo := server.DataFileInfo{OriginalFileName: originalFileName}
+
 	data, err := json.Marshal(dataInfo)
 	if err != nil {
 		logger.Log.Error("Marshal json failed", zap.Error(err))
@@ -406,7 +418,12 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 	}
 
 	reqData := &server.ReqData{
-		Data: data, //todo шифруем data
+		Data: data,
+	}
+
+	// Шифруем данные о файле
+	if err := s.encryptData(reqData); err != nil {
+		return err
 	}
 
 	reqDataJson, err := json.Marshal(reqData)
@@ -422,14 +439,6 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 		if err != nil {
 			return err
 		}
-
-		//g, _ := generateKey()
-		//
-		//encrypt, err := encryptData(data, g)
-		//if err != nil {
-		//	return err
-		//}
-		//_ = encrypt
 
 		maxChunk := r.SizeChunk * (i)
 		if i == n {
