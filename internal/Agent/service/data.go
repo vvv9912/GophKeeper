@@ -16,6 +16,7 @@ import (
 )
 
 var PathStorage = "Agent/storage"
+var PathTmp = "Agent/tmp"
 
 // CreateCredentials - Создание данных логин/пароль
 func (s *Service) CreateCredentials(ctx context.Context, data *server.ReqData) error {
@@ -23,7 +24,11 @@ func (s *Service) CreateCredentials(ctx context.Context, data *server.ReqData) e
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}
-	//todo шифруем data
+
+	if err := s.encryptData(data); err != nil {
+		return err
+	}
+
 	resp, err := s.DataInterface.PostCredentials(ctx, data)
 	if err != nil {
 		return err
@@ -40,17 +45,32 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	}
 	//todo шифруем data
 	// Считывание файла по чанкам
-	r := NewReader(path)
+
+	// Создаеим новый шифрованный файл
+	newNameFile := uuid.NewString()
+	err := s.Encrypter.EncryptFile(path, path2.Join(PathTmp, newNameFile))
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		os.Remove(path2.Join(PathTmp, newNameFile))
+	}()
+
+	r := NewReader(path2.Join(PathTmp, newNameFile))
 	n, err := r.NumChunk()
 	if err != nil {
 		return err
 	}
 
+	// Оригинальное название файла
+	_, originalFileName := path2.Split(path)
+
 	// id - чанка при передачи
 	var uuidChunk string
 
 	// Данные о файле
-	dataInfo := server.DataFileInfo{OriginalFileName: r.NameFile}
+	dataInfo := server.DataFileInfo{OriginalFileName: originalFileName}
 
 	data, err := json.Marshal(dataInfo)
 	if err != nil {
@@ -62,7 +82,12 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	reqData := &server.ReqData{
 		Name:        name,
 		Description: description,
-		Data:        data, //todo шифруем data
+		Data:        data,
+	}
+
+	// Шифруем данные о файле
+	if err := s.encryptData(reqData); err != nil {
+		return err
 	}
 
 	reqDataJson, err := json.Marshal(reqData)
@@ -137,6 +162,27 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 
 	return nil
 }
+func (s *Service) encryptData(reqData *server.ReqData) error {
+
+	// Шифруем данные о файле
+	DataEncrypt, err := s.Encrypter.Encrypt((reqData.Data))
+	if err != nil {
+		return err
+	}
+
+	reqData.Data = DataEncrypt
+
+	return nil
+}
+func (s *Service) decryptData(reqData *server.ReqData) error {
+	DataDecrypt, err := s.Encrypter.Decrypt(reqData.Data)
+	if err != nil {
+		return err
+	}
+
+	reqData.Data = DataDecrypt
+	return nil
+}
 
 // todo :text
 func (s *Service) CreateFileData(ctx context.Context, data *server.ReqData) error {
@@ -156,6 +202,10 @@ func (s *Service) CreateFileData(ctx context.Context, data *server.ReqData) erro
 func (s *Service) CreateCreditCard(ctx context.Context, data *server.ReqData) error {
 
 	if err := s.setJwtToken(ctx); err != nil {
+		return err
+	}
+
+	if err := s.encryptData(data); err != nil {
 		return err
 	}
 
@@ -210,7 +260,12 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 	}
 	fmt.Println(string(resp))
 
-	return resp, nil
+	decrypt, err := s.Encrypter.Decrypt(resp)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(string(decrypt))
+	return decrypt, nil
 }
 
 // CheckNewData - проверка на новые данные
@@ -255,7 +310,11 @@ func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 		return []byte(resp), nil
 	}
 
-	resp := fmt.Sprintf("Данные %s", string(dataFile.EncryptData))
+	decrypt, err := s.Encrypter.Decrypt(dataFile.EncryptData)
+	if err != nil {
+		return nil, err
+	}
+	resp := fmt.Sprintf("Данные %s", string(decrypt))
 
 	return []byte(resp), err
 }

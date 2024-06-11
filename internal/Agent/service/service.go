@@ -1,6 +1,7 @@
 package service
 
 import (
+	"GophKeeper/internal/Agent/Encrypt"
 	"GophKeeper/internal/Agent/server"
 	"GophKeeper/pkg/store"
 	"GophKeeper/pkg/store/sqllite"
@@ -13,7 +14,7 @@ import (
 
 type AgentService interface{}
 
-func NewServiceAgent(db *sqlx.DB) *Service {
+func NewServiceAgent(db *sqlx.DB, key []byte) *Service {
 	//todo config
 	cert1, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")
 	if err != nil {
@@ -29,6 +30,7 @@ func NewServiceAgent(db *sqlx.DB) *Service {
 		AuthService:   serv,
 		DataInterface: serv,
 		StorageData:   sqllite.NewDatabase(db),
+		Encrypter:     Encrypt.NewEncrypt(key),
 	}
 }
 
@@ -68,11 +70,19 @@ type StorageData interface {
 	UpdateDataBinary(ctx context.Context, userDataId int64, data []byte, hash string, updateAt *time.Time, metaData []byte) error
 }
 
+type Encrypter interface {
+	Encrypt(data []byte) ([]byte, error)
+	Decrypt(data []byte) ([]byte, error)
+	EncryptFile(inputFilePath string, outputFilePath string) error
+	DecryptFile(inputFilePath string, outputFilePath string) error
+}
+
 type Service struct {
 	//AgentService
 	AuthService
 	DataInterface
 	StorageData
+	Encrypter
 	//UserId   int64
 	JWTToken string
 }
