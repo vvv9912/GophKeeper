@@ -154,27 +154,6 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 
 	return nil
 }
-func (s *Service) encryptData(reqData *server.ReqData) error {
-
-	// Шифруем данные о файле
-	DataEncrypt, err := s.Encrypter.Encrypt((reqData.Data))
-	if err != nil {
-		return err
-	}
-
-	reqData.Data = DataEncrypt
-
-	return nil
-}
-func (s *Service) decryptData(reqData *server.ReqData) error {
-	DataDecrypt, err := s.Encrypter.Decrypt(reqData.Data)
-	if err != nil {
-		return err
-	}
-
-	reqData.Data = DataDecrypt
-	return nil
-}
 
 // todo :text
 func (s *Service) CreateFileData(ctx context.Context, data *server.ReqData) error {
@@ -327,37 +306,6 @@ func (s *Service) GetListData(ctx context.Context) ([]byte, error) {
 
 }
 
-// copyFile - копирование файла по новому пути и новым именим
-func copyFile(src, newPath string, newNameFile string) error {
-
-	if err := os.MkdirAll(newPath, os.ModePerm); err != nil {
-		return err
-	}
-
-	dst := path2.Join(newPath, newNameFile)
-
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-
-	defer srcFile.Close()
-
-	dstFile, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-
-	defer dstFile.Close()
-
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // UpdateData - обновление данных пользователя (кроме бинарного файла)
 func (s *Service) UpdateData(ctx context.Context, userDataId int64, data []byte) ([]byte, error) {
 	if err := s.setJwtToken(ctx); err != nil {
@@ -480,6 +428,58 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 	}
 	if err := s.StorageData.UpdateDataBinary(ctx, userDataId, data, resp.Hash, resp.UpdateAt, meta); err != nil {
 		logger.Log.Error("CreateBinaryFile failed", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+func (s *Service) encryptData(reqData *server.ReqData) error {
+
+	// Шифруем данные о файле
+	DataEncrypt, err := s.Encrypter.Encrypt((reqData.Data))
+	if err != nil {
+		return err
+	}
+
+	reqData.Data = DataEncrypt
+
+	return nil
+}
+func (s *Service) decryptData(reqData *server.ReqData) error {
+	DataDecrypt, err := s.Encrypter.Decrypt(reqData.Data)
+	if err != nil {
+		return err
+	}
+
+	reqData.Data = DataDecrypt
+	return nil
+}
+
+// copyFile - копирование файла по новому пути и новым именим
+func copyFile(src, newPath string, newNameFile string) error {
+
+	if err := os.MkdirAll(newPath, os.ModePerm); err != nil {
+		return err
+	}
+
+	dst := path2.Join(newPath, newNameFile)
+
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
 		return err
 	}
 
