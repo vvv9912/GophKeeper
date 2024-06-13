@@ -1,12 +1,15 @@
 package Encrypt
 
 import (
+	"GophKeeper/pkg/logger"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"fmt"
+	"go.uber.org/zap"
 	"io"
 	"os"
+	"path"
 )
 
 type Encrypt struct {
@@ -55,7 +58,14 @@ func (e *Encrypt) EncryptFile(inputFilePath string, outputFilePath string) error
 	}
 	defer inputFile.Close()
 
-	outputFile, err := os.Create(outputFilePath)
+	dir := path.Dir(outputFilePath)
+	fmt.Println(dir)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		logger.Log.Error("Error create dir", zap.Error(err))
+		return err
+	}
+
+	outputFile, err := os.OpenFile(outputFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -87,6 +97,10 @@ func (e *Encrypt) DecryptFile(inputFilePath string, outputFilePath string) error
 	}
 	defer inputFile.Close()
 
+	dir, _ := path.Split(outputFilePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
 	outputFile, err := os.Create(outputFilePath)
 	if err != nil {
 		return err

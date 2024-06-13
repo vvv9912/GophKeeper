@@ -39,12 +39,12 @@ func (c *Cobra) Start() error {
 	}
 
 	CreateFile := &cobra.Command{
-		Use:     "createFile",
-		Short:   "Create file",
+		Use:     "createBinaryFile",
+		Short:   "Create binary file",
 		Example: "createFile {Path} {Name} {Description}",
 		Args:    cobra.MaximumNArgs(3),
 		Run:     c.CreateBinaryFile,
-		Aliases: []string{"createfile"},
+		Aliases: []string{"createbinaryfile"},
 	}
 
 	CreateCredentials := &cobra.Command{

@@ -15,8 +15,8 @@ import (
 	path2 "path"
 )
 
-var PathStorage = "Agent/storage"
-var PathTmp = "Agent/tmp"
+var PathStorage = "FileAgent/storage"
+var PathTmp = "FileAgent/tmp"
 
 // CreateCredentials - Создание данных логин/пароль
 func (s *Service) CreateCredentials(ctx context.Context, data *server.ReqData) error {
@@ -46,7 +46,7 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	//todo шифруем data
 	// Считывание файла по чанкам
 
-	// Создаеим новый шифрованный файл
+	// Создаеим новый шифрованный файл в tmp папке
 	newNameFile := uuid.NewString()
 	err := s.Encrypter.EncryptFile(path, path2.Join(PathTmp, newNameFile))
 	if err != nil {
@@ -97,12 +97,8 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	}
 
 	var resp *server.RespData
+	fmt.Println(r.NameFile)
 
-	// Передача файла на сервер
-	uuidChunk, resp, err = s.PostCrateFileStartChunks(ctx, nil, r.NameFile, uuidChunk, 0, r.SizeChunk, int(r.Size()), reqDataJson)
-	if err != nil {
-		return err
-	}
 	// Передача файла на сервер
 	for i := 1; i <= n; i++ {
 		// Считываем файл по чанкам
@@ -126,8 +122,13 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 		ch <- fmt.Sprintf("Передано кБайт %0.1f из %0.1f", float64(maxChunk)/1024.0, float64(r.Size())/1024)
 
 	}
+	if resp == nil {
+		err := fmt.Errorf("resp is nil")
+		logger.Log.Error("resp is nil", zap.Error(err))
+		return err
+	}
 
-	// Копирование к себе в хранилище
+	// Копируем файл в локальное хранилище Агента
 	NewNameFile := uuid.NewString()
 	if err := copyFile(path, PathStorage, NewNameFile); err != nil {
 		logger.Log.Error("copyFile failed", zap.Error(err))
@@ -140,13 +141,7 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 		PathSave: PathStorage,
 	}
 
-	if resp == nil {
-		err := fmt.Errorf("resp is nil")
-		logger.Log.Error("resp is nil", zap.Error(err))
-		return err
-	}
-
-	// Добавляем данные в бд
+	// Сохранение в локальное хранилище
 	if err := s.StorageData.CreateBinaryFile(ctx, data, resp.UserDataId, name, description, resp.Hash, resp.CreatedAt, resp.UpdateAt, metaData); err != nil {
 		logger.Log.Error("CreateBinaryFile failed", zap.Error(err))
 		return err
@@ -221,6 +216,7 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 		if err != nil {
 			return nil, err
 		}
+		// сохраняем файл
 		return resp, err
 	}
 
@@ -275,6 +271,10 @@ func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 		if err != nil {
 			return nil, err
 		}
+		//todo
+		// расшифровываем бинарные файлы
+
+		// Сохраняем файл
 
 		resp := fmt.Sprintf("Файл сохранен %s/%s; Название оригинальное %s", metaData.PathSave, metaData.FileName, string(dataFile.EncryptData))
 
@@ -285,6 +285,7 @@ func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 	if err != nil {
 		return nil, err
 	}
+
 	resp := fmt.Sprintf("Данные %s", string(decrypt))
 
 	return []byte(resp), err
@@ -332,6 +333,7 @@ func (s *Service) UpdateData(ctx context.Context, userDataId int64, data []byte)
 
 // UpdateBinaryFile - обновление данных бинарного формата
 func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId int64, ch chan<- string) error {
+	ctx = context.Background()
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}

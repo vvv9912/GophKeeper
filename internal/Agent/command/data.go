@@ -292,6 +292,7 @@ func (c *Cobra) UpdateBinaryFile(cmd *cobra.Command, args []string) {
 		UserDataId string
 		Path       string
 	)
+
 	fmt.Println(args)
 	if len(args) == 2 {
 		UserDataId = args[0]
@@ -309,6 +310,7 @@ func (c *Cobra) UpdateBinaryFile(cmd *cobra.Command, args []string) {
 					fmt.Println(val)
 				} else {
 					fmt.Println("Канал закрыт")
+					return
 				}
 			}
 		}
