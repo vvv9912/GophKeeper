@@ -38,19 +38,14 @@ func (s *Service) CreateBinaryFile(ctx context.Context, path string, name, descr
 	// Распределение на чанки
 	r := NewReader(pathTmpFile)
 
-	// Количество чанков в файле
-	n, err := r.NumChunk()
-	if err != nil {
-		return err
-	}
-
 	// Подготовка данных для запроса на сервер
 	reqData, reqDataJson, err := s.prepareReqBinaryFile(originalFileName, name, description)
 	if err != nil {
 		return err
 	}
+
 	// Передача на сервер
-	resp, err := s.transferDataBinaryFile(ctx, r, n, reqDataJson, ch)
+	resp, err := s.transferCreateDataBinaryFile(ctx, r, reqDataJson, ch)
 	if err != nil {
 		return err
 	}
@@ -67,18 +62,17 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}
-	// Создаеим новый шифрованный файл
-	newNameFile := uuid.NewString()
-	err := s.Encrypter.EncryptFile(path, path2.Join(PathTmp, newNameFile))
+
+	// Создаем новый шифрованный файл в tmp папке
+	pathTmpFile, err := s.createEncryptedFile(path)
 	if err != nil {
 		return err
 	}
-
 	defer func() {
-		os.Remove(path2.Join(PathTmp, newNameFile))
+		os.Remove(pathTmpFile)
 	}()
 
-	r := NewReader(path2.Join(PathTmp, newNameFile))
+	r := NewReader(pathTmpFile)
 	n, err := r.NumChunk()
 	if err != nil {
 		return err
@@ -214,8 +208,14 @@ func (s *Service) prepareReqBinaryFile(originalFileName string, name, descriptio
 
 }
 
-func (s *Service) transferDataBinaryFile(ctx context.Context, r *Reader, n int, reqDataJson []byte, ch chan<- string) (*server.RespData, error) {
+func (s *Service) transferCreateDataBinaryFile(ctx context.Context, r *Reader, reqDataJson []byte, ch chan<- string) (*server.RespData, error) {
 	var resp *server.RespData
+
+	// Количество чанков в файле
+	n, err := r.NumChunk()
+	if err != nil {
+		return nil, err
+	}
 
 	var uuidChunk string
 	// Передача файла на сервер
