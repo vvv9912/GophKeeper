@@ -20,46 +20,50 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}
-	//todo шифруем data
-	// Считывание файла по чанкам
 
-	// Создаеим новый шифрованный файл в tmp папке
+	// Создаем новый шифрованный файл в tmp папке
+	// Имя нового файла
 	newNameFile := uuid.NewString()
-	err := s.Encrypter.EncryptFile(path, path2.Join(PathTmp, newNameFile))
+	pathTmp := path2.Join(PathTmp, newNameFile)
+	err := s.Encrypter.EncryptFile(path, pathTmp)
 	if err != nil {
 		return err
 	}
 
 	defer func() {
-		os.Remove(path2.Join(PathTmp, newNameFile))
+		os.Remove(pathTmp)
 	}()
 
-	r := NewReader(path2.Join(PathTmp, newNameFile))
+	// Распределение на чанки
+	r := NewReader(pathTmp)
+	// Количество чанков в файле
 	n, err := r.NumChunk()
+
 	if err != nil {
 		return err
 	}
 
-	// Оригинальное название файла
+	// Получаем оригинальное название файла пользователя
 	_, originalFileName := path2.Split(path)
 
 	// id - чанка при передачи
 	var uuidChunk string
 
 	// Данные о файле
-	dataInfo := server.DataFileInfo{OriginalFileName: originalFileName}
+	infoOriginalFile := server.DataFileInfo{OriginalFileName: originalFileName}
 
-	data, err := json.Marshal(dataInfo)
+	// Метаданные оригинального файла
+	dataOriginalFile, err := json.Marshal(infoOriginalFile)
 	if err != nil {
 		logger.Log.Error("Marshal json failed", zap.Error(err))
 		return err
 	}
 
-	// Структура запроса с данными о файле на сервер
+	// Структура запроса с данными о файле на сервере
 	reqData := &server.ReqData{
 		Name:        name,
 		Description: description,
-		Data:        data,
+		Data:        dataOriginalFile,
 	}
 
 	// Шифруем данные о файле
@@ -74,7 +78,6 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	}
 
 	var resp *server.RespData
-	fmt.Println(r.NameFile)
 
 	// Передача файла на сервер
 	for i := 1; i <= n; i++ {
@@ -119,7 +122,7 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	}
 
 	// Сохранение в локальное хранилище
-	if err := s.StorageData.CreateBinaryFile(ctx, data, resp.UserDataId, name, description, resp.Hash, resp.CreatedAt, resp.UpdateAt, metaData); err != nil {
+	if err := s.StorageData.CreateBinaryFile(ctx, dataOriginalFile, resp.UserDataId, name, description, resp.Hash, resp.CreatedAt, resp.UpdateAt, metaData); err != nil {
 		logger.Log.Error("CreateBinaryFile failed", zap.Error(err))
 		return err
 	}
