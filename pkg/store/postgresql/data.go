@@ -21,17 +21,7 @@ func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []
 	}
 
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 
 	dataId, err := db.createData(ctx, tx, data)
@@ -56,17 +46,7 @@ func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []b
 	}
 
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 
 	dataId, err := db.createData(ctx, tx, data)
@@ -91,18 +71,9 @@ func (db *Database) CreateFileDataChunks(ctx context.Context, userId int64, data
 	}
 
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
+
 	m, err := json.Marshal(metaData)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "err json marshal metadata")
@@ -132,17 +103,7 @@ func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byt
 	}
 
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 
 	// возвращаем user_data_id
@@ -227,25 +188,16 @@ func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64
 		return nil, nil, err
 	}
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 
 	usersData, err := db.getDataUserByUserId(ctx, tx, userId, usersDataId)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			err = customErrors.NewCustomError(err, http.StatusNotFound, "get data failed")
 			return nil, nil, err
 		}
+
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")
 		return nil, nil, err
 	}
@@ -266,17 +218,7 @@ func (db *Database) UpdateData(ctx context.Context, userId, userDataId int64, da
 		return nil, err
 	}
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 
 	err = db.updateData(ctx, tx, userId, userDataId, data, hash)
@@ -319,17 +261,7 @@ func (db *Database) UpdateBinaryFile(ctx context.Context, userId int64, userData
 	}
 
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 
 	err = db.updateData(ctx, tx, userId, userDataId, data, hash)
@@ -350,11 +282,27 @@ func (db *Database) UpdateBinaryFile(ctx context.Context, userId int64, userData
 	return usersData, nil
 }
 
-//func (db *Database) RemoveAllData(ctx context.Context, userId int64) error {
-//	err := db.removeAllData(ctx, userId)
-//	if err != nil {
-//		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "remove all data failed")
-//		return err
+//	func (db *Database) RemoveAllData(ctx context.Context, userId int64) error {
+//		err := db.removeAllData(ctx, userId)
+//		if err != nil {
+//			err = customErrors.NewCustomError(err, http.StatusInternalServerError, "remove all data failed")
+//			return err
+//		}
+//		return nil
 //	}
-//	return nil
-//}
+func handleTransaction(tx *sql.Tx, err error) error {
+	if err != nil {
+		newErr := tx.Rollback()
+		if newErr != nil {
+			logger.Log.Error("Error while rollback", zap.Error(newErr))
+			err = errors.Join(err, newErr)
+		}
+	} else {
+		newErr := tx.Commit()
+		if newErr != nil {
+			logger.Log.Error("Error while commit", zap.Error(newErr))
+			err = errors.Join(err, newErr)
+		}
+	}
+	return err
+}

@@ -36,17 +36,7 @@ func (db *Database) CreateBinaryFile(ctx context.Context, data []byte, userDataI
 		return err
 	}
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 
 	m, err := json.Marshal(metaData)
@@ -78,17 +68,7 @@ func (db *Database) CreateFileData(ctx context.Context, data []byte, userDataId 
 	}
 
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
@@ -108,17 +88,7 @@ func (db *Database) CreateCredentials(ctx context.Context, data []byte, userData
 	}
 
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
@@ -189,7 +159,7 @@ func (db *Database) GetMetaData(ctx context.Context, userDataId int64) (*store.M
 func (db *Database) GetInfoData(ctx context.Context, userDataId int64) (*store.UsersData, error) {
 	usersData, err := db.getDataUserByUserId(ctx, userDataId)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			err = customErrors.NewCustomError(err, http.StatusNotFound, "get data failed")
 			return nil, err
 		}
@@ -202,7 +172,7 @@ func (db *Database) GetInfoData(ctx context.Context, userDataId int64) (*store.U
 func (db *Database) GetData(ctx context.Context, usersDataId int64) (*store.UsersData, *store.DataFile, error) {
 	usersData, err := db.getDataUserByUserId(ctx, usersDataId)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			err = customErrors.NewCustomError(err, http.StatusNotFound, "get data failed")
 			return nil, nil, err
 		}
@@ -333,17 +303,7 @@ func (db *Database) UpdateData(ctx context.Context, userDataId int64, data []byt
 	}
 
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 
 	err = db.updateData(ctx, tx, userDataId, data, hash, updateAt)
@@ -359,17 +319,7 @@ func (db *Database) UpdateDataBinary(ctx context.Context, userDataId int64, data
 	}
 
 	defer func() {
-		if err != nil {
-			newErr := tx.Rollback()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		} else {
-			newErr := tx.Commit()
-			if newErr != nil {
-				err = errors.Join(err, newErr)
-			}
-		}
+		err = handleTransaction(tx, err)
 	}()
 
 	err = db.updateData(ctx, tx, userDataId, data, hash, updateAt)
@@ -455,4 +405,20 @@ func (db *Database) updateMetaData(ctx context.Context, tx *sql.Tx, userDataId i
 		return err
 	}
 	return nil
+}
+func handleTransaction(tx *sql.Tx, err error) error {
+	if err != nil {
+		newErr := tx.Rollback()
+		if newErr != nil {
+			logger.Log.Error("Error while rollback", zap.Error(newErr))
+			err = errors.Join(err, newErr)
+		}
+	} else {
+		newErr := tx.Commit()
+		if newErr != nil {
+			logger.Log.Error("Error while commit", zap.Error(newErr))
+			err = errors.Join(err, newErr)
+		}
+	}
+	return err
 }
