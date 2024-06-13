@@ -481,19 +481,3 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, userId int64, userDataId
 	return resp, nil
 
 }
-
-//func (s *Service) createFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
-//	return s.SaveFiles.CreateFile(additionalPath, r)
-//}
-
-//func (s *Service) CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string) (*RespData, error) {
-//	return s.SaveFiles.CreateFileChunks(ctx, userId, tmpFile, name, description)
-//}
-
-//func (s *Service) GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
-//	return s.SaveFiles.GetFileSize(ctx, userId, userDataId)
-//}
-
-//func (s *Service) GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error) {
-//	return s.SaveFiles.GetFileChunks(ctx, userId, userDataId, r)
-//}

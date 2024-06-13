@@ -14,8 +14,8 @@ import (
 	path2 "path"
 )
 
-// CreateFile - создание файла бинарного
-func (s *Service) CreateFile(ctx context.Context, path string, name, description string, ch chan<- string) error {
+// CreateBinaryFile - создание файла бинарного
+func (s *Service) CreateBinaryFile(ctx context.Context, path string, name, description string, ch chan<- string) error {
 	// Получение jwt токена
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
@@ -24,7 +24,9 @@ func (s *Service) CreateFile(ctx context.Context, path string, name, description
 	// Создаем новый шифрованный файл в tmp папке
 	// Имя нового файла
 	newNameFile := uuid.NewString()
+	//Полный путь к новому файлу
 	pathTmp := path2.Join(PathTmp, newNameFile)
+
 	err := s.Encrypter.EncryptFile(path, pathTmp)
 	if err != nil {
 		return err

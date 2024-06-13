@@ -45,7 +45,7 @@ func (c *Cobra) CreateBinaryFile(cmd *cobra.Command, args []string) {
 		}
 	}()
 	defer close(ch)
-	err := c.s.CreateFile(cmd.Context(), Path, Name, Description, ch)
+	err := c.s.CreateBinaryFile(cmd.Context(), Path, Name, Description, ch)
 
 	if err != nil {
 		fmt.Println(err)
