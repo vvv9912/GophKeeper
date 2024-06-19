@@ -2,9 +2,11 @@ package service
 
 import (
 	"GophKeeper/internal/Agent/server"
+	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store/sqllite"
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 )
 
 // CreateCredentials - Создание данных логин/пароль
@@ -70,7 +72,6 @@ func (s *Service) PingServer(ctx context.Context) bool {
 func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error) {
 	// Проверяем доступен ли сервер
 	if !s.PingServer(ctx) {
-		fmt.Println("Сервер недоступен")
 		resp, err := s.GetDataFromAgentStorage(ctx, userDataId)
 		if err != nil {
 			return nil, err
@@ -101,13 +102,15 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(resp))
+
+	logger.Log.Debug("data from server", zap.String("resp", string(resp)))
 
 	decrypt, err := s.Encrypter.Decrypt(resp)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(decrypt))
+
+	logger.Log.Debug("decrypt from server", zap.String("decrypt", string(decrypt)))
 	return decrypt, nil
 }
 
@@ -120,7 +123,7 @@ func (s *Service) CheckNewData(ctx context.Context, userDataId int64) (bool, err
 	}
 
 	// Выставляем токен для будущих запросов
-	if err := s.setJwtToken(ctx); err != nil {
+	if err = s.setJwtToken(ctx); err != nil {
 		return false, err
 	}
 
@@ -133,8 +136,7 @@ func (s *Service) CheckNewData(ctx context.Context, userDataId int64) (bool, err
 
 // GetDataFromAgentStorage - получение данных из хранилища агента
 func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64) ([]byte, error) {
-
-	fmt.Println("Скачиваем данные из локального хранилища")
+	logger.Log.Info("Получаем данные из локального хранилища")
 
 	// Получение файла из хранилища
 	usersData, dataFile, err := s.StorageData.GetData(ctx, userDataId)

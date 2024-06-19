@@ -1,7 +1,6 @@
 package server
 
 import (
-	"crypto/rsa"
 	"crypto/tls"
 	"github.com/go-resty/resty/v2"
 	"log"
@@ -26,31 +25,27 @@ var (
 )
 
 type AgentServer struct {
-	publicKey  *rsa.PublicKey
-	privateKey *rsa.PrivateKey
-	host       string
-	JWTToken   string
-	client     *resty.Client
+	host     string
+	JWTToken string
+	client   *resty.Client
 }
 
-func NewAgentServer(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey, host string) *AgentServer {
+func NewAgentServer(certFile, keyFile string, host string) *AgentServer {
 	client := resty.New()
 
 	//todo config
 	client.SetTLSClientConfig(&tls.Config{
 		InsecureSkipVerify: true,
 	})
-	cert1, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")
+	cert1, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		log.Fatalf("ERROR client certificate: %s", err)
+		log.Panicln("ERROR client certificate: %s", err)
 	}
 
 	client.SetCertificates(cert1)
 
 	return &AgentServer{
-		client:     client,
-		publicKey:  publicKey,
-		privateKey: privateKey,
-		host:       host,
+		client: client,
+		host:   host,
 	}
 }

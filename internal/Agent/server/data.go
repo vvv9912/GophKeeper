@@ -86,7 +86,7 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 
 	var resp *resty.Response
 	if nEnd != maxSize {
-		fmt.Println("чанк")
+		logger.Log.Debug("Первый чанк nEnd != maxSize", zap.Int("nEnd", nEnd), zap.Int("maxSize", maxSize))
 		resp, err = req.SetContext(ctx).SetBody(&buf).SetMultipartFields(
 			&resty.MultipartField{
 				Param:       "file",
@@ -96,7 +96,7 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 		).Post(a.host + pathFileChunks)
 	} else {
 		// Последний чанк, передаем информацию о файле
-		fmt.Println("Последний чанк")
+		logger.Log.Debug("Последний чанк")
 		resp, err = req.SetContext(ctx).SetBody(&buf).SetMultipartFields(
 			&resty.MultipartField{
 				Param:       "file",

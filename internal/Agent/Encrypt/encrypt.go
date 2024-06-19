@@ -59,7 +59,9 @@ func (e *Encrypt) EncryptFile(inputFilePath string, outputFilePath string) error
 	defer inputFile.Close()
 
 	dir := path.Dir(outputFilePath)
-	fmt.Println(dir)
+
+	logger.Log.Debug("dir", zap.String("dir", dir))
+
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		logger.Log.Error("Error create dir", zap.Error(err))
 		return err

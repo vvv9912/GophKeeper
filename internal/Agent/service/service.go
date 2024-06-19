@@ -6,25 +6,15 @@ import (
 	"GophKeeper/pkg/store"
 	"GophKeeper/pkg/store/sqllite"
 	"context"
-	"crypto/rsa"
-	"crypto/tls"
 	"github.com/jmoiron/sqlx"
 	"time"
 )
 
 type AgentService interface{}
 
-func NewServiceAgent(db *sqlx.DB, key []byte) *Service {
-	//todo config
-	cert1, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")
-	if err != nil {
-		panic(err)
-	}
-
-	priv := cert1.PrivateKey.(*rsa.PrivateKey)
-	pub := priv.PublicKey
-
-	serv := server.NewAgentServer(&pub, priv, "https://localhost:8080")
+// "certs/cert.pem", "certs/key.pem"
+func NewServiceAgent(db *sqlx.DB, key []byte, certFile, keyFile string, serverDns string) *Service {
+	serv := server.NewAgentServer(certFile, keyFile, serverDns)
 
 	return &Service{
 		AuthService:   serv,
@@ -39,8 +29,6 @@ type AuthService interface {
 	SignUp(ctx context.Context, login, password string) (*server.User, error)
 	SetJWTToken(token string)
 	GetJWTToken() string
-	GetPublicKey() *rsa.PublicKey
-	GetPrivateKey() *rsa.PrivateKey
 }
 
 type DataInterface interface {

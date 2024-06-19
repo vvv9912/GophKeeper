@@ -6,29 +6,24 @@ import (
 	"GophKeeper/pkg/logger"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"strconv"
-	"time"
 )
 
-//	func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
-//		c.s.AuthService
-//	}
 func (c *Cobra) CreateBinaryFile(cmd *cobra.Command, args []string) {
 	var (
 		Path        string
 		Name        string
 		Description string
 	)
-	fmt.Println(args)
+
 	if len(args) == 3 {
 		Path = args[0]
 		Name = args[1]
 		Description = args[2]
 	} else {
-		fmt.Println("Error: Invalid number of arguments")
+		logger.Log.Error("Error: Invalid number of arguments")
 		return
 	}
 	ch := make(chan string)
@@ -36,11 +31,10 @@ func (c *Cobra) CreateBinaryFile(cmd *cobra.Command, args []string) {
 		{
 			for {
 				val, ok := <-ch
-				if ok {
-					fmt.Println(val)
-				} else {
-					fmt.Println("Канал закрыт")
+				if !ok {
+					return
 				}
+				logger.Log.Info(val)
 			}
 		}
 	}()
@@ -48,10 +42,9 @@ func (c *Cobra) CreateBinaryFile(cmd *cobra.Command, args []string) {
 	err := c.s.CreateBinaryFile(cmd.Context(), Path, Name, Description, ch)
 
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error("CreateBinaryFile failed", zap.Error(err))
 	}
-	//todo waitGroup?
-	time.Sleep(1 * time.Second)
+
 }
 
 func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
@@ -68,7 +61,7 @@ func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
 		Password = args[3]
 
 	} else {
-		fmt.Println("Error: Invalid number of arguments")
+		logger.Log.Error("Error: Invalid number of arguments")
 		return
 	}
 
@@ -91,7 +84,8 @@ func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logger.Log.Error("CreateCredentials failed", zap.Error(err))
 	}
-	fmt.Println("Credentials created successfully")
+
+	logger.Log.Info("CreateCredentials success")
 }
 
 func (c *Cobra) CreateCreditCard(cmd *cobra.Command, args []string) {
@@ -153,9 +147,10 @@ func (c *Cobra) CreateCreditCard(cmd *cobra.Command, args []string) {
 	})
 
 	if err != nil {
-		logger.Log.Error("CreateCreditCatd failed", zap.Error(err))
+		logger.Log.Error("CreateCreditCard failed", zap.Error(err))
 	}
-	fmt.Println("Credit card created successfully")
+
+	logger.Log.Info("CreateCreditCard success")
 }
 
 // Получение списка данных
@@ -163,18 +158,18 @@ func (c *Cobra) GetListData(cmd *cobra.Command, args []string) {
 
 	resp, err := c.s.GetListData(cmd.Context())
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error("GetListData failed", zap.Error(err))
 	}
 
 	var out bytes.Buffer
 	err = json.Indent(&out, resp, "", "  ")
-	fmt.Println(out.String())
+
 }
 
 // Получение списка данных
 func (c *Cobra) GetData(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
-		fmt.Println("Error: Invalid number of arguments")
+		logger.Log.Error("Error: Invalid number of arguments")
 		return
 	}
 	userDataId, err := strconv.Atoi(args[0])
@@ -183,10 +178,12 @@ func (c *Cobra) GetData(cmd *cobra.Command, args []string) {
 		return
 	}
 	resp, err := c.s.GetData(cmd.Context(), int64(userDataId))
+
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error("GetData failed", zap.Error(err))
 	}
-	fmt.Println(string(resp))
+
+	logger.Log.Info(string(resp))
 
 }
 func (c *Cobra) UpdateCredentials(cmd *cobra.Command, args []string) {
@@ -201,7 +198,7 @@ func (c *Cobra) UpdateCredentials(cmd *cobra.Command, args []string) {
 		Password = args[2]
 
 	} else {
-		fmt.Println("Error: Invalid number of arguments")
+		logger.Log.Error("Error: Invalid number of arguments")
 		return
 	}
 
@@ -225,8 +222,8 @@ func (c *Cobra) UpdateCredentials(cmd *cobra.Command, args []string) {
 		logger.Log.Error("CreateCredentials failed", zap.Error(err))
 	}
 
-	fmt.Println(string(resp))
-	fmt.Println("Credentials updated successfully")
+	logger.Log.Info(string(resp))
+	logger.Log.Info("Credentials updated successfully")
 }
 
 func (c *Cobra) UpdateCreditCard(cmd *cobra.Command, args []string) {
@@ -284,8 +281,8 @@ func (c *Cobra) UpdateCreditCard(cmd *cobra.Command, args []string) {
 		logger.Log.Error("CreateCredentials failed", zap.Error(err))
 	}
 
-	fmt.Println(string(resp))
-	fmt.Println("CreditCard update successfully")
+	logger.Log.Info(string(resp))
+	logger.Log.Info("CreditCard updated successfully")
 }
 func (c *Cobra) UpdateBinaryFile(cmd *cobra.Command, args []string) {
 	var (
@@ -293,12 +290,13 @@ func (c *Cobra) UpdateBinaryFile(cmd *cobra.Command, args []string) {
 		Path       string
 	)
 
-	fmt.Println(args)
+	logger.Log.Debug("args", zap.Any("args", args))
+
 	if len(args) == 2 {
 		UserDataId = args[0]
 		Path = args[1]
 	} else {
-		fmt.Println("Error: Invalid number of arguments")
+		logger.Log.Error("Error: Invalid number of arguments")
 		return
 	}
 	ch := make(chan string)
@@ -306,15 +304,14 @@ func (c *Cobra) UpdateBinaryFile(cmd *cobra.Command, args []string) {
 		{
 			for {
 				val, ok := <-ch
-				if ok {
-					fmt.Println(val)
-				} else {
-					fmt.Println("Канал закрыт")
+				if !ok {
 					return
 				}
+				logger.Log.Info(val)
 			}
 		}
 	}()
+
 	defer close(ch)
 	userDataId, err := strconv.Atoi(UserDataId)
 	if err != nil {
@@ -325,28 +322,8 @@ func (c *Cobra) UpdateBinaryFile(cmd *cobra.Command, args []string) {
 	err = c.s.UpdateBinaryFile(cmd.Context(), Path, int64(userDataId), ch)
 
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error("UpdateBinaryFile failed", zap.Error(err))
 	}
 
-	//todo waitGroup?
-	time.Sleep(1 * time.Second)
-	fmt.Println("File updated successfully")
+	logger.Log.Info("BinaryFile updated successfully")
 }
-
-//func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
-//	var (
-//		Name        string
-//		Description string
-//	)
-//	if len(args) == 2 {
-//		Name = args[0]
-//		Description = args[1]
-//	} else {
-//		fmt.Println("Error: Invalid number of arguments")
-//		return
-//	}
-//	err := c.s.CreateCredentials(cmd.Context(), Name, Description)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//}

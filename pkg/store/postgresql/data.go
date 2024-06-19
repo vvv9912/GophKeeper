@@ -137,17 +137,6 @@ func (db *Database) ChangeAllData(ctx context.Context, userId int64, lastTimeUpd
 }
 
 func (db *Database) GetFileSize(ctx context.Context, userId int64, userDataId int64) (int64, error) {
-	//q := `SELECT EXISTS(SELECT 1 FROM users_data WHERE user_id = $1 AND user_data_id = $2)`
-	//
-	//row := db.db.QueryRowContext(ctx, q, userId, userDataId)
-	//var exist bool
-	//if err := row.Scan(&exist); err != nil {
-	//	err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get file size failed, not found userDataId")
-	//	return 0, err
-	//}
-	//if !exist {
-	//	return 0, nil
-	//}
 
 	metaData, err := db.GetMetaData(ctx, userId, userDataId)
 	if err != nil {

@@ -53,13 +53,11 @@ func (s *Service) setJwtToken(ctx context.Context) error {
 		}
 
 		if jwt == "" {
-			fmt.Println("jwt is empty")
 			return fmt.Errorf("jwt is empty")
 		}
 
 		// Выставляем в структуре AuthServer JWT token
 		s.AuthService.SetJWTToken(jwt)
-		fmt.Println("jwt", jwt)
 	}
 
 	return nil
