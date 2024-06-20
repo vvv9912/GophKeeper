@@ -291,7 +291,7 @@ func (c *Cobra) UpdateBinaryFile(cmd *cobra.Command, args []string) {
 	)
 
 	logger.Log.Debug("args", zap.Any("args", args))
-
+	//
 	if len(args) == 2 {
 		UserDataId = args[0]
 		Path = args[1]

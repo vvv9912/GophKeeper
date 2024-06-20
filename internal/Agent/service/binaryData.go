@@ -72,60 +72,21 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 		os.Remove(pathTmpFile)
 	}()
 
-	r := NewReader(pathTmpFile)
-	n, err := r.NumChunk()
-	if err != nil {
-		return err
-	}
-
 	// Оригинальное название файла
 	_, originalFileName := path2.Split(path)
 
-	var uuidChunk string
+	// Распределение на чанки
+	r := NewReader(pathTmpFile)
 
-	dataInfo := server.DataFileInfo{OriginalFileName: originalFileName}
-
-	data, err := json.Marshal(dataInfo)
+	// Подготовка данных для запроса на сервер
+	reqData, reqDataJson, err := s.prepareReqBinaryFile(originalFileName, "", "")
 	if err != nil {
-		logger.Log.Error("Marshal json failed", zap.Error(err))
 		return err
 	}
 
-	reqData := &server.ReqData{
-		Data: data,
-	}
-
-	// Шифруем данные о файле
-	if err := s.encryptData(reqData); err != nil {
-		return err
-	}
-
-	reqDataJson, err := json.Marshal(reqData)
+	resp, err := s.transferUpdateDataBinaryFile(ctx, r, reqDataJson, userDataId, ch)
 	if err != nil {
-		logger.Log.Error("Marshal json failed", zap.Error(err))
 		return err
-	}
-	var resp *server.RespData
-
-	for i := 1; i <= n; i++ {
-
-		data, err := r.ReadFile(i)
-		if err != nil {
-			return err
-		}
-
-		maxChunk := r.SizeChunk * (i)
-		if i == n {
-			maxChunk = int(r.Size())
-		}
-		uuidChunk, resp, err = s.PostUpdateBinaryFile(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson, userDataId)
-		if err != nil {
-			logger.Log.Error("PostCrateFileStartChunks failed", zap.Error(err))
-			return err
-		}
-
-		ch <- fmt.Sprintf("Передано кБайт %0.1f из %0.1f", float64(maxChunk)/1024.0, float64(r.Size())/1024)
-
 	}
 	//todo удаление предыдущего файла
 
@@ -153,7 +114,7 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 		logger.Log.Error("Marshal json failed", zap.Error(err))
 		return err
 	}
-	if err := s.StorageData.UpdateDataBinary(ctx, userDataId, data, resp.Hash, resp.UpdateAt, meta); err != nil {
+	if err := s.StorageData.UpdateDataBinary(ctx, userDataId, reqData.Data, resp.Hash, resp.UpdateAt, meta); err != nil {
 		logger.Log.Error("CreateBinaryFile failed", zap.Error(err))
 		return err
 	}
@@ -232,6 +193,47 @@ func (s *Service) transferCreateDataBinaryFile(ctx context.Context, r *Reader, r
 		}
 
 		uuidChunk, resp, err = s.PostCrateFileStartChunks(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson)
+		if err != nil {
+			logger.Log.Error("PostCrateFileStartChunks failed", zap.Error(err))
+			return nil, err
+		}
+
+		// Вывод полезной информации пользователю
+		ch <- fmt.Sprintf("Передано кБайт %0.1f из %0.1f", float64(maxChunk)/1024.0, float64(r.Size())/1024)
+
+	}
+	if resp == nil {
+		err := fmt.Errorf("resp is nil")
+		logger.Log.Error("resp is nil", zap.Error(err))
+		return nil, err
+	}
+
+	return resp, nil
+}
+func (s *Service) transferUpdateDataBinaryFile(ctx context.Context, r *Reader, reqDataJson []byte, userDataId int64, ch chan<- string) (*server.RespData, error) {
+	var resp *server.RespData
+
+	// Количество чанков в файле
+	n, err := r.NumChunk()
+	if err != nil {
+		return nil, err
+	}
+
+	var uuidChunk string
+	// Передача файла на сервер
+	for i := 1; i <= n; i++ {
+		// Считываем файл по чанкам
+		data, err := r.ReadFile(i)
+		if err != nil {
+			return nil, err
+		}
+
+		maxChunk := r.SizeChunk * (i)
+		if i == n {
+			maxChunk = int(r.Size())
+		}
+
+		uuidChunk, resp, err = s.PostUpdateBinaryFile(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson, userDataId)
 		if err != nil {
 			logger.Log.Error("PostCrateFileStartChunks failed", zap.Error(err))
 			return nil, err
