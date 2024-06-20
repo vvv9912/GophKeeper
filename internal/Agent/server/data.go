@@ -271,7 +271,7 @@ func (a *AgentServer) GetData(ctx context.Context, userDataId int64) ([]byte, er
 		return nil, err
 	}
 
-	if Data.InfoUsersData.DataType == sqllite.TypeFile {
+	if Data.InfoUsersData.DataType == sqllite.TypeBinaryFile {
 		// логика скачивания
 		fileSize, err := a.getFileSize(ctx, Data.InfoUsersData.UserDataId)
 		if err != nil {

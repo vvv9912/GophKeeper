@@ -15,10 +15,11 @@ import (
 	"time"
 )
 
-var (
+const (
 	TypeCredentials    = 1
 	TypeCreditCardData = 2
-	TypeFile           = 3
+	TypeBinaryFile     = 3
+	TypeTxt            = 4
 )
 
 type Database struct {
@@ -51,7 +52,7 @@ func (db *Database) CreateBinaryFile(ctx context.Context, data []byte, userDataI
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
 		return err
 	}
-	err = db.createUserData(ctx, tx, userDataId, dataId, TypeFile, name, description, hash, createdAt, UpdateAt)
+	err = db.createUserData(ctx, tx, userDataId, dataId, TypeBinaryFile, name, description, hash, createdAt, UpdateAt)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
 		return err
@@ -74,12 +75,13 @@ func (db *Database) CreateFileData(ctx context.Context, data []byte, userDataId 
 	if err != nil {
 		return err
 	}
-	err = db.createUserData(ctx, tx, userDataId, dataId, TypeFile, name, description, hash, createdAt, UpdateAt)
+	err = db.createUserData(ctx, tx, userDataId, dataId, TypeBinaryFile, name, description, hash, createdAt, UpdateAt)
 	if err != nil {
 		return err
 	}
 	return nil
 }
+
 func (db *Database) CreateCredentials(ctx context.Context, data []byte, userDataId int64, name, description, hash string, createdAt *time.Time, UpdateAt *time.Time) error {
 	// Получаем userDataId
 	tx, err := db.db.Begin()
@@ -283,7 +285,7 @@ func (db *Database) createBinaryFile(ctx context.Context, tx *sql.Tx, data []byt
 	if err != nil {
 		return err
 	}
-	err = db.createUserData(ctx, tx, userDataId, dataId, TypeFile, name, description, hash, createdAt, updateAt)
+	err = db.createUserData(ctx, tx, userDataId, dataId, TypeBinaryFile, name, description, hash, createdAt, updateAt)
 	if err != nil {
 		return err
 	}

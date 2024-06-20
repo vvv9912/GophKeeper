@@ -151,7 +151,7 @@ func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 		return nil, err
 	}
 
-	if usersData.DataType == sqllite.TypeFile {
+	if usersData.DataType == sqllite.TypeBinaryFile {
 		metaData, err := s.GetMetaData(ctx, userDataId)
 		if err != nil {
 			return nil, err

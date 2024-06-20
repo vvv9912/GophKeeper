@@ -86,7 +86,7 @@ func (db *Database) CreateFileDataChunks(ctx context.Context, userId int64, data
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
 		return nil, err
 	}
-	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
+	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeBinaryFile, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
 		return nil, err
@@ -113,7 +113,7 @@ func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byt
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
 		return nil, err
 	}
-	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeFile, name, description, hash)
+	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeBinaryFile, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
 		return nil, err

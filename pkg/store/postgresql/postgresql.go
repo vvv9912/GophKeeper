@@ -12,11 +12,13 @@ import (
 	"time"
 )
 
-var (
+const (
 	TypeCredentials    = 1
 	TypeCreditCardData = 2
-	TypeFile           = 3
+	TypeBinaryFile     = 3
+	TypeTxt            = 4
 )
+
 var DataType = map[int]string{
 	1: "Credentials",
 	2: "CreditCardData",
