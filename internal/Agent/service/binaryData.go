@@ -88,7 +88,6 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 	if err != nil {
 		return err
 	}
-	//todo удаление предыдущего файла
 
 	// Копирование к себе в хранилище
 	NewNameFile := uuid.NewString()
