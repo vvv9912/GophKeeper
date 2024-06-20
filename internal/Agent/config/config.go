@@ -13,17 +13,22 @@ type Config struct {
 	PathDatabaseFile string `hcl:"pathFileLogger,omitempty" env:"PATH_FILE_LOGGER"`
 	PathTmpStorage   string `hcl:"pathTmpStorage,omitempty" env:"PATH_TMP_STORAGE"`
 	PathLocalStorage string `hcl:"pathLocalStorage,omitempty" env:"PATH_LOCAL_STORAGE"`
+	PathUserData     string `hcl:"pathUserData,omitempty" env:"PATH_USER_DATA"`
 	PathSecretKey    string `hcl:"pathSecretKey" env:"PATH_SECRET_KEY"`
 	LevelLogger      string `hcl:"levelLogger" env:"LEVEL_LOGGER"`
 }
 
 func (c *Config) setDefaultValues() {
-	c.ServerDNS = "default_server_dns"
-	c.PathDatabaseFile = "default_path_database_file"
-	c.PathTmpStorage = "default_path_tmp_storage"
-	c.PathLocalStorage = "default_path_local_storage"
-	c.PathSecretKey = "default_path_secret_key"
+	c.ServerDNS = ":8080"
+	c.CertFile = "agent/cert.pem"
+	c.KeyFile = "agent/key.pem"
+	c.PathDatabaseFile = "clientdb.db"
+	c.PathTmpStorage = "FileAgent/tmp"
+	c.PathLocalStorage = "FileAgent/storage"
+	c.PathUserData = "FileAgent/userData"
+	c.PathSecretKey = "12345678901234567890123456789012"
 	c.LevelLogger = "debug"
+
 }
 
 var (

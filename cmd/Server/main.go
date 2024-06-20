@@ -2,15 +2,17 @@ package main
 
 import (
 	"GophKeeper/internal/Server/app"
-	"os"
+	"context"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
 
-	//goose.Up()
-	Run()
-	app.Run()
-	//service.StartServer(context.Background(), nil,)
-	ch := make(chan os.Signal, 1)
-	<-ch
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	defer cancel()
+
+	app.Run(ctx)
+
+	<-ctx.Done()
 }

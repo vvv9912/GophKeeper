@@ -1,29 +1,27 @@
 package app
 
 import (
+	"GophKeeper/internal/Server/config"
 	"GophKeeper/internal/Server/handler"
 	"GophKeeper/internal/Server/service"
 	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store"
 	"context"
-	"crypto/rsa"
-	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"os"
 )
 
-type App struct {
-	privateKey *rsa.PrivateKey
-	publicKey  *rsa.PublicKey
-}
+func Run(ctx context.Context) error {
 
-func Run() error {
-	fmt.Println(logger.Initialize("info"))
+	if err := config.InitConfig(); err != nil {
+		panic(err)
+	}
+	if err := logger.Initialize(config.Get().LevelLogger); err != nil {
+		panic(err)
+	}
 	logger.Log.Info("start app")
-	ctx := context.Background()
 
-	db, err := sqlx.Open("pgx", "postgres://postgres:postgres@localhost:5434/postgres?sslmode=disable")
+	db, err := sqlx.Open("pgx", config.Get().DatabaseDNS)
 	if err != nil {
 		return err
 	}
@@ -33,40 +31,14 @@ func Run() error {
 		return err
 	}
 
-	secretKey := string([]byte("asdahgf53sk41250"))
-	services, err := service.NewService(db, nil, nil, secretKey)
+	services, err := service.NewService(db, config.Get().SecretKey)
 	if err != nil {
 		return err
 	}
 
 	h := handler.NewHandler(services)
-	cert := "server/cert.pem"
-	key := "server/key.pem"
 
-	addr := ":8080"
-	server := service.StartServer(ctx, h.InitRoutes(services), addr, cert, key)
-	_ = server
+	service.StartServer(ctx, h.InitRoutes(services), config.Get().ServerDNS, config.Get().CertFile, config.Get().KeyFile)
 
-	//todo
-	ch := make(chan os.Signal, 1)
-	<-ch
 	return nil
 }
-
-//	func NewApp(ctx context.Context, connString string) (*App, error) {
-//		conn, err := pgx.Connect(ctx, connString)
-//		if err != nil {
-//			return nil, err
-//		}
-//		_ = conn
-//		return nil, err
-//	}
-//
-// conn, err := pgx.Connect(ctx, "postgres://postgres:postgres@localhost:5434/postgres?sslmode=disable")
-//
-//	if err != nil {
-//		//todo Log
-//		return err
-//	}
-//
-// _ = conn
