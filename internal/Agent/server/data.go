@@ -282,11 +282,10 @@ func (a *AgentServer) GetData(ctx context.Context, userDataId int64) ([]byte, er
 		if err != nil {
 			return nil, err
 		}
-		//todo rename
+
 		return []byte("файл скачен путь: " + pathSaveFile), nil
 	}
 
-	// Готовим ответ todo
 	return Data.EncryptData.EncryptData, nil
 }
 

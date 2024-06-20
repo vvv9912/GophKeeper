@@ -1,10 +1,12 @@
 package service
 
 import (
+	"GophKeeper/internal/Agent/model"
 	"GophKeeper/internal/Agent/server"
 	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store/sqllite"
 	"context"
+	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
 )
@@ -144,12 +146,25 @@ func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 		return nil, err
 	}
 
+	decrypt, err := s.Encrypter.Decrypt(dataFile.EncryptData)
+	if err != nil {
+		return nil, err
+	}
+
 	if usersData.DataType == sqllite.TypeFile {
 		metaData, err := s.GetMetaData(ctx, userDataId)
 		if err != nil {
 			return nil, err
 		}
-		origFileName := string(dataFile.EncryptData)
+
+		var fileData model.Data
+		err = json.Unmarshal(decrypt, &fileData)
+		if err != nil {
+			logger.Log.Error("Unmarshal", zap.Error(err))
+			return nil, err
+		}
+
+		origFileName := string(fileData.DecryptData)
 		origPathSave, err := s.decryptFile(ctx, metaData, origFileName)
 		if err != nil {
 			return nil, err
@@ -158,11 +173,6 @@ func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 		resp := fmt.Sprintf("Файл сохранен %s/%s; Название оригинальное %s", origPathSave, metaData.FileName, string(dataFile.EncryptData))
 
 		return []byte(resp), nil
-	}
-
-	decrypt, err := s.Encrypter.Decrypt(dataFile.EncryptData)
-	if err != nil {
-		return nil, err
 	}
 
 	resp := fmt.Sprintf("Данные %s", string(decrypt))
