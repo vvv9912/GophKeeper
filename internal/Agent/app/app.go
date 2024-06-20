@@ -6,6 +6,7 @@ import (
 	"GophKeeper/internal/Agent/service"
 	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store"
+	"context"
 	"errors"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -13,7 +14,7 @@ import (
 	"os"
 )
 
-func Run() {
+func Run(ctx context.Context) {
 	if err := config.InitConfig(); err != nil {
 		panic(err)
 	}
@@ -39,9 +40,10 @@ func Run() {
 	}
 
 	agent := service.NewServiceAgent(db, key, config.Get().CertFile, config.Get().KeyFile, config.Get().PathDatabaseFile)
+
 	cob := command.NewCobra(agent)
 
-	if err := cob.Start(); err != nil {
+	if err := cob.Start(ctx); err != nil {
 		panic(err)
 	}
 

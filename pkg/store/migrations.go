@@ -23,9 +23,6 @@ func MigratePostgres(db *sqlx.DB) error {
 
 		return fmt.Errorf("postgres migrate up: %w", err)
 	}
-	//if err := db.Close(); err != nil {
-	//	return fmt.Errorf("postgres migrate close: %w", err)
-	//}
 
 	return nil
 }
@@ -39,9 +36,6 @@ func MigrateSQLITE(db *sqlx.DB) error {
 
 		return fmt.Errorf("sqlite migrate up: %w", err)
 	}
-	//if err := db.Close(); err != nil {
-	//	return fmt.Errorf("postgres migrate close: %w", err)
-	//}
 
 	return nil
 }

@@ -3,6 +3,7 @@ package command
 import (
 	"GophKeeper/internal/Agent/service"
 	"GophKeeper/pkg/logger"
+	"context"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -15,7 +16,7 @@ func NewCobra(s *service.Service) *Cobra {
 	return &Cobra{s: s}
 }
 
-func (c *Cobra) Start() error {
+func (c *Cobra) Start(ctx context.Context) error {
 	rootCmd := &cobra.Command{
 		Use:   "myapp",
 		Short: "My Application",
@@ -120,7 +121,7 @@ func (c *Cobra) Start() error {
 	rootCmd.AddCommand(UpdateCredentials)
 	rootCmd.AddCommand(UpdateCreditCard)
 	rootCmd.AddCommand(UpdateBinaryFile)
-	//rootCmd.AddCommand(c2)
+	rootCmd.SetContext(ctx)
 	if err := rootCmd.Execute(); err != nil {
 		logger.Log.Error("Root execute err", zap.Error(err))
 		return err
