@@ -12,8 +12,6 @@ import (
 
 // deferHandler - defer function for get error
 func deferHandler(err error, w http.ResponseWriter) {
-
-	fmt.Println(err)
 	var MyErr *customErrors.CustomError
 	if errors.As(err, &MyErr) {
 

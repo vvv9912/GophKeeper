@@ -146,17 +146,12 @@ func (db *Database) GetFileSize(ctx context.Context, userId int64, userDataId in
 }
 
 func (db *Database) GetMetaData(ctx context.Context, userId, userDataId int64) (*store.MetaData, error) {
-	q1 := `SELECT data_id from users_data where user_id = $1 AND user_data_id = $2`
-	var dataId int64
-	row := db.db.QueryRowContext(ctx, q1, userId, userDataId)
-	if err := row.Scan(&dataId); err != nil {
-		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get file size failed, not found userDataId")
-		return nil, err
-	}
+	query := `SELECT d.meta_data FROM users_data as u
+		JOIN data as d on u.data_id = d.data_id
+		WHERE u.user_data_id = $1 and u.user_id = $2`
 
-	q2 := `SELECT meta_data FROM data WHERE  data_id = $1 `
 	var metaData []byte
-	if err := db.db.QueryRowContext(ctx, q2, dataId).Scan(&metaData); err != nil {
+	if err := db.db.QueryRowContext(ctx, query, userDataId, userId).Scan(&metaData); err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get file size failed")
 		return nil, err
 	}
