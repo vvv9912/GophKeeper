@@ -12,9 +12,10 @@ import (
 	"time"
 )
 
-// Auth - интерфейс аутентификации (расчет токена и получения данных из него).
 //
 //go:generate mockgen -source=service.go -destination=mocks/mock.go
+
+// Auth - интерфейс аутентификации (расчет токена и получения данных из него).
 type Auth interface {
 	BuildJWTString(userId int64) (string, error)
 	GetUserId(tokenString string) (int64, error)
@@ -33,7 +34,6 @@ type Data interface {
 	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
 	ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
 	GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
-	//UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error
 
 	RemoveData(ctx context.Context, userId, userDataId int64) error
 	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
