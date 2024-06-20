@@ -46,11 +46,15 @@ func (c *Cobra) SignUp(cmd *cobra.Command, args []string) {
 }
 
 func auth(args []string) (string, string) {
-	LenLoginMax := 20
-	LenLoginMin := 5
 
-	LenPasswordMax := 20
-	LenPasswordMin := 5
+	// Ограничение по длине символов для логин, пароля
+	const (
+		LenLoginMax = 20
+		LenLoginMin = 5
+
+		LenPasswordMax = 20
+		LenPasswordMin = 5
+	)
 
 	var (
 		Login    string
