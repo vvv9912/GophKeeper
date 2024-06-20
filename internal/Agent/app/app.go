@@ -13,10 +13,7 @@ import (
 	"os"
 )
 
-func Run() error {
-	return nil
-}
-func init() {
+func Run() {
 	if err := config.InitConfig(); err != nil {
 		panic(err)
 	}
@@ -44,7 +41,6 @@ func init() {
 	agent := service.NewServiceAgent(db, key, config.Get().CertFile, config.Get().KeyFile, config.Get().PathDatabaseFile)
 	cob := command.NewCobra(agent)
 
-	//cob.UpdateBinaryFile(&cobra.Command{}, []string{"15", "/home/vlad/Загрузки/FileZilla_3.66.1_x86_64-linux-gnu.tar.xz"})
 	if err := cob.Start(); err != nil {
 		panic(err)
 	}
@@ -53,17 +49,6 @@ func init() {
 
 }
 
-//	func generateKey() []byte {
-//		key := make([]byte, 32)
-//		_, err := rand.Read(key)
-//		if err != nil {
-//			return nil
-//		}
-//		s := string(key)
-//		_ = s
-//		fmt.Println(string(key))
-//		return key
-//	}
 func readKeyFromFile(filePath string) ([]byte, error) {
 	key, err := os.ReadFile(filePath)
 	if err != nil {
