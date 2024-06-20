@@ -97,10 +97,6 @@ func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.D
 	var data store.DataFile
 	err := db.db.QueryRow(query, dataId).Scan(&data.DataId, &data.EncryptData)
 	if err != nil {
-		//if err == sql.ErrNoRows {
-		//	err
-		//}
-		//todo
 		logger.Log.Error("Get data by id", zap.Error(err))
 		return nil, err
 	}
@@ -237,14 +233,9 @@ func (db *Database) updateMetaData(ctx context.Context, tx *sql.Tx, dataId int64
 
 // updateData - обновление пользовательских данных
 func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userId, userDataId int64, data []byte, hash string) error {
-	//todo логика работы с транзакцийе
-	// Блокирующая транзацкция SELECT * FROM table_name WHERE condition FOR UPDATE;
 
 	//// Блокировка таблицы users_data и получение dataid
-	//queryBlock1 := "SELECT data_id FROM users_data WHERE user_id = $1 and user_data_id = $2 FOR UPDATE "
-	//// Блокировка таблицы data
-	//queryBlock2 := "SELECT data_id FROM data WHERE data_id = $1 FOR UPDATE "
-	// Блокировка таблицы users_data и получение dataid
+
 	queryBlock1 := "SELECT data_id FROM users_data WHERE user_id = $1 and user_data_id = $2 FOR UPDATE "
 
 	// Изменение данных в таблице users_data

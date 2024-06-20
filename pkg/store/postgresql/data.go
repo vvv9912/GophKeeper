@@ -266,14 +266,6 @@ func (db *Database) UpdateBinaryFile(ctx context.Context, userId int64, userData
 	return usersData, nil
 }
 
-//	func (db *Database) RemoveAllData(ctx context.Context, userId int64) error {
-//		err := db.removeAllData(ctx, userId)
-//		if err != nil {
-//			err = customErrors.NewCustomError(err, http.StatusInternalServerError, "remove all data failed")
-//			return err
-//		}
-//		return nil
-//	}
 func handleTransaction(tx *sql.Tx, err error) error {
 	if err != nil {
 		newErr := tx.Rollback()

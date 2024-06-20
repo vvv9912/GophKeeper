@@ -56,22 +56,3 @@ func TestInitialize(t *testing.T) {
 		})
 	}
 }
-
-//func TestInitialize(t *testing.T) {
-//	// Проверяем инициализацию синглтона логера
-//	err := Initialize("debug")
-//	if err != nil {
-//		t.Errorf("Unexpected error: %v", err)
-//	}
-//
-//	// Проверяем, что логер был инициализирован
-//	if Log == nil {
-//		t.Error("Log is not initialized")
-//	}
-//
-//	// Проверяем уровень логирования
-//	// Здесь вы можете добавить свою проверку, в зависимости от ожидаемого значения уровня логирования
-//	if Log.Core().Enabled(zap.DebugLevel) {
-//		t.Error("Log level is not set correctly")
-//	}
-//}

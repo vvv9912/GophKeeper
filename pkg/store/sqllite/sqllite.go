@@ -215,10 +215,6 @@ func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.D
 	var data store.DataFile
 	err := db.db.QueryRow(query, dataId).Scan(&data.DataId, &data.EncryptData)
 	if err != nil {
-		//if err == sql.ErrNoRows {
-		//	err
-		//}
-		//todo
 		logger.Log.Error("Get data by id", zap.Error(err))
 		return nil, err
 	}

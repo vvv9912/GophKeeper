@@ -29,7 +29,6 @@ func (db *Database) CreateUser(ctx context.Context, login, password string) (int
 	return id, nil
 }
 
-// todo
 func (db *Database) GetUserId(ctx context.Context, login, password string) (int64, error) {
 	//row := db.db.QueryRowxContext(ctx, "SELECT user_id FROM users WHERE login = $1 AND password = $2", login, password)
 	//var id int64
