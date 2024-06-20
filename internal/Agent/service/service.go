@@ -10,17 +10,21 @@ import (
 	"time"
 )
 
-type AgentService interface{}
-
 // "certs/cert.pem", "certs/key.pem"
 func NewServiceAgent(db *sqlx.DB, key []byte, certFile, keyFile string, serverDns string) *Service {
+
 	serv := server.NewAgentServer(certFile, keyFile, serverDns)
+
+	encrypt, err := Encrypt.NewEncrypt(key)
+	if err != nil {
+		panic(err)
+	}
 
 	return &Service{
 		AuthService:   serv,
 		DataInterface: serv,
 		StorageData:   sqllite.NewDatabase(db),
-		Encrypter:     Encrypt.NewEncrypt(key),
+		Encrypter:     encrypt,
 	}
 }
 

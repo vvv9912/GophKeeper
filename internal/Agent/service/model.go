@@ -7,7 +7,21 @@ type Data struct {
 	EncryptData   *store.DataFile  `json:"encryptData"`
 }
 
-// todo config
-const PathStorage = "FileAgent/storage"
-const PathTmp = "FileAgent/tmp"
-const PathUserData = "FileAgent/userData"
+var PathStorage = "FileAgent/storage"
+var PathTmp = "FileAgent/tmp"
+var PathUserData = "FileAgent/userData"
+
+// NewPath - создание новых путей сохранения данных
+func NewPath(path ...string) {
+	if len(path) >= 1 {
+		PathStorage = path[0]
+	}
+
+	if len(path) >= 2 {
+		PathStorage = path[1]
+	}
+
+	if len(path) >= 3 {
+		PathUserData = path[2]
+	}
+}

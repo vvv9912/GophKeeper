@@ -13,41 +13,51 @@ import (
 )
 
 type Encrypt struct {
-	key []byte
+	block cipher.Block
 }
 
-func NewEncrypt(key []byte) *Encrypt {
-	return &Encrypt{key: key}
+func NewEncrypt(key []byte) (*Encrypt, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		logger.Log.Error("Error new cipher", zap.Error(err))
+		return nil, err
+	}
+
+	return &Encrypt{block: block}, nil
 }
 
 func (e *Encrypt) Encrypt(text []byte) ([]byte, error) {
-	block, err := aes.NewCipher(e.key)
-	if err != nil {
-		return nil, err
-	}
-	b := []byte(text)
-	ciphertext := make([]byte, aes.BlockSize+len(b))
+
+	ciphertext := make([]byte, aes.BlockSize+len(text))
+
 	iv := ciphertext[:aes.BlockSize]
+
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		logger.Log.Error("Error read full", zap.Error(err))
 		return nil, err
 	}
-	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], b)
+
+	stream := cipher.NewCFBEncrypter(e.block, iv)
+
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], text)
+
 	return ciphertext, nil
 
 }
 func (e *Encrypt) Decrypt(ciphertext []byte) ([]byte, error) {
-	block, err := aes.NewCipher(e.key)
-	if err != nil {
-		return nil, err
-	}
+
 	if len(ciphertext) < aes.BlockSize {
+		logger.Log.Error("cipherText too short")
 		return nil, fmt.Errorf("cipherText too short")
 	}
 	iv := ciphertext[:aes.BlockSize]
+
 	ciphertext = ciphertext[aes.BlockSize:]
-	stream := cipher.NewCFBDecrypter(block, iv)
+
+	stream := cipher.NewCFBDecrypter(e.block, iv)
+
 	stream.XORKeyStream(ciphertext, ciphertext)
+
 	return ciphertext, nil
 }
 
@@ -69,24 +79,22 @@ func (e *Encrypt) EncryptFile(inputFilePath string, outputFilePath string) error
 
 	outputFile, err := os.OpenFile(outputFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
+		logger.Log.Error("Error create file", zap.Error(err))
 		return err
 	}
 	defer outputFile.Close()
 
-	block, err := aes.NewCipher(e.key)
-	if err != nil {
-		return err
-	}
-
 	iv := make([]byte, aes.BlockSize)
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		logger.Log.Error("Error read iv", zap.Error(err))
 		return err
 	}
 
-	stream := cipher.NewCFBEncrypter(block, iv)
+	stream := cipher.NewCFBEncrypter(e.block, iv)
 	writer := &cipher.StreamWriter{S: stream, W: outputFile}
 
 	if _, err := io.Copy(writer, inputFile); err != nil {
+		logger.Log.Error("Error copy", zap.Error(err))
 		return err
 	}
 
@@ -101,28 +109,27 @@ func (e *Encrypt) DecryptFile(inputFilePath string, outputFilePath string) error
 
 	dir, _ := path.Split(outputFilePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
+		logger.Log.Error("Error create dir", zap.Error(err))
 		return err
 	}
 	outputFile, err := os.Create(outputFilePath)
 	if err != nil {
+		logger.Log.Error("Error create file", zap.Error(err))
 		return err
 	}
 	defer outputFile.Close()
 
-	block, err := aes.NewCipher(e.key)
-	if err != nil {
-		return err
-	}
-
 	iv := make([]byte, aes.BlockSize)
 	if _, err := inputFile.Read(iv); err != nil {
+		logger.Log.Error("Error read iv", zap.Error(err))
 		return err
 	}
 
-	stream := cipher.NewCFBDecrypter(block, iv)
+	stream := cipher.NewCFBDecrypter(e.block, iv)
 	reader := &cipher.StreamReader{S: stream, R: inputFile}
 
 	if _, err := io.Copy(outputFile, reader); err != nil {
+		logger.Log.Error("Error copy file", zap.Error(err))
 		return err
 	}
 

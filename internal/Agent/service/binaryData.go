@@ -302,3 +302,15 @@ func copyFile(src, newPath string, newNameFile string) error {
 
 	return nil
 }
+
+func (s *Service) decryptFile(ctx context.Context, meta *store.MetaData, originalFileName string) (string, error) {
+
+	saveOrigFile := path2.Join(PathUserData, originalFileName)
+
+	err := s.DecryptFile(meta.PathSave, saveOrigFile)
+	if err != nil {
+		return "", err
+	}
+
+	return saveOrigFile, nil
+}

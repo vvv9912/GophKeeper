@@ -149,12 +149,13 @@ func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 		if err != nil {
 			return nil, err
 		}
-		//todo
-		// расшифровываем бинарные файлы
+		origFileName := string(dataFile.EncryptData)
+		origPathSave, err := s.decryptFile(ctx, metaData, origFileName)
+		if err != nil {
+			return nil, err
+		}
 
-		// Сохраняем файл
-
-		resp := fmt.Sprintf("Файл сохранен %s/%s; Название оригинальное %s", metaData.PathSave, metaData.FileName, string(dataFile.EncryptData))
+		resp := fmt.Sprintf("Файл сохранен %s/%s; Название оригинальное %s", origPathSave, metaData.FileName, string(dataFile.EncryptData))
 
 		return []byte(resp), nil
 	}
