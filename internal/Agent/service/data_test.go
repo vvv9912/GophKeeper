@@ -4,12 +4,165 @@ import (
 	"GophKeeper/internal/Agent/server"
 	mock_service "GophKeeper/internal/Agent/service/mocks"
 	"context"
+	"errors"
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
 
+// mockData := &mock_service.MockStorageData{}
+// mockData.On("CreateCredentials", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+func TestService_CreateCredentials(t *testing.T) {
+	type mockAuth func(s *mock_service.MockAuthService, ctx context.Context)
+	type mockDataI func(s *mock_service.MockDataInterface, ctx context.Context, req *server.ReqData)
+	type mockStorage func(s *mock_service.MockStorageData)
+	type mockEncrypt func(s *mock_service.MockEncrypter, data []byte)
+
+	type args struct {
+		mockAuth    mockAuth
+		mockDataI   mockDataI
+		mockStorage mockStorage
+		mockEncrypt mockEncrypt
+	}
+	tests := []struct {
+		name string
+		//	fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "ok",
+			args: args{
+				mockAuth: func(s *mock_service.MockAuthService, ctx context.Context) {
+					s.EXPECT().GetJWTToken().Return("testToken")
+				},
+				mockDataI: func(s *mock_service.MockDataInterface, ctx context.Context, req *server.ReqData) {
+					s.EXPECT().PostCredentials(gomock.Any(), gomock.Any()).Return(&server.RespData{
+						UserDataId: 1,
+						Hash:       "testHash",
+						CreatedAt:  nil,
+						UpdateAt:   nil,
+					}, nil)
+				},
+				mockStorage: func(s *mock_service.MockStorageData) {
+					s.EXPECT().CreateCredentials(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				},
+				mockEncrypt: func(s *mock_service.MockEncrypter, data []byte) {
+					s.EXPECT().Encrypt(gomock.Any()).Return([]byte("EncryptData"), nil)
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "false err mockDataInterface",
+			args: args{
+				mockAuth: func(s *mock_service.MockAuthService, ctx context.Context) {
+					s.EXPECT().GetJWTToken().Return("testToken")
+				},
+				mockDataI: func(s *mock_service.MockDataInterface, ctx context.Context, req *server.ReqData) {
+					s.EXPECT().PostCredentials(gomock.Any(), gomock.Any()).Return(nil, errors.New("Error custom"))
+				},
+				mockStorage: func(s *mock_service.MockStorageData) {
+				},
+				mockEncrypt: func(s *mock_service.MockEncrypter, data []byte) {
+					s.EXPECT().Encrypt(gomock.Any()).Return([]byte("EncryptData"), nil)
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "false err mockStorage",
+			args: args{
+				mockAuth: func(s *mock_service.MockAuthService, ctx context.Context) {
+					s.EXPECT().GetJWTToken().Return("testToken")
+				},
+				mockDataI: func(s *mock_service.MockDataInterface, ctx context.Context, req *server.ReqData) {
+					s.EXPECT().PostCredentials(gomock.Any(), gomock.Any()).Return(&server.RespData{
+						UserDataId: 1,
+						Hash:       "testHash",
+						CreatedAt:  nil,
+						UpdateAt:   nil,
+					}, nil)
+				},
+				mockStorage: func(s *mock_service.MockStorageData) {
+					s.EXPECT().CreateCredentials(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("Error custom"))
+				},
+				mockEncrypt: func(s *mock_service.MockEncrypter, data []byte) {
+					s.EXPECT().Encrypt(gomock.Any()).Return([]byte("EncryptData"), nil)
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "false err mockEncrypt",
+			args: args{
+				mockAuth: func(s *mock_service.MockAuthService, ctx context.Context) {
+					s.EXPECT().GetJWTToken().Return("testToken")
+				},
+				mockDataI: func(s *mock_service.MockDataInterface, ctx context.Context, req *server.ReqData) {
+					//s.EXPECT().PostCredentials(gomock.Any(), gomock.Any()).Return(nil, errors.New("Error custom"))
+				},
+				mockStorage: func(s *mock_service.MockStorageData) {
+					//s.EXPECT().CreateCredentials(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				},
+				mockEncrypt: func(s *mock_service.MockEncrypter, data []byte) {
+					s.EXPECT().Encrypt(gomock.Any()).Return([]byte("EncryptData"), errors.New("Error custom"))
+				},
+			},
+			wantErr: true,
+		},
+		// TODO: Add test cases.
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			//Авториз
+			mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+			tt.args.mockAuth(mockAuthService, context.TODO())
+			// Шифр
+			mockEncryptSer := mock_service.NewMockEncrypter(ctrl)
+
+			tt.args.mockEncrypt(mockEncryptSer, []byte("testData"))
+
+			//Запрос
+
+			mockPost := mock_service.NewMockDataInterface(ctrl)
+			tt.args.mockDataI(mockPost, context.TODO(), &server.ReqData{
+				Name:        "test",
+				Description: "test description",
+				Data:        []byte("test data"),
+			})
+
+			//storage
+			mockStoragee := mock_service.NewMockStorageData(ctrl)
+			tt.args.mockStorage(mockStoragee)
+
+			ss := &Service{
+				AuthService:   mockAuthService,
+				DataInterface: mockPost,
+				StorageData:   mockStoragee,
+				Encrypter:     mockEncryptSer,
+				JWTToken:      "",
+			}
+
+			reqData := &server.ReqData{
+				Name:        "testName",
+				Description: "testDescr",
+				Data:        []byte("testData"),
+			}
+
+			if err := ss.CreateCredentials(context.TODO(), reqData); (err != nil) != tt.wantErr {
+				t.Errorf("CreateCredentials() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+		})
+	}
+}
 func TestCreateFileData(t *testing.T) {
 
 	// Выставить jwt
