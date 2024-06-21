@@ -5,6 +5,7 @@ import (
 	mock_service "GophKeeper/internal/Agent/service/mocks"
 	"context"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
@@ -73,8 +74,8 @@ func TestCreateFileData(t *testing.T) {
 		Description: "testDescr",
 		Data:        []byte("testData"),
 	}
-	ss.CreateCredentials(context.TODO(), reqData)
-
+	err := ss.CreateCredentials(context.TODO(), reqData)
+	require.NoError(t, err)
 }
 
 func TestService_CreateFileData(t *testing.T) {
@@ -133,8 +134,8 @@ func TestService_CreateFileData(t *testing.T) {
 		Description: "testDescr",
 		Data:        []byte("testData"),
 	}
-	ss.CreateFileData(context.TODO(), reqData)
-
+	err := ss.CreateFileData(context.TODO(), reqData)
+	require.NoError(t, err)
 }
 
 func TestService_CreateCreditCard(t *testing.T) {
@@ -201,5 +202,43 @@ func TestService_CreateCreditCard(t *testing.T) {
 		Description: "testDescr",
 		Data:        []byte("testData"),
 	}
-	ss.CreateCreditCard(context.TODO(), reqData)
+	err := ss.CreateCreditCard(context.TODO(), reqData)
+	require.NoError(t, err)
+}
+
+func TestService_PingServer(t *testing.T) {
+
+	//
+	// Запрос
+	PostD := func(s *mock_service.MockDataInterface) {
+		s.EXPECT().Ping(gomock.Any()).Return(nil)
+	}
+	c := gomock.NewController(t)
+	defer c.Finish()
+	//Запрос
+
+	mockPost := mock_service.NewMockDataInterface(c)
+	PostD(mockPost)
+
+	ss := &Service{
+		AuthService:   nil,
+		DataInterface: mockPost,
+		StorageData:   nil,
+		Encrypter:     nil,
+		JWTToken:      "",
+	}
+
+	err := ss.Ping(context.TODO())
+	require.NoError(t, err)
+}
+
+// server доступенн
+func TestService_GetData(t *testing.T) {
+
+}
+
+// server недоступенн
+
+func TestService_GetData1(t *testing.T) {
+
 }
