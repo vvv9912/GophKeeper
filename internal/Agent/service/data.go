@@ -21,7 +21,6 @@ type UseCase struct {
 	JWTToken string
 }
 
-// "certs/cert.pem", "certs/key.pem"
 func NewUseCase(db *sqlx.DB, key []byte, certFile, keyFile string, serverDns string) *UseCase {
 
 	serv := server.NewAgentServer(certFile, keyFile, serverDns)

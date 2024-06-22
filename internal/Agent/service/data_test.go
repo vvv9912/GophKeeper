@@ -711,6 +711,8 @@ func TestUseCase_GetListData(t *testing.T) {
 	assert.NoError(t, err)
 
 }
+
+// err test
 func TestUpdateData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -749,6 +751,8 @@ func TestUpdateData(t *testing.T) {
 	require.Nil(t, resp)
 	// Assertions for error response
 }
+
+// success test
 func TestUpdateDataSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -764,7 +768,6 @@ func TestUpdateDataSuccess(t *testing.T) {
 
 	expectedResponse := []byte("Data updated")
 
-	// Expected calls
 	mockAuthService.EXPECT().GetJWTToken().Return(";ll;")
 	mockEncrypter.EXPECT().Encrypt(data).Return(data, nil)
 	mockDataInterface.EXPECT().PostUpdateData(ctx, userDataId, data).Return(&server.RespData{}, nil)
@@ -777,12 +780,64 @@ func TestUpdateDataSuccess(t *testing.T) {
 		AuthService:   mockAuthService,
 	}
 
-	// Call the function
 	resp, err := useCase.UpdateData(ctx, userDataId, data)
 
-	// Assertions for successful response
 	require.NoError(t, err)
 	require.Equal(t, resp, expectedResponse)
 
-	// Assertions for error response
+}
+
+func TestEncryptData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockEncrypter.EXPECT().Encrypt(gomock.Any()).Return(nil, fmt.Errorf("error"))
+
+	useCase := &UseCase{
+		Encrypter: mockEncrypter,
+	}
+
+	err := useCase.encryptData(&server.ReqData{})
+
+	require.Error(t, err)
+
+}
+func TestEncryptData2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	e := "encrypt"
+	d := "decrypt"
+
+	r := server.ReqData{Data: []byte(d)}
+
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockEncrypter.EXPECT().Encrypt(gomock.Any()).Return([]byte(e), nil)
+
+	useCase := &UseCase{
+		Encrypter: mockEncrypter,
+	}
+
+	err := useCase.encryptData(&r)
+
+	require.Equal(t, e, string(r.Data))
+	require.NoError(t, err)
+
+}
+func TestDecryptData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(nil, fmt.Errorf("error"))
+
+	useCase := &UseCase{
+		Encrypter: mockEncrypter,
+	}
+
+	err := useCase.decryptData(&server.ReqData{})
+
+	require.Error(t, err)
+
 }
