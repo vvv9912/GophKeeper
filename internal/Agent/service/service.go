@@ -1,30 +1,18 @@
 package service
 
 import (
-	"GophKeeper/internal/Agent/Encrypt"
 	"GophKeeper/internal/Agent/server"
 	"GophKeeper/pkg/store"
-	"GophKeeper/pkg/store/sqllite"
 	"context"
 	"github.com/jmoiron/sqlx"
 	"time"
 )
 
-// "certs/cert.pem", "certs/key.pem"
+//go:generate mockgen -source=service.go -destination=mocks/service.go -package=mocks
 func NewServiceAgent(db *sqlx.DB, key []byte, certFile, keyFile string, serverDns string) *Service {
 
-	serv := server.NewAgentServer(certFile, keyFile, serverDns)
-
-	encrypt, err := Encrypt.NewEncrypt(key)
-	if err != nil {
-		panic(err)
-	}
-
 	return &Service{
-		AuthService:   serv,
-		DataInterface: serv,
-		StorageData:   sqllite.NewDatabase(db),
-		Encrypter:     encrypt,
+		UseCaser: NewUseCase(db, key, certFile, keyFile, serverDns),
 	}
 }
 
@@ -69,12 +57,32 @@ type Encrypter interface {
 	DecryptFile(inputFilePath string, outputFilePath string) error
 }
 
+type UseCaser interface {
+	// CreateCredentials - Создание данных логин/пароль
+	CreateCredentials(ctx context.Context, data *server.ReqData) error
+	// CreateFileData - создание файла
+	CreateFileData(ctx context.Context, data *server.ReqData) error
+	// CreateCreditCard - создание данных о кредитной карте
+	CreateCreditCard(ctx context.Context, data *server.ReqData) error
+	// PingServer - пинг сервера
+	PingServer(ctx context.Context) bool
+	// GetData - получение данных любого формата
+	GetData(ctx context.Context, userDataId int64) ([]byte, error)
+	// CheckNewData - проверка на новые данные
+	CheckNewData(ctx context.Context, userDataId int64) (bool, error)
+	// GetDataFromAgentStorage - получение данных из хранилища агента
+	GetDataFromAgentStorage(ctx context.Context, userDataId int64) ([]byte, error)
+	// GetListData - получение списка актуальных данных пользователя
+	GetListData(ctx context.Context) ([]byte, error)
+	// UpdateData - обновление данных пользователя (кроме бинарного файла)
+	UpdateData(ctx context.Context, userDataId int64, data []byte) ([]byte, error)
+	// CreateBinaryFile - создание файла бинарного
+	CreateBinaryFile(ctx context.Context, path string, name, description string, ch chan<- string) error
+	// UpdateBinaryFile - обновление данных бинарного формата
+	UpdateBinaryFile(ctx context.Context, path string, userDataId int64, ch chan<- string) error
+	SignIn(ctx context.Context, username, password string) (string, error)
+	SignUp(ctx context.Context, username, password string) (string, error)
+}
 type Service struct {
-	//AgentService
-	AuthService
-	DataInterface
-	StorageData
-	Encrypter
-	//UserId   int64
-	JWTToken string
+	UseCaser
 }

@@ -3,10 +3,12 @@ package service
 import (
 	"GophKeeper/internal/Agent/server"
 	mock_service "GophKeeper/internal/Agent/service/mocks"
+	"GophKeeper/pkg/store"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -27,8 +29,7 @@ func TestService_CreateCredentials(t *testing.T) {
 		mockEncrypt mockEncrypt
 	}
 	tests := []struct {
-		name string
-		//	fields  fields
+		name    string
 		args    args
 		wantErr bool
 	}{
@@ -142,7 +143,7 @@ func TestService_CreateCredentials(t *testing.T) {
 			mockStoragee := mock_service.NewMockStorageData(ctrl)
 			tt.args.mockStorage(mockStoragee)
 
-			ss := &Service{
+			ss := &UseCase{
 				AuthService:   mockAuthService,
 				DataInterface: mockPost,
 				StorageData:   mockStoragee,
@@ -214,7 +215,7 @@ func TestCreateFileData(t *testing.T) {
 	mockStorage := mock_service.NewMockStorageData(c)
 	storage(mockStorage, context.TODO(), []byte("EncryptData"), 1, "testName", "testDescr", "testHash", nil, nil)
 
-	ss := &Service{
+	ss := &UseCase{
 		AuthService:   mockAuthService,
 		DataInterface: mockPost,
 		StorageData:   mockStorage,
@@ -274,7 +275,7 @@ func TestService_CreateFileData(t *testing.T) {
 	mockStorage := mock_service.NewMockStorageData(c)
 	storage(mockStorage, context.TODO(), []byte("EncryptData"), 1, "testName", "testDescr", "testHash", nil, nil)
 
-	ss := &Service{
+	ss := &UseCase{
 		AuthService:   mockAuthService,
 		DataInterface: mockPost,
 		StorageData:   mockStorage,
@@ -342,7 +343,7 @@ func TestService_CreateCreditCard(t *testing.T) {
 	mockStorage := mock_service.NewMockStorageData(c)
 	storage(mockStorage, context.TODO(), []byte("EncryptData"), 1, "testName", "testDescr", "testHash", nil, nil)
 
-	ss := &Service{
+	ss := &UseCase{
 		AuthService:   mockAuthService,
 		DataInterface: mockPost,
 		StorageData:   mockStorage,
@@ -373,7 +374,7 @@ func TestService_PingServer(t *testing.T) {
 	mockPost := mock_service.NewMockDataInterface(c)
 	PostD(mockPost)
 
-	ss := &Service{
+	ss := &UseCase{
 		AuthService:   nil,
 		DataInterface: mockPost,
 		StorageData:   nil,
@@ -385,13 +386,338 @@ func TestService_PingServer(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// server доступенн
-func TestService_GetData(t *testing.T) {
+func TestGetData_ServerUnavailable_LocalStorageFails(t *testing.T) {
+	ctx := context.TODO()
+	userDataId := int64(1)
+	c := gomock.NewController(t)
+	defer c.Finish()
+
+	mockAuthService := mock_service.NewMockAuthService(c)
+	mockDataInterface := mock_service.NewMockDataInterface(c)
+	mockStorageData := mock_service.NewMockStorageData(c)
+	mockEncrypter := mock_service.NewMockEncrypter(c)
+
+	mockDataInterface.EXPECT().Ping(ctx).Return(errors.New("server unavailable"))
+	mockStorageData.EXPECT().GetData(ctx, userDataId).Return(nil, nil, errors.New("local storage error"))
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+	s := Service{
+		UseCaser: useCase,
+	}
+
+	result, err := s.GetData(ctx, userDataId)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, "local storage error", err.Error())
+
+}
+func TestGetData_ServerUnavailable_jwtFailed(t *testing.T) {
+	ctx := context.TODO()
+	userDataId := int64(1)
+	c := gomock.NewController(t)
+	defer c.Finish()
+
+	mockAuthService := mock_service.NewMockAuthService(c)
+	mockDataInterface := mock_service.NewMockDataInterface(c)
+	mockStorageData := mock_service.NewMockStorageData(c)
+	mockEncrypter := mock_service.NewMockEncrypter(c)
+
+	mockDataInterface.EXPECT().Ping(ctx).Return(nil)
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+	mockStorageData.EXPECT().GetJWTToken(ctx).Return("", errors.New("jwt failed"))
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+	s := Service{
+		UseCaser: useCase,
+	}
+
+	result, err := s.GetData(ctx, userDataId)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, "jwt failed", err.Error())
 
 }
 
-// server недоступенн
+func TestGetData_ServerFailedCheckNewData(t *testing.T) {
+	ctx := context.TODO()
+	userDataId := int64(1)
+	c := gomock.NewController(t)
+	defer c.Finish()
 
-func TestService_GetData1(t *testing.T) {
+	mockAuthService := mock_service.NewMockAuthService(c)
+	mockDataInterface := mock_service.NewMockDataInterface(c)
+	mockStorageData := mock_service.NewMockStorageData(c)
+	mockEncrypter := mock_service.NewMockEncrypter(c)
 
+	mockDataInterface.EXPECT().Ping(ctx).Return(nil)
+	mockAuthService.EXPECT().GetJWTToken().Return(";ll;")
+	mockStorageData.EXPECT().GetInfoData(ctx, userDataId).Return(nil, errors.New("Failed update"))
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+	s := Service{
+		UseCaser: useCase,
+	}
+
+	result, err := s.GetData(ctx, userDataId)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, "Failed update", err.Error())
+
+}
+func TestGetData_ServerFailedGetDataInt(t *testing.T) {
+	ctx := context.TODO()
+	userDataId := int64(1)
+	ttt := time.Now()
+	c := gomock.NewController(t)
+	defer c.Finish()
+
+	mockAuthService := mock_service.NewMockAuthService(c)
+	mockDataInterface := mock_service.NewMockDataInterface(c)
+	mockStorageData := mock_service.NewMockStorageData(c)
+	mockEncrypter := mock_service.NewMockEncrypter(c)
+
+	mockDataInterface.EXPECT().Ping(ctx).Return(nil)
+	mockAuthService.EXPECT().GetJWTToken().Return(";ll;").AnyTimes()
+	mockStorageData.EXPECT().GetInfoData(ctx, userDataId).Return(&store.UsersData{UpdateAt: &ttt}, nil)
+	mockDataInterface.EXPECT().CheckUpdate(ctx, userDataId, gomock.Any()).Return(true, nil)
+	mockDataInterface.EXPECT().GetData(ctx, userDataId).Return(nil, errors.New("Failed update"))
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+	s := Service{
+		UseCaser: useCase,
+	}
+
+	result, err := s.GetData(ctx, userDataId)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, "Failed update", err.Error())
+
+}
+func TestGetData_ServerFailedDecr(t *testing.T) {
+	ctx := context.TODO()
+	userDataId := int64(1)
+	ttt := time.Now()
+	c := gomock.NewController(t)
+	defer c.Finish()
+
+	mockAuthService := mock_service.NewMockAuthService(c)
+	mockDataInterface := mock_service.NewMockDataInterface(c)
+	mockStorageData := mock_service.NewMockStorageData(c)
+	mockEncrypter := mock_service.NewMockEncrypter(c)
+
+	mockDataInterface.EXPECT().Ping(ctx).Return(nil)
+	mockAuthService.EXPECT().GetJWTToken().Return(";ll;").AnyTimes()
+	mockStorageData.EXPECT().GetInfoData(ctx, userDataId).Return(&store.UsersData{UpdateAt: &ttt}, nil)
+	mockDataInterface.EXPECT().CheckUpdate(ctx, userDataId, gomock.Any()).Return(true, nil)
+	mockDataInterface.EXPECT().GetData(ctx, userDataId).Return([]byte("data"), nil)
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(nil, errors.New("Failed decr"))
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+	s := Service{
+		UseCaser: useCase,
+	}
+
+	result, err := s.GetData(ctx, userDataId)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, "Failed decr", err.Error())
+
+}
+
+func TestCheckNewData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+
+	userDataId := int64(123)
+	ttt := time.Now()
+	ctx := context.TODO()
+
+	mockStorageData.EXPECT().GetInfoData(ctx, userDataId).Return(&store.UsersData{UpdateAt: &ttt}, nil)
+	mockAuthService.EXPECT().GetJWTToken().Return("test JWT token").AnyTimes()
+	mockDataInterface.EXPECT().CheckUpdate(ctx, userDataId, gomock.Any()).Return(true, nil)
+
+	useCase := &UseCase{
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+	}
+
+	ok, err := useCase.CheckNewData(ctx, userDataId)
+
+	assert.NoError(t, err)
+	assert.True(t, ok)
+
+}
+func TestCheckErrNewData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+
+	userDataId := int64(123)
+
+	ctx := context.TODO()
+
+	mockStorageData.EXPECT().GetInfoData(ctx, userDataId).Return(nil, fmt.Errorf("err get info"))
+	//mockAuthService.EXPECT().GetJWTToken().Return("test JWT token").AnyTimes()
+	//mockDataInterface.EXPECT().CheckUpdate(ctx, userDataId, gomock.Any()).Return(true, nil)
+
+	useCase := &UseCase{
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+	}
+
+	ok, err := useCase.CheckNewData(ctx, userDataId)
+
+	assert.Error(t, err)
+	assert.Equal(t, "err get info", err.Error())
+	assert.Equal(t, ok, false)
+
+}
+func TestGetDataFromAgentStorage(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+
+	userDataId := int64(123)
+	ctx := context.TODO()
+
+	// Expected calls
+	mockStorageData.EXPECT().GetData(ctx, userDataId).Return(nil, nil, fmt.Errorf("error getting data"))
+	//mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(nil, fmt.Errorf("error decrypting"))
+	//mockStorageData.EXPECT().GetMetaData(ctx, userDataId).Return(nil, fmt.Errorf("error getting metadata"))
+
+	useCase := &UseCase{
+		StorageData: mockStorageData,
+		Encrypter:   mockEncrypter,
+	}
+
+	_, err := useCase.GetDataFromAgentStorage(ctx, userDataId)
+
+	assert.Error(t, err)
+}
+func TestGetDataFromAgentStorage2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+
+	userDataId := int64(123)
+	ctx := context.TODO()
+
+	mockStorageData.EXPECT().GetData(ctx, userDataId).Return(&store.UsersData{}, &store.DataFile{}, nil)
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(nil, fmt.Errorf("error decrypting"))
+	//mockStorageData.EXPECT().GetMetaData(ctx, userDataId).Return(nil, fmt.Errorf("error getting metadata"))
+
+	useCase := &UseCase{
+		StorageData: mockStorageData,
+		Encrypter:   mockEncrypter,
+	}
+
+	_, err := useCase.GetDataFromAgentStorage(ctx, userDataId)
+
+	assert.Error(t, err)
+}
+func TestGetDataFromAgentStorage3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+
+	userDataId := int64(123)
+	ctx := context.TODO()
+
+	mockStorageData.EXPECT().GetData(ctx, userDataId).Return(&store.UsersData{}, &store.DataFile{}, nil)
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return([]byte("test data"), nil)
+
+	useCase := &UseCase{
+		StorageData: mockStorageData,
+		Encrypter:   mockEncrypter,
+	}
+
+	_, err := useCase.GetDataFromAgentStorage(ctx, userDataId)
+
+	assert.NoError(t, err)
+}
+
+func TestUseCase_GetListData(t *testing.T) {
+	type fields struct {
+		AuthService   AuthService
+		DataInterface DataInterface
+		StorageData   StorageData
+		Encrypter     Encrypter
+		JWTToken      string
+	}
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    []byte
+		wantErr assert.ErrorAssertionFunc
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &UseCase{
+				AuthService:   tt.fields.AuthService,
+				DataInterface: tt.fields.DataInterface,
+				StorageData:   tt.fields.StorageData,
+				Encrypter:     tt.fields.Encrypter,
+				JWTToken:      tt.fields.JWTToken,
+			}
+			got, err := s.GetListData(tt.args.ctx)
+			if !tt.wantErr(t, err, fmt.Sprintf("GetListData(%v)", tt.args.ctx)) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "GetListData(%v)", tt.args.ctx)
+		})
+	}
 }

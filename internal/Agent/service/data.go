@@ -1,6 +1,7 @@
 package service
 
 import (
+	"GophKeeper/internal/Agent/Encrypt"
 	"GophKeeper/internal/Agent/model"
 	"GophKeeper/internal/Agent/server"
 	"GophKeeper/pkg/logger"
@@ -8,11 +9,38 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
 
+type UseCase struct {
+	AuthService
+	DataInterface
+	StorageData
+	Encrypter
+	JWTToken string
+}
+
+// "certs/cert.pem", "certs/key.pem"
+func NewUseCase(db *sqlx.DB, key []byte, certFile, keyFile string, serverDns string) *UseCase {
+
+	serv := server.NewAgentServer(certFile, keyFile, serverDns)
+
+	encrypt, err := Encrypt.NewEncrypt(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return &UseCase{
+		AuthService:   serv,
+		DataInterface: serv,
+		StorageData:   sqllite.NewDatabase(db),
+		Encrypter:     encrypt,
+	}
+}
+
 // CreateCredentials - Создание данных логин/пароль
-func (s *Service) CreateCredentials(ctx context.Context, data *server.ReqData) error {
+func (s *UseCase) CreateCredentials(ctx context.Context, data *server.ReqData) error {
 	// Получение jwt токена
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
@@ -30,8 +58,8 @@ func (s *Service) CreateCredentials(ctx context.Context, data *server.ReqData) e
 	return s.StorageData.CreateCredentials(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash, resp.CreatedAt, resp.UpdateAt)
 }
 
-// todo :text
-func (s *Service) CreateFileData(ctx context.Context, data *server.ReqData) error {
+// CreateFileData - создание файла
+func (s *UseCase) CreateFileData(ctx context.Context, data *server.ReqData) error {
 
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
@@ -45,7 +73,7 @@ func (s *Service) CreateFileData(ctx context.Context, data *server.ReqData) erro
 }
 
 // CreateCreditCard - создание данных о кредитной карте
-func (s *Service) CreateCreditCard(ctx context.Context, data *server.ReqData) error {
+func (s *UseCase) CreateCreditCard(ctx context.Context, data *server.ReqData) error {
 
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
@@ -63,7 +91,7 @@ func (s *Service) CreateCreditCard(ctx context.Context, data *server.ReqData) er
 }
 
 // PingServer - пинг сервера
-func (s *Service) PingServer(ctx context.Context) bool {
+func (s *UseCase) PingServer(ctx context.Context) bool {
 	if err := s.DataInterface.Ping(ctx); err != nil {
 		return false
 	}
@@ -71,7 +99,7 @@ func (s *Service) PingServer(ctx context.Context) bool {
 }
 
 // GetData - получение данных любого формата
-func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error) {
+func (s *UseCase) GetData(ctx context.Context, userDataId int64) ([]byte, error) {
 	// Проверяем доступен ли сервер
 	if !s.PingServer(ctx) {
 		resp, err := s.GetDataFromAgentStorage(ctx, userDataId)
@@ -88,6 +116,9 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 
 	// Проверяем Новые ли данные на сервере
 	ok, err := s.CheckNewData(ctx, userDataId)
+	if err != nil {
+		return nil, err
+	}
 
 	if !ok {
 		// Если не новые скачиваем из локального хранилища
@@ -117,7 +148,7 @@ func (s *Service) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 }
 
 // CheckNewData - проверка на новые данные
-func (s *Service) CheckNewData(ctx context.Context, userDataId int64) (bool, error) {
+func (s *UseCase) CheckNewData(ctx context.Context, userDataId int64) (bool, error) {
 	// Получаем инофрмацию о обновление текущих данных
 	data, err := s.StorageData.GetInfoData(ctx, userDataId)
 	if err != nil {
@@ -137,7 +168,7 @@ func (s *Service) CheckNewData(ctx context.Context, userDataId int64) (bool, err
 }
 
 // GetDataFromAgentStorage - получение данных из хранилища агента
-func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64) ([]byte, error) {
+func (s *UseCase) GetDataFromAgentStorage(ctx context.Context, userDataId int64) ([]byte, error) {
 	logger.Log.Info("Получаем данные из локального хранилища")
 
 	// Получение файла из хранилища
@@ -152,7 +183,7 @@ func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 	}
 
 	if usersData.DataType == sqllite.TypeBinaryFile {
-		metaData, err := s.GetMetaData(ctx, userDataId)
+		metaData, err := s.StorageData.GetMetaData(ctx, userDataId)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +212,7 @@ func (s *Service) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 }
 
 // GetListData - получение списка актуальных данных пользователя
-func (s *Service) GetListData(ctx context.Context) ([]byte, error) {
+func (s *UseCase) GetListData(ctx context.Context) ([]byte, error) {
 
 	if err := s.setJwtToken(ctx); err != nil {
 		return nil, err
@@ -197,7 +228,7 @@ func (s *Service) GetListData(ctx context.Context) ([]byte, error) {
 }
 
 // UpdateData - обновление данных пользователя (кроме бинарного файла)
-func (s *Service) UpdateData(ctx context.Context, userDataId int64, data []byte) ([]byte, error) {
+func (s *UseCase) UpdateData(ctx context.Context, userDataId int64, data []byte) ([]byte, error) {
 	if err := s.setJwtToken(ctx); err != nil {
 		return nil, err
 	}
@@ -219,7 +250,7 @@ func (s *Service) UpdateData(ctx context.Context, userDataId int64, data []byte)
 
 	return []byte("Data updated"), nil
 }
-func (s *Service) encryptData(reqData *server.ReqData) error {
+func (s *UseCase) encryptData(reqData *server.ReqData) error {
 
 	// Шифруем данные о файле
 	DataEncrypt, err := s.Encrypter.Encrypt((reqData.Data))
@@ -231,7 +262,7 @@ func (s *Service) encryptData(reqData *server.ReqData) error {
 
 	return nil
 }
-func (s *Service) decryptData(reqData *server.ReqData) error {
+func (s *UseCase) decryptData(reqData *server.ReqData) error {
 	DataDecrypt, err := s.Encrypter.Decrypt(reqData.Data)
 	if err != nil {
 		return err

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (s *Service) SignIn(ctx context.Context, username, password string) (string, error) {
+func (s *UseCase) SignIn(ctx context.Context, username, password string) (string, error) {
 	user, err := s.AuthService.SignIn(ctx, username, password)
 	if err != nil {
 		return "", err
@@ -23,7 +23,7 @@ func (s *Service) SignIn(ctx context.Context, username, password string) (string
 	return user.JWT, err
 }
 
-func (s *Service) SignUp(ctx context.Context, username, password string) (string, error) {
+func (s *UseCase) SignUp(ctx context.Context, username, password string) (string, error) {
 	user, err := s.AuthService.SignUp(ctx, username, password)
 	if err != nil {
 		return "", err
@@ -42,7 +42,7 @@ func (s *Service) SignUp(ctx context.Context, username, password string) (string
 }
 
 // setJwtToken - выставляем токен для будущих запросов
-func (s *Service) setJwtToken(ctx context.Context) error {
+func (s *UseCase) setJwtToken(ctx context.Context) error {
 	// Проверка на пустой токен
 	if s.AuthService.GetJWTToken() == "" {
 

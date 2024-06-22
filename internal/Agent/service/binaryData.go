@@ -15,7 +15,7 @@ import (
 )
 
 // CreateBinaryFile - создание файла бинарного
-func (s *Service) CreateBinaryFile(ctx context.Context, path string, name, description string, ch chan<- string) error {
+func (s *UseCase) CreateBinaryFile(ctx context.Context, path string, name, description string, ch chan<- string) error {
 	// Получение jwt токена
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
@@ -58,7 +58,7 @@ func (s *Service) CreateBinaryFile(ctx context.Context, path string, name, descr
 }
 
 // UpdateBinaryFile - обновление данных бинарного формата
-func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId int64, ch chan<- string) error {
+func (s *UseCase) UpdateBinaryFile(ctx context.Context, path string, userDataId int64, ch chan<- string) error {
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (s *Service) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 	return nil
 }
 
-func (s *Service) createEncryptedFile(path string) (string, error) {
+func (s *UseCase) createEncryptedFile(path string) (string, error) {
 	// Создаем новый шифрованный файл в tmp папке
 	// Имя нового файла
 	newNameFile := uuid.NewString()
@@ -135,7 +135,7 @@ func (s *Service) createEncryptedFile(path string) (string, error) {
 
 	return pathTmp, nil
 }
-func (s *Service) prepareReqBinaryFile(originalFileName string, name, description string) (*server.ReqData, []byte, error) {
+func (s *UseCase) prepareReqBinaryFile(originalFileName string, name, description string) (*server.ReqData, []byte, error) {
 
 	// Данные о файле
 	infoOriginalFile := server.DataFileInfo{OriginalFileName: originalFileName}
@@ -168,7 +168,7 @@ func (s *Service) prepareReqBinaryFile(originalFileName string, name, descriptio
 
 }
 
-func (s *Service) transferCreateDataBinaryFile(ctx context.Context, r *Reader, reqDataJson []byte, ch chan<- string) (*server.RespData, error) {
+func (s *UseCase) transferCreateDataBinaryFile(ctx context.Context, r *Reader, reqDataJson []byte, ch chan<- string) (*server.RespData, error) {
 	var resp *server.RespData
 
 	// Количество чанков в файле
@@ -209,7 +209,7 @@ func (s *Service) transferCreateDataBinaryFile(ctx context.Context, r *Reader, r
 
 	return resp, nil
 }
-func (s *Service) transferUpdateDataBinaryFile(ctx context.Context, r *Reader, reqDataJson []byte, userDataId int64, ch chan<- string) (*server.RespData, error) {
+func (s *UseCase) transferUpdateDataBinaryFile(ctx context.Context, r *Reader, reqDataJson []byte, userDataId int64, ch chan<- string) (*server.RespData, error) {
 	var resp *server.RespData
 
 	// Количество чанков в файле
@@ -251,7 +251,7 @@ func (s *Service) transferUpdateDataBinaryFile(ctx context.Context, r *Reader, r
 	return resp, nil
 }
 
-func (s *Service) saveLocalFile(ctx context.Context, r *Reader, pathTmpFile, name, description string, reqData *server.ReqData, resp *server.RespData) error {
+func (s *UseCase) saveLocalFile(ctx context.Context, r *Reader, pathTmpFile, name, description string, reqData *server.ReqData, resp *server.RespData) error {
 	// Копируем файл в локальное хранилище Агента
 	NewNameFile := uuid.NewString()
 	if err := copyFile(pathTmpFile, PathStorage, NewNameFile); err != nil {
@@ -304,7 +304,7 @@ func copyFile(src, newPath string, newNameFile string) error {
 	return nil
 }
 
-func (s *Service) decryptFile(ctx context.Context, meta *store.MetaData, originalFileName string) (string, error) {
+func (s *UseCase) decryptFile(ctx context.Context, meta *store.MetaData, originalFileName string) (string, error) {
 
 	saveOrigFile := path2.Join(PathUserData, originalFileName)
 

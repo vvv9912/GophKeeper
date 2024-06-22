@@ -28,7 +28,7 @@ func TestSetJwtToken(t *testing.T) {
 	storage(mockStorage)
 	//
 
-	ss := &Service{
+	ss := &UseCase{
 		AuthService:   mockAuth,
 		DataInterface: nil,
 		StorageData:   mockStorage,
