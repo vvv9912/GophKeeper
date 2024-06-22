@@ -685,39 +685,104 @@ func TestGetDataFromAgentStorage3(t *testing.T) {
 }
 
 func TestUseCase_GetListData(t *testing.T) {
-	type fields struct {
-		AuthService   AuthService
-		DataInterface DataInterface
-		StorageData   StorageData
-		Encrypter     Encrypter
-		JWTToken      string
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+
+	ctx := context.TODO()
+
+	mockAuthService.EXPECT().GetJWTToken().Return(";ll;")
+	mockDataInterface.EXPECT().GetListData(ctx).Return([]byte("test data"), nil)
+
+	useCase := &UseCase{
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
 	}
-	type args struct {
-		ctx context.Context
+
+	d, err := useCase.GetListData(ctx)
+
+	assert.Equal(t, "test data", string(d))
+	assert.NoError(t, err)
+
+}
+func TestUpdateData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	userDataId := int64(123)
+	data := []byte("example data")
+	ctx := context.TODO()
+
+	//expectedResponse := []byte("Data updated")
+	expectedError := errors.New("error message")
+
+	// Expected calls
+	mockAuthService.EXPECT().GetJWTToken().Return(";ll;")
+	mockEncrypter.EXPECT().Encrypt(data).Return(data, nil)
+	mockDataInterface.EXPECT().PostUpdateData(ctx, userDataId, data).Return(nil, expectedError)
+	//mockStorageData.EXPECT().UpdateData(ctx, userDataId, data, gomock.Any(), gomock.Any()).Return(expectedError)
+
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []byte
-		wantErr assert.ErrorAssertionFunc
-	}{
-		// TODO: Add test cases.
+
+	// Call the function
+	resp, err := useCase.UpdateData(ctx, userDataId, data)
+
+	// Assertions for successful response
+	require.Error(t, err)
+	require.Equal(t, err.Error(), expectedError.Error())
+	require.Nil(t, resp)
+	// Assertions for error response
+}
+func TestUpdateDataSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	userDataId := int64(123)
+	data := []byte("example data")
+	ctx := context.TODO()
+
+	expectedResponse := []byte("Data updated")
+
+	// Expected calls
+	mockAuthService.EXPECT().GetJWTToken().Return(";ll;")
+	mockEncrypter.EXPECT().Encrypt(data).Return(data, nil)
+	mockDataInterface.EXPECT().PostUpdateData(ctx, userDataId, data).Return(&server.RespData{}, nil)
+	mockStorageData.EXPECT().UpdateData(ctx, userDataId, data, gomock.Any(), gomock.Any()).Return(nil)
+
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &UseCase{
-				AuthService:   tt.fields.AuthService,
-				DataInterface: tt.fields.DataInterface,
-				StorageData:   tt.fields.StorageData,
-				Encrypter:     tt.fields.Encrypter,
-				JWTToken:      tt.fields.JWTToken,
-			}
-			got, err := s.GetListData(tt.args.ctx)
-			if !tt.wantErr(t, err, fmt.Sprintf("GetListData(%v)", tt.args.ctx)) {
-				return
-			}
-			assert.Equalf(t, tt.want, got, "GetListData(%v)", tt.args.ctx)
-		})
-	}
+
+	// Call the function
+	resp, err := useCase.UpdateData(ctx, userDataId, data)
+
+	// Assertions for successful response
+	require.NoError(t, err)
+	require.Equal(t, resp, expectedResponse)
+
+	// Assertions for error response
 }
