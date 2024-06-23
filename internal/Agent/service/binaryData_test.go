@@ -5,6 +5,7 @@ import (
 	mock_service "GophKeeper/internal/Agent/service/mocks"
 	"GophKeeper/pkg/store"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -778,6 +779,41 @@ func TestUseCase_PrepareReqBinaryFile(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+// json error
+func TestUseCase_PrepareReqBinaryFile2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+
+	useCase := &UseCase{
+		Encrypter: mockEncrypter,
+	}
+
+	originalFileName := "test.txt"
+	name := "Test Name"
+	description := "Test Description"
+
+	//infoOriginalFile := server.DataFileInfo{OriginalFileName: originalFileName}
+	//dataOriginalFile, _ := json.Marshal(infoOriginalFile)
+
+	mockEncrypter.EXPECT().Encrypt(gomock.Any()).Return([]byte("test encrypt"), nil)
+
+	//reqData := &server.ReqData{
+	//	Name:        name,
+	//	Description: description,
+	//	Data:        dataOriginalFile,
+	//}
+
+	//reqDataJson, _ := json.Marshal(reqData)
+
+	_, _, err := useCase.prepareReqBinaryFile(originalFileName, name, description)
+
+	//assert.NotNil(t, resultReqData)
+	//assert.NotNil(t, resultReqDataJson)
+	assert.Nil(t, err)
+}
+
 func Test_copyFile1(t *testing.T) {
 	src := "/tmp/source.txt"
 	newPath := "/tmp/new/"
@@ -815,5 +851,67 @@ func Test_copyFile3(t *testing.T) {
 	require.NoError(t, err)
 
 	err = copyFile(tempFile.Name(), newPath, newNameFile)
+	require.Error(t, err)
+}
+
+func TestPrepareReqBinaryFile_SuccessfullyMarshalsDataFileInfo(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+
+	uc := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	originalFileName := "testfile.txt"
+	name := "Test File"
+	description := "This is a test file"
+	//var a server.ReqData
+	or := server.DataFileInfo{
+		OriginalFileName: originalFileName,
+	}
+
+	orr, err := json.Marshal(or)
+
+	require.NoError(t, err)
+
+	mockEncrypter.EXPECT().Encrypt(gomock.Any()).Return(orr, nil).Times(1)
+
+	reqData, reqDataJson, err := uc.prepareReqBinaryFile(originalFileName, name, description)
+
+	require.NoError(t, err)
+	require.NotNil(t, reqData)
+	require.NotNil(t, reqDataJson)
+
+	var infoOriginalFile server.DataFileInfo
+	err = json.Unmarshal(reqData.Data, &infoOriginalFile)
+	require.NoError(t, err)
+	require.Equal(t, originalFileName, infoOriginalFile.OriginalFileName)
+}
+
+func TestUseCase_saveLocalFile(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+
+	uc := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+	err := uc.saveLocalFile(context.TODO(), nil, "", "", "", nil, nil)
 	require.Error(t, err)
 }

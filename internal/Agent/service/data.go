@@ -159,7 +159,7 @@ func (s *UseCase) CheckNewData(ctx context.Context, userDataId int64) (bool, err
 		return false, err
 	}
 
-	ok, err := s.CheckUpdate(ctx, userDataId, data.UpdateAt)
+	ok, err := s.DataInterface.CheckUpdate(ctx, userDataId, data.UpdateAt)
 	if err != nil {
 		return false, err
 	}

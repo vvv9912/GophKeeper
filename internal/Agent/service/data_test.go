@@ -7,12 +7,20 @@ import (
 	"GophKeeper/pkg/store"
 	"GophKeeper/pkg/store/sqllite"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"github.com/golang/mock/gomock"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"math/big"
+	"os"
 	"testing"
 	"time"
 )
@@ -1066,4 +1074,563 @@ func TestUseCase_GetDataFromAgentStorage6(t *testing.T) {
 	resp, err := useCase.GetDataFromAgentStorage(context.TODO(), int64(1))
 	require.NoError(t, err)
 	require.Equal(t, resp, []byte("Данные {\"decryptData\":\"dGVzdA==\"}"))
+}
+
+func TestNewUseCase(t *testing.T) {
+	db := &sqlx.DB{}
+	key := []byte("shortkey")
+	certFile := "path/to/certFile"
+	keyFile := "path/to/keyFile"
+	serverDns := "example.com"
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic")
+		}
+	}()
+
+	NewUseCase(db, key, certFile, keyFile, serverDns)
+}
+func TestNewUseCase_InvalidCertFiles(t *testing.T) {
+	db := &sqlx.DB{}
+	key := []byte("examplekey123456")
+	certFile := "invalid/path/to/certFile"
+	keyFile := "invalid/path/to/keyFile"
+	serverDns := "example.com"
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic")
+		}
+	}()
+
+	NewUseCase(db, key, certFile, keyFile, serverDns)
+}
+func TestNewUseCase2(t *testing.T) {
+	db := &sqlx.DB{}
+	key := []byte("examplekey123456")
+	certFile := "path/to/certFile"
+	keyFile := "path/to/keyFile"
+	serverDns := "example.com"
+
+	a := func() (string, string, error) {
+		// Генерация закрытого ключа
+		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			return "", "", err
+		}
+
+		// Генерация сертификата
+		template := x509.Certificate{
+			SerialNumber: big.NewInt(1),
+			Subject: pkix.Name{
+				Country:      []string{"US"},
+				Organization: []string{"Example"},
+			},
+			NotBefore:   time.Now(),
+			NotAfter:    time.Now().AddDate(1, 0, 0),
+			KeyUsage:    x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+			ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		}
+
+		certBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
+		if err != nil {
+			return "", "", err
+		}
+
+		// Запись сертификата в файл cert.pem
+		certFile := "cert.pem"
+		certOut, err := os.Create(certFile)
+		if err != nil {
+			return "", "", err
+		}
+		pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
+		certOut.Close()
+
+		// Запись закрытого ключа в файл key.pem
+		keyFile := "key.pem"
+		keyOut, err := os.Create(keyFile)
+		if err != nil {
+			return "", "", err
+		}
+		pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)})
+		keyOut.Close()
+
+		return certFile, keyFile, nil
+
+	}
+	certFile, keyFile, err := a()
+	defer func() {
+		os.Remove(certFile)
+		os.Remove(keyFile)
+	}()
+	require.NoError(t, err)
+	useCase := NewUseCase(db, key, certFile, keyFile, serverDns)
+	require.NotNil(t, useCase)
+}
+func TestNewUseCase3(t *testing.T) {
+
+	key := []byte("examplekey123456")
+	certFile := "path/to/certFile"
+	keyFile := "path/to/keyFile"
+	serverDns := "example.com"
+
+	a := func() (string, string, error) {
+		// Генерация закрытого ключа
+		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			return "", "", err
+		}
+
+		// Генерация сертификата
+		template := x509.Certificate{
+			SerialNumber: big.NewInt(1),
+			Subject: pkix.Name{
+				Country:      []string{"US"},
+				Organization: []string{"Example"},
+			},
+			NotBefore:   time.Now(),
+			NotAfter:    time.Now().AddDate(1, 0, 0),
+			KeyUsage:    x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+			ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		}
+
+		certBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
+		if err != nil {
+			return "", "", err
+		}
+
+		// Запись сертификата в файл cert.pem
+		certFile := "cert.pem"
+		certOut, err := os.Create(certFile)
+		if err != nil {
+			return "", "", err
+		}
+		pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
+		certOut.Close()
+
+		// Запись закрытого ключа в файл key.pem
+		keyFile := "key.pem"
+		keyOut, err := os.Create(keyFile)
+		if err != nil {
+			return "", "", err
+		}
+		pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)})
+		keyOut.Close()
+
+		return certFile, keyFile, nil
+
+	}
+	certFile, keyFile, err := a()
+	defer func() {
+		os.Remove(certFile)
+		os.Remove(keyFile)
+	}()
+	require.NoError(t, err)
+	useCase := NewUseCase(nil, key, certFile, keyFile, serverDns)
+	require.NotNil(t, useCase)
+}
+
+func TestCreateFileData_SuccessfullyEncryptsData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", fmt.Errorf("error"))
+	err := useCase.CreateFileData(context.TODO(), &server.ReqData{})
+	assert.Error(t, err)
+
+}
+
+func TestCreateFileData_SuccessfullyEncryptsData3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", nil)
+	err := useCase.CreateFileData(context.TODO(), &server.ReqData{})
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "jwt is empty")
+
+}
+
+func TestUseCase_CreateCreditCard(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", nil)
+	err := useCase.CreateCreditCard(context.TODO(), &server.ReqData{})
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "jwt is empty")
+}
+func TestUseCase_CreateCreditCard2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", fmt.Errorf("error"))
+	err := useCase.CreateCreditCard(context.TODO(), &server.ReqData{})
+	assert.Error(t, err)
+}
+func TestUseCase_CreateCreditCard3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("tplkemn")
+	mockEncrypter.EXPECT().Encrypt(gomock.Any()).Return([]byte("sss"), fmt.Errorf("error"))
+
+	err := useCase.CreateCreditCard(context.TODO(), &server.ReqData{})
+	assert.Error(t, err)
+}
+
+func TestUseCase_CreateFileData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", fmt.Errorf("error"))
+	err := useCase.CreateFileData(context.TODO(), &server.ReqData{})
+	assert.Error(t, err)
+}
+func TestUseCase_CreateFileData2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", nil)
+	err := useCase.CreateFileData(context.TODO(), &server.ReqData{})
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "jwt is empty")
+}
+
+func TestUseCase_GetData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockDataInterface.EXPECT().Ping(gomock.Any()).Return(nil)
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", nil)
+
+	_, err := useCase.GetData(context.TODO(), int64(1))
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "jwt is empty")
+}
+func TestUseCase_GetData2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockDataInterface.EXPECT().Ping(gomock.Any()).Return(nil)
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", fmt.Errorf("error"))
+
+	_, err := useCase.GetData(context.TODO(), int64(1))
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "error")
+}
+func TestUseCase_GetData3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockDataInterface.EXPECT().Ping(gomock.Any()).Return(nil)
+
+	mockAuthService.EXPECT().GetJWTToken().Return("kk")
+
+	mockStorageData.EXPECT().GetInfoData(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+
+	_, err := useCase.GetData(context.TODO(), int64(1))
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "error")
+}
+func TestUseCase_GetData4(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockDataInterface.EXPECT().Ping(gomock.Any()).Return(nil)
+
+	mockAuthService.EXPECT().GetJWTToken().Return("kk").AnyTimes()
+
+	mockStorageData.EXPECT().GetInfoData(gomock.Any(), gomock.Any()).Return(&store.UsersData{
+		UserDataId:  0,
+		UserId:      0,
+		DataId:      0,
+		DataType:    0,
+		Name:        "",
+		Description: "",
+		Hash:        "",
+		CreatedAt:   nil,
+		UpdateAt:    nil,
+		IsDeleted:   false,
+	}, nil)
+
+	mockDataInterface.EXPECT().CheckUpdate(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("error"))
+
+	_, err := useCase.GetData(context.TODO(), int64(1))
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "error")
+}
+func TestUseCase_GetData5(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockDataInterface.EXPECT().Ping(gomock.Any()).Return(nil)
+
+	mockAuthService.EXPECT().GetJWTToken().Return("kk").AnyTimes()
+
+	mockStorageData.EXPECT().GetInfoData(gomock.Any(), gomock.Any()).Return(&store.UsersData{
+		UserDataId:  0,
+		UserId:      0,
+		DataId:      0,
+		DataType:    0,
+		Name:        "",
+		Description: "",
+		Hash:        "",
+		CreatedAt:   nil,
+		UpdateAt:    nil,
+		IsDeleted:   false,
+	}, nil)
+
+	//false/ok
+	mockDataInterface.EXPECT().CheckUpdate(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
+
+	mockStorageData.EXPECT().GetData(gomock.Any(), gomock.Any()).Return(nil, nil, fmt.Errorf("error"))
+	_, err := useCase.GetData(context.TODO(), int64(1))
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "error")
+}
+
+func TestUseCase_GetListData1(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", fmt.Errorf("error"))
+
+	_, err := useCase.GetListData(context.TODO())
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "error")
+}
+func TestUseCase_GetListData2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", nil)
+
+	_, err := useCase.GetListData(context.TODO())
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "jwt is empty")
+}
+func TestUseCase_GetListData3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("sss")
+
+	mockDataInterface.EXPECT().GetListData(gomock.Any()).Return([]byte("data"), nil)
+
+	resp, err := useCase.GetListData(context.TODO())
+	assert.NoError(t, err)
+	assert.Equal(t, string(resp), "data")
+}
+func TestUseCase_GetListData4(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	useCase := &UseCase{
+		AuthService:   mockAuthService,
+		DataInterface: mockDataInterface,
+		StorageData:   mockStorageData,
+		Encrypter:     mockEncrypter,
+	}
+
+	mockAuthService.EXPECT().GetJWTToken().Return("sss")
+
+	mockDataInterface.EXPECT().GetListData(gomock.Any()).Return([]byte("data"), fmt.Errorf("error"))
+
+	resp, err := useCase.GetListData(context.TODO())
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "error")
+	assert.Nil(t, resp)
 }

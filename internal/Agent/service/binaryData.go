@@ -136,6 +136,7 @@ func (s *UseCase) createEncryptedFile(path string) (string, error) {
 	return pathTmp, nil
 }
 
+// prepareReqBinaryFile - подготовка данных для запроса
 func (s *UseCase) prepareReqBinaryFile(originalFileName string, name, description string) (*server.ReqData, []byte, error) {
 
 	// Данные о файле
