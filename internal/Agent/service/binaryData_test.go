@@ -42,6 +42,62 @@ func TestUseCase_CreateBinaryFile(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "error encrypting file")
 }
+func TestUseCase_CreateBinaryFile7(t *testing.T) {
+	ctx := context.TODO()
+	path := "/tmp/test.txt"
+	name := "test"
+	description := "test"
+	ch := make(chan string)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", nil)
+
+	//mockEncrypter.EXPECT().EncryptFile(gomock.Any(), gomock.Any()).Return(fmt.Errorf("error encrypting file"))
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	err := useCase.CreateBinaryFile(ctx, path, name, description, ch)
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "jwt is empty")
+}
+func TestUseCase_CreateBinaryFile8(t *testing.T) {
+	ctx := context.TODO()
+	path := "/tmp/test.txt"
+	name := "test"
+	description := "test"
+	ch := make(chan string)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", fmt.Errorf("error get jwt token"))
+
+	//mockEncrypter.EXPECT().EncryptFile(gomock.Any(), gomock.Any()).Return(fmt.Errorf("error encrypting file"))
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	err := useCase.CreateBinaryFile(ctx, path, name, description, ch)
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "error get jwt token")
+}
 func TestUseCase_CreateBinaryFile2(t *testing.T) {
 	ctx := context.TODO()
 	path := "/tmp/test.txt"
@@ -297,6 +353,61 @@ func TestUseCase_UpdateBinaryFile(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "error encrypting file")
 }
+func TestUseCase_UpdateBinaryFile8(t *testing.T) {
+	ctx := context.TODO()
+	path := "/tmp/test.txt"
+	userDataId := int64(1)
+
+	ch := make(chan string)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", fmt.Errorf("error get jwt token"))
+
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	err := useCase.UpdateBinaryFile(ctx, path, userDataId, ch)
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "error get jwt token")
+}
+func TestUseCase_UpdateBinaryFile7(t *testing.T) {
+	ctx := context.TODO()
+	path := "/tmp/test.txt"
+	userDataId := int64(1)
+
+	ch := make(chan string)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockAuthService.EXPECT().GetJWTToken().Return("")
+	mockStorageData.EXPECT().GetJWTToken(gomock.Any()).Return("", nil)
+
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	err := useCase.UpdateBinaryFile(ctx, path, userDataId, ch)
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "jwt is empty")
+}
+
 func TestUseCase_UpdateBinaryFile2(t *testing.T) {
 	ctx := context.TODO()
 	path := "/tmp/test.txt"
@@ -313,6 +424,7 @@ func TestUseCase_UpdateBinaryFile2(t *testing.T) {
 	mockAuthService.EXPECT().GetJWTToken().Return(";ll;")
 	mockEncrypter.EXPECT().EncryptFile(gomock.Any(), gomock.Any()).Return(nil)
 	mockEncrypter.EXPECT().Encrypt(gomock.Any()).Return(nil, fmt.Errorf("error encrypting"))
+
 	useCase := &UseCase{
 		DataInterface: mockDataInterface,
 		Encrypter:     mockEncrypter,
