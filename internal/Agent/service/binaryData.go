@@ -135,6 +135,7 @@ func (s *UseCase) createEncryptedFile(path string) (string, error) {
 
 	return pathTmp, nil
 }
+
 func (s *UseCase) prepareReqBinaryFile(originalFileName string, name, description string) (*server.ReqData, []byte, error) {
 
 	// Данные о файле
@@ -191,7 +192,7 @@ func (s *UseCase) transferCreateDataBinaryFile(ctx context.Context, r *Reader, r
 			maxChunk = int(r.Size())
 		}
 
-		uuidChunk, resp, err = s.PostCrateFileStartChunks(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson)
+		uuidChunk, resp, err = s.DataInterface.PostCrateFileStartChunks(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson)
 		if err != nil {
 			logger.Log.Error("PostCrateFileStartChunks failed", zap.Error(err))
 			return nil, err
@@ -232,7 +233,7 @@ func (s *UseCase) transferUpdateDataBinaryFile(ctx context.Context, r *Reader, r
 			maxChunk = int(r.Size())
 		}
 
-		uuidChunk, resp, err = s.PostUpdateBinaryFile(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson, userDataId)
+		uuidChunk, resp, err = s.DataInterface.PostUpdateBinaryFile(ctx, data, r.NameFile, uuidChunk, int(r.SizeChunk)*(i-1), maxChunk, int(r.Size()), reqDataJson, userDataId)
 		if err != nil {
 			logger.Log.Error("PostCrateFileStartChunks failed", zap.Error(err))
 			return nil, err

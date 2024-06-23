@@ -841,3 +841,44 @@ func TestDecryptData(t *testing.T) {
 	require.Error(t, err)
 
 }
+
+func TestUseCase_encryptData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	//mockAuthService.EXPECT().GetJWTToken().Return(";ll;")
+	mockEncrypter.EXPECT().Encrypt(gomock.Any()).Return(nil, fmt.Errorf("error encrypting file"))
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	err := useCase.encryptData(&server.ReqData{})
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "error encrypting file")
+}
+func TestUseCase_decryptData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	//mockAuthService.EXPECT().GetJWTToken().Return(";ll;")
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(nil, fmt.Errorf("error encrypting file"))
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	err := useCase.decryptData(&server.ReqData{})
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "error encrypting file")
+}
