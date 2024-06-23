@@ -777,3 +777,43 @@ func TestUseCase_PrepareReqBinaryFile(t *testing.T) {
 	//assert.NotNil(t, resultReqDataJson)
 	assert.Nil(t, err)
 }
+
+func Test_copyFile1(t *testing.T) {
+	src := "/tmp/source.txt"
+	newPath := "/tmp/new/"
+	newNameFile := "new_file.txt"
+
+	// Create a temporary source file for testing
+	err := copyFile(src, newPath, newNameFile)
+	require.Error(t, err)
+}
+func Test_copyFile2(t *testing.T) {
+	src := ""
+	newPath := ""
+	newNameFile := ""
+
+	// Create a temporary source file for testing
+	err := copyFile(src, newPath, newNameFile)
+	require.Error(t, err)
+}
+func Test_copyFile3(t *testing.T) {
+
+	newPath := "/tmp/new/"
+	newNameFile := "new_file/fff/ss/ss.txt"
+
+	// Create a temporary source file for testing
+	tempFile, err := ioutil.TempFile("", "source.txt")
+	require.NoError(t, err)
+	defer os.Remove(tempFile.Name())
+
+	// Write some data to the temporary source file
+	testData := []byte("Hello, World!")
+	_, err = tempFile.Write(testData)
+	require.NoError(t, err)
+
+	err = tempFile.Close()
+	require.NoError(t, err)
+
+	err = copyFile(tempFile.Name(), newPath, newNameFile)
+	require.Error(t, err)
+}

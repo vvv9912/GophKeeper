@@ -33,10 +33,10 @@ type AgentServer struct {
 func NewAgentServer(certFile, keyFile string, host string) *AgentServer {
 	client := resty.New()
 
-	//todo config
 	client.SetTLSClientConfig(&tls.Config{
 		InsecureSkipVerify: true,
 	})
+
 	cert1, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		log.Panicln("ERROR client certificate: %s", err)

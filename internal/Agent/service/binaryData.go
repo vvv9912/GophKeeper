@@ -309,7 +309,7 @@ func (s *UseCase) decryptFile(ctx context.Context, meta *store.MetaData, origina
 
 	saveOrigFile := path2.Join(PathUserData, originalFileName)
 
-	err := s.DecryptFile(meta.PathSave, saveOrigFile)
+	err := s.Encrypter.DecryptFile(meta.PathSave, saveOrigFile)
 	if err != nil {
 		return "", err
 	}

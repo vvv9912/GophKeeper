@@ -18,7 +18,7 @@ func NewPath(path ...string) {
 	}
 
 	if len(path) >= 2 {
-		PathStorage = path[1]
+		PathTmp = path[1]
 	}
 
 	if len(path) >= 3 {

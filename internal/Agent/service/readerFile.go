@@ -65,18 +65,6 @@ func (r *Reader) ReadFile(numChunk int) ([]byte, error) {
 
 	return data, nil
 }
-func (r *Reader) CloseFile() error {
-	return r.f.Close()
-}
-
-func (r *Reader) Name() string {
-	return r.Path
-}
-
-func (r *Reader) Description() string {
-	return ""
-}
-
 func (r *Reader) Size() int64 {
 	return r.size
 }

@@ -1,10 +1,13 @@
 package service
 
 import (
+	"GophKeeper/internal/Agent/model"
 	"GophKeeper/internal/Agent/server"
 	mock_service "GophKeeper/internal/Agent/service/mocks"
 	"GophKeeper/pkg/store"
+	"GophKeeper/pkg/store/sqllite"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/golang/mock/gomock"
@@ -841,6 +844,28 @@ func TestDecryptData(t *testing.T) {
 	require.Error(t, err)
 
 }
+func TestDecryptData2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	e := "encrypt"
+	d := "decrypt"
+
+	r := server.ReqData{Data: []byte(d)}
+
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return([]byte(e), nil)
+
+	useCase := &UseCase{
+		Encrypter: mockEncrypter,
+	}
+
+	err := useCase.decryptData(&r)
+
+	require.Equal(t, e, string(r.Data))
+	require.NoError(t, err)
+
+}
 
 func TestUseCase_encryptData(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -881,4 +906,164 @@ func TestUseCase_decryptData(t *testing.T) {
 	err := useCase.decryptData(&server.ReqData{})
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "error encrypting file")
+}
+
+func TestUseCase_GetDataFromAgentStorage(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockStorageData.EXPECT().GetData(gomock.Any(), gomock.Any()).Return(nil, nil, fmt.Errorf("error get Data"))
+
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	_, err := useCase.GetDataFromAgentStorage(context.TODO(), int64(1))
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "error get Data")
+}
+func TestUseCase_GetDataFromAgentStorage2(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockStorageData.EXPECT().GetData(gomock.Any(), gomock.Any()).Return(&store.UsersData{}, &store.DataFile{}, nil)
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(nil, fmt.Errorf("error get crypted data"))
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	_, err := useCase.GetDataFromAgentStorage(context.TODO(), int64(1))
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "error get crypted data")
+}
+func TestUseCase_GetDataFromAgentStorage3(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockStorageData.EXPECT().GetData(gomock.Any(), gomock.Any()).Return(&store.UsersData{
+		DataType: sqllite.TypeBinaryFile,
+	}, &store.DataFile{}, nil)
+
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(nil, nil)
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	mockStorageData.EXPECT().GetMetaData(gomock.Any(), gomock.Any()).Return(&store.MetaData{}, fmt.Errorf("error get meta data"))
+	_, err := useCase.GetDataFromAgentStorage(context.TODO(), int64(1))
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "error get meta data")
+}
+func TestUseCase_GetDataFromAgentStorage4(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockStorageData.EXPECT().GetData(gomock.Any(), gomock.Any()).Return(&store.UsersData{
+		DataType: sqllite.TypeBinaryFile,
+	}, &store.DataFile{}, nil)
+
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(nil, nil)
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	mockStorageData.EXPECT().GetMetaData(gomock.Any(), gomock.Any()).Return(&store.MetaData{}, nil)
+
+	_, err := useCase.GetDataFromAgentStorage(context.TODO(), int64(1))
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "unexpected end of JSON input")
+}
+func TestUseCase_GetDataFromAgentStorage5(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockStorageData.EXPECT().GetData(gomock.Any(), gomock.Any()).Return(&store.UsersData{
+		DataType: sqllite.TypeBinaryFile,
+	}, &store.DataFile{
+		EncryptData: []byte("test"),
+	}, nil)
+	j := model.Data{
+		DecryptData: []byte("test"),
+	}
+	msg, err := json.Marshal(j)
+	require.NoError(t, err)
+
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(msg, nil)
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+	mockStorageData.EXPECT().GetMetaData(gomock.Any(), gomock.Any()).Return(&store.MetaData{}, nil)
+	mockEncrypter.EXPECT().DecryptFile(gomock.Any(), gomock.Any()).Return(fmt.Errorf("error decrypt file"))
+
+	_, err = useCase.GetDataFromAgentStorage(context.TODO(), int64(1))
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "error decrypt file")
+}
+func TestUseCase_GetDataFromAgentStorage6(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockDataInterface := mock_service.NewMockDataInterface(ctrl)
+	mockEncrypter := mock_service.NewMockEncrypter(ctrl)
+	mockStorageData := mock_service.NewMockStorageData(ctrl)
+	mockAuthService := mock_service.NewMockAuthService(ctrl)
+
+	mockStorageData.EXPECT().GetData(gomock.Any(), gomock.Any()).Return(&store.UsersData{
+		DataType: sqllite.TypeCreditCardData,
+	}, &store.DataFile{
+		EncryptData: []byte("test"),
+	}, nil)
+	j := model.Data{
+		DecryptData: []byte("test"),
+	}
+	msg, err := json.Marshal(j)
+	require.NoError(t, err)
+
+	mockEncrypter.EXPECT().Decrypt(gomock.Any()).Return(msg, nil)
+	useCase := &UseCase{
+		DataInterface: mockDataInterface,
+		Encrypter:     mockEncrypter,
+		StorageData:   mockStorageData,
+		AuthService:   mockAuthService,
+	}
+
+	resp, err := useCase.GetDataFromAgentStorage(context.TODO(), int64(1))
+	require.NoError(t, err)
+	require.Equal(t, resp, []byte("Данные {\"decryptData\":\"dGVzdA==\"}"))
 }
