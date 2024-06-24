@@ -6,16 +6,15 @@ import (
 	"log"
 )
 
-var (
-	pathSignIn      = "/api/signIn"
-	pathSignUp      = "/api/signUp"
-	pathGetData     = "/api/data"
-	pathChanges     = "/api/changes"
-	pathFile        = "/api/data/file"
-	pathCredentials = "/api/data/credentials"
-	pathCreditCard  = "/api/data/creditCard"
-	pathFileChunks  = "/api/data/fileChunks"
-	//pathGetFileChunks = "/api/data/GetFile"
+const (
+	pathSignIn       = "/api/signIn"
+	pathSignUp       = "/api/signUp"
+	pathGetData      = "/api/data"
+	pathChanges      = "/api/changes"
+	pathFile         = "/api/data/file"
+	pathCredentials  = "/api/data/credentials"
+	pathCreditCard   = "/api/data/creditCard"
+	pathFileChunks   = "/api/data/fileChunks"
 	pathGetFileSize  = "/api/data/fileSize"
 	pathGetListData  = "/api/data"
 	pathPing         = "/api/ping"
