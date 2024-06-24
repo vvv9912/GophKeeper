@@ -108,10 +108,14 @@ func (e *Encrypt) DecryptFile(inputFilePath string, outputFilePath string) error
 	defer inputFile.Close()
 
 	dir, _ := path.Split(outputFilePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		logger.Log.Error("Error create dir", zap.Error(err))
-		return err
+
+	if dir != "" {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			logger.Log.Error("Error create dir", zap.Error(err))
+			return err
+		}
 	}
+
 	outputFile, err := os.Create(outputFilePath)
 	if err != nil {
 		logger.Log.Error("Error create file", zap.Error(err))
