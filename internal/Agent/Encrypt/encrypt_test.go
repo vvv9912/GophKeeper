@@ -15,5 +15,4 @@ func TestEncrypt_Encrypt(t *testing.T) {
 	d, err := encr.Decrypt(e)
 	require.NoError(t, err)
 	require.Equal(t, []byte("hello world"), d)
-
 }
