@@ -9,18 +9,16 @@ import (
 )
 
 type Cobra struct {
-	s *service.Service
+	s       *service.Service
+	rootCmd *cobra.Command
 }
 
 func NewCobra(s *service.Service) *Cobra {
-	return &Cobra{s: s}
+
+	return &Cobra{s: s, rootCmd: &cobra.Command{}}
 }
 
 func (c *Cobra) Start(ctx context.Context) error {
-	rootCmd := &cobra.Command{
-		Use:   "myapp",
-		Short: "My Application",
-	}
 
 	signIn := &cobra.Command{
 		Use:     "signIn",
@@ -111,18 +109,18 @@ func (c *Cobra) Start(ctx context.Context) error {
 		Aliases: []string{"updatebinaryfile"},
 	}
 
-	rootCmd.AddCommand(signIn)
-	rootCmd.AddCommand(signUp)
-	rootCmd.AddCommand(CreateFile)
-	rootCmd.AddCommand(ListData)
-	rootCmd.AddCommand(GetData)
-	rootCmd.AddCommand(CreateCredentials)
-	rootCmd.AddCommand(CreateCreditCard)
-	rootCmd.AddCommand(UpdateCredentials)
-	rootCmd.AddCommand(UpdateCreditCard)
-	rootCmd.AddCommand(UpdateBinaryFile)
-	rootCmd.SetContext(ctx)
-	if err := rootCmd.Execute(); err != nil {
+	c.rootCmd.AddCommand(signIn)
+	c.rootCmd.AddCommand(signUp)
+	c.rootCmd.AddCommand(CreateFile)
+	c.rootCmd.AddCommand(ListData)
+	c.rootCmd.AddCommand(GetData)
+	c.rootCmd.AddCommand(CreateCredentials)
+	c.rootCmd.AddCommand(CreateCreditCard)
+	c.rootCmd.AddCommand(UpdateCredentials)
+	c.rootCmd.AddCommand(UpdateCreditCard)
+	c.rootCmd.AddCommand(UpdateBinaryFile)
+	c.rootCmd.SetContext(ctx)
+	if err := c.rootCmd.Execute(); err != nil {
 		logger.Log.Error("Root execute err", zap.Error(err))
 		return err
 	}
