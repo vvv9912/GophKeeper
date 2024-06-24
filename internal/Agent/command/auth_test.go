@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -82,4 +83,14 @@ func TestCobra_SignUp2(t *testing.T) {
 	cobr.SetContext(context.Background())
 
 	c.SignUp(&cobr, args)
+}
+
+func TestValidLoginAndPasswordProvidedAsArguments(t *testing.T) {
+	// Mock dependencies
+
+	args := []string{"validLogin", "validPassword"}
+	login, password := auth(args)
+
+	assert.Equal(t, "validLogin", login)
+	assert.Equal(t, "validPassword", password)
 }
