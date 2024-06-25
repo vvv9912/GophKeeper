@@ -38,7 +38,7 @@ func NewAgentServer(certFile, keyFile string, host string) *AgentServer {
 
 	cert1, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		log.Panicln("ERROR client certificate: %s", err)
+		log.Panicln("ERROR client certificate: ", err)
 	}
 
 	client.SetCertificates(cert1)

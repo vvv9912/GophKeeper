@@ -66,7 +66,6 @@ func (a *Autorization) GetUserId(tokenString string) (int64, error) {
 		return -1, nil
 	}
 
-	//fmt.Println("Token os valid")
 	return claims.UserID, nil
 }
 func Sha256Hash(input string) string {
