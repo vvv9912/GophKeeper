@@ -1337,5 +1337,450 @@ func TestAgentServer_GetListData500(t *testing.T) {
 }
 
 func TestAgentServer_CheckUpdate(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
 
+	var response struct {
+		Status bool `json:"status"`
+	}
+
+	body, err := json.Marshal(response)
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/CheckUpdate/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	tt := time.Now()
+	_, err = server.CheckUpdate(context.TODO(), 1, &tt)
+	assert.NoError(t, err)
+}
+func TestAgentServer_CheckUpdateBadReq(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	var response struct {
+		Status bool `json:"status"`
+	}
+
+	body, err := json.Marshal(response)
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/CheckUp2date/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	tt := time.Now()
+	_, err = server.CheckUpdate(context.TODO(), 1, &tt)
+	assert.Error(t, err)
+}
+func TestAgentServer_CheckUpdate400(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/CheckUpdate/1" {
+			return &http.Response{
+				StatusCode: http.StatusBadRequest,
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	tt := time.Now()
+	_, err := server.CheckUpdate(context.TODO(), 1, &tt)
+	assert.Error(t, err)
+}
+
+func TestAgentServer_CheckUpdate500(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	body, err := json.Marshal(RespError{})
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/CheckUpdate/1" {
+			return &http.Response{
+				StatusCode: http.StatusInternalServerError,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	tt := time.Now()
+	_, err = server.CheckUpdate(context.TODO(), 1, &tt)
+	assert.Error(t, err)
+}
+func TestAgentServer_CheckUpdateBadJson(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/CheckUpdate/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	tt := time.Now()
+	_, err := server.CheckUpdate(context.TODO(), 1, &tt)
+	assert.Error(t, err)
+}
+
+func TestAgentServer_PostUpdateData(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	body, err := json.Marshal(RespData{})
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/update/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, err = server.PostUpdateData(context.TODO(), 1, []byte("data"))
+	assert.NoError(t, err)
+}
+
+func TestAgentServer_PostUpdateDataBadBody(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/update/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, err := server.PostUpdateData(context.TODO(), 1, []byte("data"))
+	assert.Error(t, err)
+}
+func TestAgentServer_PostUpdateDataBadReq(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	body, err := json.Marshal(RespData{})
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/updae/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, err = server.PostUpdateData(context.TODO(), 1, []byte("data"))
+	assert.Error(t, err)
+}
+func TestAgentServer_PostUpdateData400(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/update/1" {
+			return &http.Response{
+				StatusCode: http.StatusBadRequest,
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, err := server.PostUpdateData(context.TODO(), 1, []byte("data"))
+	assert.Error(t, err)
+}
+func TestAgentServer_PostUpdateData500(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	body, err := json.Marshal(RespError{})
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/update/1" {
+			return &http.Response{
+				StatusCode: http.StatusInternalServerError,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, err = server.PostUpdateData(context.TODO(), 1, []byte("data"))
+	assert.Error(t, err)
+}
+
+func TestAgentServer_PostUpdateBinaryFile(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	body, err := json.Marshal(RespData{})
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/updateBinary/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, _, err = server.PostUpdateBinaryFile(context.TODO(), []byte("data"), "data", "", 0, 0, 0, []byte("Rdata"), 1)
+	assert.NoError(t, err)
+}
+func TestAgentServer_PostUpdateBinaryFileBadReq(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	body, err := json.Marshal(RespData{})
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/updateBi2nary/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, _, err = server.PostUpdateBinaryFile(context.TODO(), []byte("data"), "data", "", 0, 0, 0, []byte("Rdata"), 1)
+	assert.Error(t, err)
+}
+func TestAgentServer_PostUpdateBinaryFileSuccess(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	body, err := json.Marshal(RespData{})
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/updateBinary/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, _, err = server.PostUpdateBinaryFile(context.TODO(), []byte("data"), "data", "", 0, 0, 1, []byte("Rdata"), 1)
+	assert.NoError(t, err)
+}
+func TestAgentServer_PostUpdateBinaryFileSuccess2(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	body, err := json.Marshal(RespData{})
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/updateBinary/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, _, err = server.PostUpdateBinaryFile(context.TODO(), []byte("data"), "data", "112", 0, 0, 1, []byte("Rdata"), 1)
+	assert.NoError(t, err)
+}
+func TestAgentServer_PostUpdateBinaryFile400(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/updateBinary/1" {
+			return &http.Response{
+				StatusCode: http.StatusBadRequest,
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, _, err := server.PostUpdateBinaryFile(context.TODO(), []byte("data"), "data", "", 0, 0, 1, []byte("Rdata"), 1)
+	assert.Error(t, err)
+}
+func TestAgentServer_PostUpdateBinaryFile500(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	body, err := json.Marshal(RespError{})
+	assert.NoError(t, err)
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/updateBinary/1" {
+			return &http.Response{
+				StatusCode: http.StatusInternalServerError,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, _, err = server.PostUpdateBinaryFile(context.TODO(), []byte("data"), "data", "", 0, 0, 1, []byte("Rdata"), 1)
+	assert.Error(t, err)
+}
+func TestAgentServer_PostUpdateBinaryFileBadJson(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/updateBinary/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer([]byte("122"))),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, _, err := server.PostUpdateBinaryFile(context.TODO(), []byte("data"), "data", "112", 0, 0, 1, []byte("Rdata"), 1)
+	assert.Error(t, err)
+}
+func TestAgentServer_PostUpdateBinaryFileBadJson2(t *testing.T) {
+	client := resty.New()
+	server := &AgentServer{
+		host:   "http://localhost:8080",
+		client: client,
+	}
+
+	rr := func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() == "http://localhost:8080/api/data/updateBinary/1" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer([]byte(""))),
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, fmt.Errorf("unexpected request")
+	}
+
+	client.SetTransport(&MockTransport{RoundTripFunc: rr})
+
+	_, _, err := server.PostUpdateBinaryFile(context.TODO(), []byte("data"), "data", "112", 0, 0, 1, []byte("Rdata"), 1)
+	assert.NoError(t, err)
 }

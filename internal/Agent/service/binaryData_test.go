@@ -43,6 +43,7 @@ func TestUseCase_CreateBinaryFile(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "error encrypting file")
 }
+
 func TestUseCase_CreateBinaryFile7(t *testing.T) {
 	ctx := context.TODO()
 	path := "/tmp/test.txt"
