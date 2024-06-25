@@ -10,7 +10,7 @@ func TestGetConfig(t *testing.T) {
 	cfg := Config{}
 	cfg.setDefaultValues()
 
-	retrievedConfig := cfg.Get()
+	retrievedConfig := cfg
 
 	assert.Equal(t, ":8080", retrievedConfig.ServerDNS)
 	assert.Equal(t, "agent/cert.pem", retrievedConfig.CertFile)
