@@ -2,7 +2,6 @@ package logger
 
 import (
 	"go.uber.org/zap"
-	"net/http"
 )
 
 // Log будет доступен всему коду как синглтон.
@@ -29,15 +28,4 @@ func Initialize(level string) error {
 	// устанавливаем синглтон
 	Log = zl
 	return nil
-}
-
-// RequestLogger — middleware-логер для входящих HTTP-запросов.
-func RequestLogger(h http.HandlerFunc) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		Log.Debug("got incoming HTTP request",
-			zap.String("method", r.Method),
-			zap.String("path", r.URL.Path),
-		)
-		h(w, r)
-	})
 }
