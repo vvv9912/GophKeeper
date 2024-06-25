@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
+// Autorization - структура для работы с авторизацией.
 type Autorization struct {
-	TokenExp  time.Duration
-	SecretKey string
+	TokenExp  time.Duration // время жизни токена.
+	SecretKey string        // секретный ключ.
 }
 
+// NewAutorization - конструктор авторизации.
 func NewAutorization(tokenExp time.Duration, secretKey string) *Autorization {
 	return &Autorization{TokenExp: tokenExp, SecretKey: secretKey}
 }
@@ -20,8 +22,8 @@ func NewAutorization(tokenExp time.Duration, secretKey string) *Autorization {
 // Claims — структура утверждений, которая включает стандартные утверждения
 // и одно пользовательское — UserID
 type Claims struct {
-	jwt.RegisteredClaims
-	UserID int64
+	jwt.RegisteredClaims       // стандартные утверждения.
+	UserID               int64 // пользовательское утверждение.
 }
 
 // BuildJWTString создаёт токен и возвращает его в виде строки.
