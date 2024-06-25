@@ -17,16 +17,6 @@ import (
 	"time"
 )
 
-// ServiceData - структура для работы с данными пользователя.
-//type ServiceData struct {
-//	StoreData
-//}
-
-// NewServiceData - конструктор структуры для работы с данными пользователя.
-//func NewServiceData(storeData StoreData, saveFiles *SaveFiles) *ServiceData {
-//	return &ServiceData{StoreData: storeData}
-//}
-
 // CreateCredentials - Создание пары логин/пароль.
 func (s *Service) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 
@@ -66,6 +56,8 @@ func (s *Service) CreateCreditCard(ctx context.Context, userId int64, data []byt
 	}
 	return resp, nil
 }
+
+// createPathIfNotExists - создание пути.
 func createPathIfNotExists(dirPath string) error {
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
@@ -78,6 +70,8 @@ func createPathIfNotExists(dirPath string) error {
 	}
 	return nil
 }
+
+// moveFile - перемещение файла.
 func moveFile(src, dst string) error {
 	err := os.Rename(src, dst)
 	if err != nil {
@@ -87,7 +81,7 @@ func moveFile(src, dst string) error {
 	return nil
 }
 
-// CreateFile - Создание произвольных данных.
+// CreateFileChunks - Создание бинарных данных.
 func (s *Service) CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string, encryptedData []byte) (*RespData, error) {
 
 	// Создаем путь
@@ -133,7 +127,7 @@ func (s *Service) CreateFileChunks(ctx context.Context, userId int64, tmpFile *T
 
 }
 
-// CreateFile - Создание произвольных данных.
+// CreateFile - Создание  данных (файл).
 func (s *Service) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	hash, err := s.createData(ctx, userId, data, name, description)
 	if err != nil {

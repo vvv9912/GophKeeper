@@ -8,8 +8,7 @@ import (
 	"net/http"
 )
 
-// todo RefreshToken
-// HandlerSignUp - регистрация пользователя
+// HandlerSignUp - регистрация пользователя.
 func (h Handler) HandlerSignUp(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte

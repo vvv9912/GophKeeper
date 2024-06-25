@@ -7,10 +7,12 @@ import (
 	"strings"
 )
 
+// Mw - middleware для проверки токена.
 type Mw struct {
 	service.Auth
 }
 
+// MiddlewareAuth - middleware для проверки токена.
 func (m Mw) MiddlewareAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")

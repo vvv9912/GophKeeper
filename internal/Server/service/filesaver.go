@@ -16,24 +16,28 @@ import (
 	"time"
 )
 
+// TmpFile - информация о текущем сохранении файла.
 type TmpFile struct {
-	LastUpdate       time.Time
-	PathFileSave     string
-	OriginalFileName string
-	Uuid             string
-	Extension        string
-	Size             int64
+	LastUpdate       time.Time // время последнего обновления.
+	PathFileSave     string    // путь к файлу на диске.
+	OriginalFileName string    // оригинальное имя файла.
+	Uuid             string    // уникальное имя файла.
+	Extension        string    // расширение
+	Size             int64     // размер
 }
+
+// SaveFiles - временное хранилище.
 type SaveFiles struct {
-	Chunks          map[string]TmpFile
-	tmpFileLifeTime time.Duration
-	muMap           sync.Mutex
-	defaultPath     string
-	fileSave        bool
+	Chunks          map[string]TmpFile // список файлов.
+	tmpFileLifeTime time.Duration      // время жизни временного файла.
+	muMap           sync.Mutex         // мьютекс.
+	defaultPath     string             // путь по умолчанию.
+	fileSave        bool               // флаг сохранения файла.
 }
 
 const defaultTmpPath = "./tmp"
 
+// NewSaveFiles - конструктор временного хранилища.
 func NewSaveFiles(tmpFileLifeTime time.Duration) (*SaveFiles, error) {
 
 	err := os.RemoveAll(defaultTmpPath)
@@ -48,6 +52,7 @@ func NewSaveFiles(tmpFileLifeTime time.Duration) (*SaveFiles, error) {
 	}, nil
 }
 
+// addNewSaveFile - добавление нового временного файла.
 func (s *SaveFiles) addNewSaveFile(pathSave string, r *http.Request) (bool, *TmpFile, error) {
 
 	file, header, err := r.FormFile("file")
@@ -106,6 +111,7 @@ func (s *SaveFiles) addNewSaveFile(pathSave string, r *http.Request) (bool, *Tmp
 	return fileUpload, &tmpFile, err
 }
 
+// UploadFile - загрузка нового временного файла.
 func (s *SaveFiles) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
 
 	uuId := r.Header.Get("Uuid-Chunk")
@@ -149,6 +155,7 @@ func (s *SaveFiles) UploadFile(additionalPath string, r *http.Request) (bool, *T
 	return fileUpload, &chunk, nil
 }
 
+// DeleteFile - удаление временного файла.
 func (s *SaveFiles) DeleteFile(uuID string) error {
 	f, ok := s.Chunks[uuID]
 	if !ok {
@@ -167,6 +174,7 @@ func (s *SaveFiles) DeleteFile(uuID string) error {
 	return nil
 }
 
+// RunCronDeleteFiles - cron job удаления временных файлов.
 func (s *SaveFiles) RunCronDeleteFiles(ctx context.Context) error {
 	go func() {
 		ticker := time.NewTicker(s.tmpFileLifeTime)
@@ -182,6 +190,7 @@ func (s *SaveFiles) RunCronDeleteFiles(ctx context.Context) error {
 	return nil
 }
 
+// cronDeleteFiles - cron job удаления временных файлов.
 func (s *SaveFiles) cronDeleteFiles(ctx context.Context) {
 
 	s.muMap.Lock()
@@ -200,6 +209,7 @@ func (s *SaveFiles) cronDeleteFiles(ctx context.Context) {
 
 }
 
+// generateUuid - генерация уникального имени для временного файла.
 func (s *SaveFiles) generateUuid() string {
 	uuid := uuid.New()
 
@@ -212,6 +222,7 @@ func (s *SaveFiles) generateUuid() string {
 	return uuid.String()
 }
 
+// saveFile - сохранение файла.
 func (s *SaveFiles) saveFile(pathFileSave string, file io.Reader) (int64, error) {
 
 	f, err := os.OpenFile(pathFileSave, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
@@ -248,6 +259,8 @@ func (s *SaveFiles) saveFile(pathFileSave string, file io.Reader) (int64, error)
 
 	return filesize, nil
 }
+
+// ParserContentRange - парсер Content-Range.
 func ParserContentRange(contentRangeHeader string) (int, int, int, error) {
 
 	r := regexp.MustCompile(`bytes (\d+)-(\d+)/(\d+)`)
@@ -281,7 +294,7 @@ func ParserContentRange(contentRangeHeader string) (int, int, int, error) {
 	return rangeMin, rangeMax, totalFileSize, nil
 }
 
-// Проверка полной загрузки файла. ПО запросу
+// FileUploadCompleted - Проверка полной загрузки файла  по запросу.
 func (s *SaveFiles) FileUploadCompleted(realFileSize int64, r *http.Request) (bool, error) {
 
 	contentRangeHeader := r.Header.Get("Content-Range")

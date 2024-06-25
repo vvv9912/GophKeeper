@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// HandlerPostCredentials - создание новых данных (логин/пароль).
 func (h *Handler) HandlerPostCredentials(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -58,6 +59,7 @@ func (h *Handler) HandlerPostCredentials(w http.ResponseWriter, r *http.Request)
 
 }
 
+// HandlerPostCreditCard - создание новых данных (кредитная карта).
 func (h *Handler) HandlerPostCreditCard(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -103,6 +105,7 @@ func (h *Handler) HandlerPostCreditCard(w http.ResponseWriter, r *http.Request) 
 
 }
 
+// validateFile - валидация файла.
 func validateFile(header *multipart.FileHeader) error {
 	if header.Size == 0 {
 		err := customErrors.NewCustomError(nil, http.StatusBadRequest, "File is empty")
@@ -113,7 +116,7 @@ func validateFile(header *multipart.FileHeader) error {
 	return nil
 }
 
-// HandlerPostCrateFile2 - загрузка чанками
+// HandlerPostChunkCrateFile - загрузка чанками файла.
 func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -163,9 +166,6 @@ func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Reque
 
 	if ok {
 
-		//todo
-		// Считывание тела по ключу
-
 		headerInfo := r.FormValue("info")
 		if err != nil {
 			return
@@ -191,6 +191,8 @@ func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Reque
 		}
 	}
 }
+
+// HandlerPostCrateFile - создание новых данных (файл).
 func (h *Handler) HandlerPostCrateFile(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -234,6 +236,8 @@ func (h *Handler) HandlerPostCrateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// HandlerGetListData - получение списка данных.
 func (h *Handler) HandlerGetListData(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -261,6 +265,7 @@ func (h *Handler) HandlerGetListData(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// HandlerCheckUpdateData - проверка обновления данных.
 func (h *Handler) HandlerCheckUpdateData(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -307,6 +312,7 @@ func (h *Handler) HandlerCheckUpdateData(w http.ResponseWriter, r *http.Request)
 
 }
 
+// HandlerCheckChanges - проверка изменений данных.
 func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -343,6 +349,8 @@ func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 
 	resp, err = h.service.ChangeAllData(r.Context(), userId, LastTimeUpdate)
 }
+
+// HandlerGetFile - получение данных файла.
 func (h *Handler) HandlerGetFile(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -380,6 +388,8 @@ func (h *Handler) HandlerGetFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+// HandlerGetData - получение данных.
 func (h *Handler) HandlerGetData(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -416,6 +426,8 @@ func (h *Handler) HandlerGetData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// HandlerGetFileSize - получение размера файла.
 func (h *Handler) HandlerGetFileSize(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -504,43 +516,7 @@ func (h *Handler) HandlerUpdateData(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// todo устаревшее
-//
-//	func (h *Handler) HandlerUpdateData(w http.ResponseWriter, r *http.Request) {
-//		var err error
-//		var resp []byte
-//
-//		defer func() {
-//			if err != nil {
-//				deferHandler(err, w)
-//				return
-//			}
-//			_, err = w.Write(resp)
-//			if err != nil {
-//				logger.Log.Error("Error writing response", zap.Error(err))
-//			}
-//			w.WriteHeader(http.StatusOK)
-//
-//		}()
-//
-//		userId, err := getUserId(r)
-//		if err != nil {
-//			return
-//		}
-//
-//		var updateData *store.UpdateUsersData
-//		err = json.NewDecoder(r.Body).Decode(&updateData)
-//		if err != nil {
-//			logger.Log.Error("Unmarshal json failed", zap.Error(err))
-//			err = customErrors.NewCustomError(err, http.StatusBadRequest, "Error reading request body")
-//		}
-//
-//		err = h.service.UpdateData(r.Context(), int64(userId), updateData, updateData.EncryptData)
-//		if err != nil {
-//			return
-//		}
-//
-// }
+// HandlerRemoveData - удаление данных.
 func (h *Handler) HandlerRemoveData(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -578,7 +554,7 @@ func (h *Handler) HandlerRemoveData(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// HandlerPostCrateFile2 - загрузка чанками
+// HandlerUpdateBinaryFile - обновление бинарного файла чанками.
 func (h *Handler) HandlerUpdateBinaryFile(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var resp []byte
@@ -635,9 +611,6 @@ func (h *Handler) HandlerUpdateBinaryFile(w http.ResponseWriter, r *http.Request
 	resp = []byte(`{"status":"ok"}`)
 
 	if ok {
-
-		//todo
-		// Считывание тела по ключу
 
 		headerInfo := r.FormValue("info")
 		if err != nil {

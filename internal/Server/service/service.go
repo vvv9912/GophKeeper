@@ -65,13 +65,13 @@ type StoreData interface {
 
 // Service - структура сервисного слоя.
 type Service struct {
-	Auth
-	StoreAuth
-	StoreData
-	SaveFiles
+	Auth      // интерфейс аутентификации.
+	StoreAuth // интерфейс для работы с БД пользователя.
+	StoreData // интерфейс для работы с БД данных пользователя.
+	SaveFiles // временное хранилище (сохр при работе с чанками).
 }
 
-// Service - Конструктор структуры сервисного слоя.
+// NewService - Конструктор структуры сервисного слоя.
 func NewService(db *sqlx.DB, secretKey string) (*Service, error) {
 	nDb := postgresql.NewDatabase(db)
 	saveFiles, err := NewSaveFiles(10 * time.Minute)

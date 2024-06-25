@@ -7,9 +7,9 @@ import (
 	"net/http"
 )
 
+// SignUp - регистрация пользователя.
 func (s *Service) SignUp(ctx context.Context, login, password string) (string, error) {
 	// Получаем хэш пароль передает User
-	// TODO: ограничение на пользовательский пароль логин
 	hashPassword := authorization.Sha256Hash(password)
 
 	userId, err := s.StoreAuth.CreateUser(ctx, login, hashPassword)
@@ -25,6 +25,7 @@ func (s *Service) SignUp(ctx context.Context, login, password string) (string, e
 	return jwt, nil
 }
 
+// SignIn - авторизация пользователя.
 func (s *Service) SignIn(ctx context.Context, login, password string) (string, error) {
 	// Получаем хэш пароль передает User
 
@@ -42,7 +43,3 @@ func (s *Service) SignIn(ctx context.Context, login, password string) (string, e
 
 	return jwt, err
 }
-
-//func (s *Service) GetUserIdFromJwt(jwt string) (int64, error) {
-//	return s.Auth.GetUserId(jwt)
-//}

@@ -8,11 +8,12 @@ import (
 	"net/http"
 )
 
+// Server - структура сервера.
 type Server struct {
 	httpServer *http.Server
 }
 
-// openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
+// StartServer - запуск сервера.
 func StartServer(ctx context.Context, h http.Handler, addr, cert, key string) *Server {
 
 	server := &http.Server{
@@ -46,6 +47,7 @@ func StartServer(ctx context.Context, h http.Handler, addr, cert, key string) *S
 	return &Server{}
 }
 
+// Stop - остановка сервера.
 func (s *Server) Stop(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }

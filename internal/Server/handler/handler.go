@@ -7,14 +7,17 @@ import (
 	"net/http"
 )
 
+// Handler - обработчик HTTP-запросов.
 type Handler struct {
-	service *service.Service
+	service *service.Service // интерфейс сервиса.
 }
 
+// NewHandler - конструктор обработчика HTTP-запросов.
 func NewHandler(service *service.Service) *Handler {
 	return &Handler{service: service}
 }
 
+// InitRoutes - инициализация маршрутов.
 func (h *Handler) InitRoutes(services *service.Service) http.Handler {
 
 	r := chi.NewRouter()
