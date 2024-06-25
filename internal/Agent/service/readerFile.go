@@ -8,22 +8,24 @@ import (
 	"os"
 )
 
-var ErrSize = fmt.Errorf("Error size must be > 0 and < 50mb")
-var ErrOpenFile = fmt.Errorf("Error open file")
-
+var ErrSize = fmt.Errorf("Error size must be > 0 and < 50mb") // Ошибка если размер больше 50mb.
+var ErrOpenFile = fmt.Errorf("Error open file")               // Ошибка если не получилось открыть файл.
+// Reader - читатель файла.
 type Reader struct {
-	SizeChunk int // Размер чанка в байтах
-	Path      string
-	f         *os.File
-	size      int64
-	maxChunk  int
-	NameFile  string
+	SizeChunk int      // Размер чанка в байтах.
+	Path      string   // Путь к файлу.
+	f         *os.File // Указатель на файл.
+	size      int64    // Размер файла в байтах.
+	maxChunk  int      // Количество чанков в файле.
+	NameFile  string   // Имя файла.
 }
 
+// NewReader - конструктор читателя файла.
 func NewReader(path string) *Reader {
 	return &Reader{Path: path, SizeChunk: 1024 * 1024}
 }
 
+// NumChunk - определение количества чанков в файле.
 func (r *Reader) NumChunk() (int, error) {
 	f, err := os.OpenFile(r.Path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
@@ -48,6 +50,8 @@ func (r *Reader) NumChunk() (int, error) {
 	r.NameFile = fileInfo.Name()
 	return r.maxChunk, nil
 }
+
+// ReadFile - считывание файла.
 func (r *Reader) ReadFile(numChunk int) ([]byte, error) {
 	var data []byte
 
@@ -65,6 +69,8 @@ func (r *Reader) ReadFile(numChunk int) ([]byte, error) {
 
 	return data, nil
 }
+
+// Size - размер файла.
 func (r *Reader) Size() int64 {
 	return r.size
 }

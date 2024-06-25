@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// SignIn - вход в аккаунт
 func (c *Cobra) SignIn(cmd *cobra.Command, args []string) {
 	Login, Password := auth(args)
 	log.Println("Login:", Login)
@@ -28,6 +29,7 @@ func (c *Cobra) SignIn(cmd *cobra.Command, args []string) {
 	logger.Log.Debug("jwt", zap.String("jwt", jwt))
 }
 
+// SignUp - регистрация
 func (c *Cobra) SignUp(cmd *cobra.Command, args []string) {
 	Login, Password := auth(args)
 

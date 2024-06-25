@@ -13,14 +13,16 @@ import (
 	"go.uber.org/zap"
 )
 
+// UseCase - структура UseCase.
 type UseCase struct {
-	AuthService
-	DataInterface
-	StorageData
-	Encrypter
-	JWTToken string
+	AuthService          // Интерфейс авторизации.
+	DataInterface        // Интерфейс для работы с данными.
+	StorageData          // Интерфейс для работы с хранилищем данных.
+	Encrypter            // Интерфейс шифрования данных.
+	JWTToken      string // JWT токен.
 }
 
+// NewUseCase - создание экземпляра UseCase.
 func NewUseCase(db *sqlx.DB, key []byte, certFile, keyFile string, serverDns string) *UseCase {
 
 	serv := server.NewAgentServer(certFile, keyFile, serverDns)
@@ -38,7 +40,7 @@ func NewUseCase(db *sqlx.DB, key []byte, certFile, keyFile string, serverDns str
 	}
 }
 
-// CreateCredentials - Создание данных логин/пароль
+// CreateCredentials - Создание данных логин/пароль.
 func (s *UseCase) CreateCredentials(ctx context.Context, data *server.ReqData) error {
 	// Получение jwt токена
 	if err := s.setJwtToken(ctx); err != nil {
@@ -57,7 +59,7 @@ func (s *UseCase) CreateCredentials(ctx context.Context, data *server.ReqData) e
 	return s.StorageData.CreateCredentials(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash, resp.CreatedAt, resp.UpdateAt)
 }
 
-// CreateFileData - создание файла
+// CreateFileData - создание файла.
 func (s *UseCase) CreateFileData(ctx context.Context, data *server.ReqData) error {
 
 	if err := s.setJwtToken(ctx); err != nil {
@@ -71,7 +73,7 @@ func (s *UseCase) CreateFileData(ctx context.Context, data *server.ReqData) erro
 	return s.StorageData.CreateFileData(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash, resp.CreatedAt, resp.UpdateAt)
 }
 
-// CreateCreditCard - создание данных о кредитной карте
+// CreateCreditCard - создание данных о кредитной карте.
 func (s *UseCase) CreateCreditCard(ctx context.Context, data *server.ReqData) error {
 
 	if err := s.setJwtToken(ctx); err != nil {
@@ -89,7 +91,7 @@ func (s *UseCase) CreateCreditCard(ctx context.Context, data *server.ReqData) er
 	return s.StorageData.CreateCreditCard(ctx, data.Data, resp.UserDataId, data.Name, data.Description, resp.Hash, resp.CreatedAt, resp.UpdateAt)
 }
 
-// PingServer - пинг сервера
+// PingServer - пинг сервера.
 func (s *UseCase) PingServer(ctx context.Context) bool {
 	if err := s.DataInterface.Ping(ctx); err != nil {
 		return false
@@ -97,7 +99,7 @@ func (s *UseCase) PingServer(ctx context.Context) bool {
 	return true
 }
 
-// GetData - получение данных любого формата
+// GetData - получение данных любого формата.
 func (s *UseCase) GetData(ctx context.Context, userDataId int64) ([]byte, error) {
 	// Проверяем доступен ли сервер
 	if !s.PingServer(ctx) {
@@ -146,7 +148,7 @@ func (s *UseCase) GetData(ctx context.Context, userDataId int64) ([]byte, error)
 	return decrypt, nil
 }
 
-// CheckNewData - проверка на новые данные
+// CheckNewData - проверка на новые данные.
 func (s *UseCase) CheckNewData(ctx context.Context, userDataId int64) (bool, error) {
 	// Получаем инофрмацию о обновление текущих данных
 	data, err := s.StorageData.GetInfoData(ctx, userDataId)
@@ -166,7 +168,7 @@ func (s *UseCase) CheckNewData(ctx context.Context, userDataId int64) (bool, err
 	return ok, nil
 }
 
-// GetDataFromAgentStorage - получение данных из хранилища агента
+// GetDataFromAgentStorage - получение данных из хранилища агента.
 func (s *UseCase) GetDataFromAgentStorage(ctx context.Context, userDataId int64) ([]byte, error) {
 	logger.Log.Info("Получаем данные из локального хранилища")
 
@@ -210,7 +212,7 @@ func (s *UseCase) GetDataFromAgentStorage(ctx context.Context, userDataId int64)
 	return []byte(resp), err
 }
 
-// GetListData - получение списка актуальных данных пользователя
+// GetListData - получение списка актуальных данных пользователя.
 func (s *UseCase) GetListData(ctx context.Context) ([]byte, error) {
 
 	if err := s.setJwtToken(ctx); err != nil {
@@ -226,7 +228,7 @@ func (s *UseCase) GetListData(ctx context.Context) ([]byte, error) {
 
 }
 
-// UpdateData - обновление данных пользователя (кроме бинарного файла)
+// UpdateData - обновление данных пользователя (кроме бинарного файла).
 func (s *UseCase) UpdateData(ctx context.Context, userDataId int64, data []byte) ([]byte, error) {
 	if err := s.setJwtToken(ctx); err != nil {
 		return nil, err
@@ -249,6 +251,8 @@ func (s *UseCase) UpdateData(ctx context.Context, userDataId int64, data []byte)
 
 	return []byte("Data updated"), nil
 }
+
+// encryptData - шифрование данных.
 func (s *UseCase) encryptData(reqData *server.ReqData) error {
 
 	// Шифруем данные о файле
@@ -261,6 +265,8 @@ func (s *UseCase) encryptData(reqData *server.ReqData) error {
 
 	return nil
 }
+
+// decryptData - расшифровка данных.
 func (s *UseCase) decryptData(reqData *server.ReqData) error {
 	DataDecrypt, err := s.Encrypter.Decrypt(reqData.Data)
 	if err != nil {

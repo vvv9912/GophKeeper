@@ -12,10 +12,12 @@ import (
 	"path"
 )
 
+// Encrypt - шифрование данных.
 type Encrypt struct {
 	block cipher.Block
 }
 
+// NewEncrypt - конструктор для шифрования данных.
 func NewEncrypt(key []byte) (*Encrypt, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -26,6 +28,7 @@ func NewEncrypt(key []byte) (*Encrypt, error) {
 	return &Encrypt{block: block}, nil
 }
 
+// Encrypt - шифрование данных.
 func (e *Encrypt) Encrypt(text []byte) ([]byte, error) {
 
 	ciphertext := make([]byte, aes.BlockSize+len(text))
@@ -44,6 +47,8 @@ func (e *Encrypt) Encrypt(text []byte) ([]byte, error) {
 	return ciphertext, nil
 
 }
+
+// Decrypt - дешифрование данных.
 func (e *Encrypt) Decrypt(ciphertext []byte) ([]byte, error) {
 
 	if len(ciphertext) < aes.BlockSize {
@@ -61,6 +66,7 @@ func (e *Encrypt) Decrypt(ciphertext []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
+// EncryptFile - шифрование файлов.
 func (e *Encrypt) EncryptFile(inputFilePath string, outputFilePath string) error {
 	inputFile, err := os.Open(inputFilePath)
 	if err != nil {
@@ -100,6 +106,8 @@ func (e *Encrypt) EncryptFile(inputFilePath string, outputFilePath string) error
 
 	return nil
 }
+
+// DecryptFile - дешифрование файлов.
 func (e *Encrypt) DecryptFile(inputFilePath string, outputFilePath string) error {
 	inputFile, err := os.Open(inputFilePath)
 	if err != nil {

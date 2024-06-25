@@ -6,16 +6,17 @@ import (
 	"sync"
 )
 
+// Config - структура конфигурации
 type Config struct {
-	CertFile         string `hcl:"certfile" env:"CertFile" `
-	KeyFile          string `hcl:"keyfile" env:"KeyFile" `
-	ServerDNS        string `hcl:"server_dns" env:"SERVER_DNS"`
-	PathDatabaseFile string `hcl:"pathFileLogger,omitempty" env:"PATH_FILE_LOGGER"`
-	PathTmpStorage   string `hcl:"pathTmpStorage,omitempty" env:"PATH_TMP_STORAGE"`
-	PathLocalStorage string `hcl:"pathLocalStorage,omitempty" env:"PATH_LOCAL_STORAGE"`
-	PathUserData     string `hcl:"pathUserData,omitempty" env:"PATH_USER_DATA"`
-	PathSecretKey    string `hcl:"pathSecretKey" env:"PATH_SECRET_KEY"`
-	LevelLogger      string `hcl:"levelLogger" env:"LEVEL_LOGGER"`
+	CertFile         string `hcl:"certfile" env:"CertFile" `                            // Сертификат.
+	KeyFile          string `hcl:"keyfile" env:"KeyFile" `                              // Ключ.
+	ServerDNS        string `hcl:"server_dns" env:"SERVER_DNS"`                         // DNS адрес сервера.
+	PathDatabaseFile string `hcl:"pathFileLogger,omitempty" env:"PATH_FILE_LOGGER"`     // Путь к базе данных.
+	PathTmpStorage   string `hcl:"pathTmpStorage,omitempty" env:"PATH_TMP_STORAGE"`     // Путь к временному хранилищу.
+	PathLocalStorage string `hcl:"pathLocalStorage,omitempty" env:"PATH_LOCAL_STORAGE"` // Путь к локальному хранилищу.
+	PathUserData     string `hcl:"pathUserData,omitempty" env:"PATH_USER_DATA"`         // Путь пользовательских сохраненных данных (разархивированные данные).
+	PathSecretKey    string `hcl:"pathSecretKey" env:"PATH_SECRET_KEY"`                 // Путь к файлу с секретным ключом.
+	LevelLogger      string `hcl:"levelLogger" env:"LEVEL_LOGGER"`                      // Уровень логгера.
 }
 
 func (c *Config) setDefaultValues() {
@@ -36,6 +37,7 @@ var (
 	once sync.Once
 )
 
+// InitConfig - инициализация конфигурации
 func InitConfig() (err error) {
 	once.Do(func() {
 
@@ -56,6 +58,8 @@ func InitConfig() (err error) {
 
 	return err
 }
+
+// Get - получение конфигурации
 func Get() Config {
 	return cfg
 }

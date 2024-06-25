@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+// CreateBinaryFile - создание бинарного файла
 func (c *Cobra) CreateBinaryFile(cmd *cobra.Command, args []string) {
 	var (
 		Path        string
@@ -47,6 +48,7 @@ func (c *Cobra) CreateBinaryFile(cmd *cobra.Command, args []string) {
 
 }
 
+// CreateCredentials - создание данных логин/пароль
 func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
 	var (
 		Login       string
@@ -88,6 +90,7 @@ func (c *Cobra) CreateCredentials(cmd *cobra.Command, args []string) {
 	logger.Log.Info("CreateCredentials success")
 }
 
+// CreateCreditCard - создание кредитной карты
 func (c *Cobra) CreateCreditCard(cmd *cobra.Command, args []string) {
 
 	var (
@@ -153,7 +156,7 @@ func (c *Cobra) CreateCreditCard(cmd *cobra.Command, args []string) {
 	logger.Log.Info("CreateCreditCard success")
 }
 
-// Получение списка данных
+// GetListData - Получение списка данных
 func (c *Cobra) GetListData(cmd *cobra.Command, args []string) {
 
 	resp, err := c.s.GetListData(cmd.Context())
@@ -166,7 +169,7 @@ func (c *Cobra) GetListData(cmd *cobra.Command, args []string) {
 
 }
 
-// Получение списка данных
+// GetData - Получение списка данных
 func (c *Cobra) GetData(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
 		logger.Log.Error("Error: Invalid number of arguments")
@@ -186,6 +189,8 @@ func (c *Cobra) GetData(cmd *cobra.Command, args []string) {
 	logger.Log.Info(string(resp))
 
 }
+
+// UpdateCredentials - обновление данных логин/пароль
 func (c *Cobra) UpdateCredentials(cmd *cobra.Command, args []string) {
 	var (
 		UserDataId string
@@ -226,6 +231,7 @@ func (c *Cobra) UpdateCredentials(cmd *cobra.Command, args []string) {
 	logger.Log.Info("Credentials updated successfully")
 }
 
+// UpdateCreditCard - обновление данных кредитной карточки
 func (c *Cobra) UpdateCreditCard(cmd *cobra.Command, args []string) {
 
 	var (
@@ -284,6 +290,8 @@ func (c *Cobra) UpdateCreditCard(cmd *cobra.Command, args []string) {
 	logger.Log.Info(string(resp))
 	logger.Log.Info("CreditCard updated successfully")
 }
+
+// UpdateBinaryFile - обновление бинарного файл
 func (c *Cobra) UpdateBinaryFile(cmd *cobra.Command, args []string) {
 	var (
 		UserDataId string

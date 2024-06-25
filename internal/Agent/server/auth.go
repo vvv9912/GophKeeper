@@ -9,12 +9,17 @@ import (
 	"net/http"
 )
 
+// SetJWTToken - установка токена.
 func (a *AgentServer) SetJWTToken(token string) {
 	a.JWTToken = token
 }
+
+// GetJWTToken - получение токена.
 func (a *AgentServer) GetJWTToken() string {
 	return a.JWTToken
 }
+
+// SignIn - вход.
 func (a *AgentServer) SignIn(ctx context.Context, login, password string) (*User, error) {
 
 	req := a.client.R()
@@ -52,6 +57,8 @@ func (a *AgentServer) SignIn(ctx context.Context, login, password string) (*User
 	return &user, nil
 
 }
+
+// SignUp - регистрация.
 func (a *AgentServer) SignUp(ctx context.Context, login, password string) (*User, error) {
 
 	req := a.client.R()
@@ -90,6 +97,7 @@ func (a *AgentServer) SignUp(ctx context.Context, login, password string) (*User
 
 }
 
+// Ping - проверка доступности сервера.
 func (a *AgentServer) Ping(ctx context.Context) error {
 
 	req := a.client.R()

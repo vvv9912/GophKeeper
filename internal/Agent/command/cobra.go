@@ -8,16 +8,18 @@ import (
 	"go.uber.org/zap"
 )
 
+// Cobra - структура для инициализации команд
 type Cobra struct {
-	s       *service.Service
-	rootCmd *cobra.Command
+	s       *service.Service // Сервис для работы с агентом
+	rootCmd *cobra.Command   // Команды
 }
 
+// NewCobra - конструктор для инициализация команд
 func NewCobra(s *service.Service) *Cobra {
-
 	return &Cobra{s: s, rootCmd: &cobra.Command{}}
 }
 
+// Start - инициализация команд
 func (c *Cobra) Start(ctx context.Context) error {
 
 	signIn := &cobra.Command{
@@ -120,6 +122,7 @@ func (c *Cobra) Start(ctx context.Context) error {
 	c.rootCmd.AddCommand(UpdateCreditCard)
 	c.rootCmd.AddCommand(UpdateBinaryFile)
 	c.rootCmd.SetContext(ctx)
+
 	if err := c.rootCmd.Execute(); err != nil {
 		logger.Log.Error("Root execute err", zap.Error(err))
 		return err

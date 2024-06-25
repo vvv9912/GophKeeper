@@ -23,12 +23,14 @@ const (
 	pathUpdateBinary = "/api/data/updateBinary"
 )
 
+// AgentServer - структура для работы с агентом
 type AgentServer struct {
 	host     string
 	JWTToken string
 	client   *resty.Client
 }
 
+// NewAgentServer - конструктор
 func NewAgentServer(certFile, keyFile string, host string) *AgentServer {
 	client := resty.New()
 

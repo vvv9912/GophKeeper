@@ -14,6 +14,7 @@ import (
 	"os"
 )
 
+// Run - запуск приложения
 func Run(ctx context.Context) {
 	if err := config.InitConfig(); err != nil {
 		panic(err)

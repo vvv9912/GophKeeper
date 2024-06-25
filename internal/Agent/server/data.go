@@ -19,6 +19,7 @@ import (
 	"time"
 )
 
+// PostCredentials - создание данных логин/пароль.
 func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*RespData, error) {
 	req := a.client.R()
 
@@ -53,7 +54,7 @@ func (a *AgentServer) PostCredentials(ctx context.Context, data *ReqData) (*Resp
 	return &respData, nil
 }
 
-// Передача бинарного файла
+// PostCrateFileStartChunks - создание бинарных файлов и передача их чанками.
 func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte, fileName string, uuidChunk string, nStart int, nEnd int, maxSize int, reqData []byte) (string, *RespData, error) {
 	req := a.client.R()
 
@@ -142,7 +143,7 @@ func (a *AgentServer) PostCrateFileStartChunks(ctx context.Context, data []byte,
 	return uuidChunk, &respData, nil
 }
 
-// Передача любых текстовых данных
+// PostCrateFile - Передача любых текстовых данных
 func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) (*RespData, error) {
 
 	req := a.client.R()
@@ -176,6 +177,8 @@ func (a *AgentServer) PostCrateFile(ctx context.Context, data *ReqData) (*RespDa
 	}
 	return &respData, nil
 }
+
+// PostCreditCard - Передача кредитной карты.
 func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData) (*RespData, error) {
 
 	req := a.client.R()
@@ -210,6 +213,8 @@ func (a *AgentServer) PostCreditCard(ctx context.Context, data *ReqData) (*RespD
 	}
 	return &respData, nil
 }
+
+// GetCheckChanges - Проверка изменений.
 func (a *AgentServer) GetCheckChanges(ctx context.Context, data *ReqData, lastTime time.Time) ([]store.UsersData, error) {
 
 	req := a.client.R()
@@ -245,6 +250,7 @@ func (a *AgentServer) GetCheckChanges(ctx context.Context, data *ReqData, lastTi
 	return usersData, nil
 }
 
+// GetData - получение данных.
 func (a *AgentServer) GetData(ctx context.Context, userDataId int64) ([]byte, error) {
 	req := a.client.R()
 	req.SetHeaders(map[string]string{
@@ -289,6 +295,7 @@ func (a *AgentServer) GetData(ctx context.Context, userDataId int64) ([]byte, er
 	return Data.EncryptData.EncryptData, nil
 }
 
+// getFileSize - получение размера файла.
 func (a *AgentServer) getFileSize(ctx context.Context, userDataId int64) (int64, error) {
 	req := a.client.R()
 	req.SetHeaders(map[string]string{
@@ -319,6 +326,7 @@ func (a *AgentServer) getFileSize(ctx context.Context, userDataId int64) (int64,
 	return reqFileSize.FileSize, nil
 }
 
+// getFileData - получение данных файла.
 func (a *AgentServer) getFileData(ctx context.Context, userDataId int64, fileSize int64) (string, error) {
 
 	sizeChunk := 1024 * 1024
@@ -351,6 +359,7 @@ func (a *AgentServer) getFileData(ctx context.Context, userDataId int64, fileSiz
 	return saveFile.GetPathFile(), nil
 }
 
+// getFileChunks - получение чанков файла.
 func (a *AgentServer) getFileChunks(ctx context.Context, userDataId int64, fileSize int64, startChunk int, endChunk int) ([]byte, error) {
 	req := a.client.R()
 	req.SetHeaders(map[string]string{
@@ -374,6 +383,8 @@ func (a *AgentServer) getFileChunks(ctx context.Context, userDataId int64, fileS
 
 	return resp.Body(), err
 }
+
+// GetListData - получение списка данных.
 func (a *AgentServer) GetListData(ctx context.Context) ([]byte, error) {
 	req := a.client.R()
 	req.SetHeaders(map[string]string{
@@ -395,6 +406,7 @@ func (a *AgentServer) GetListData(ctx context.Context) ([]byte, error) {
 	return resp.Body(), err
 }
 
+// CheckUpdate - проверка обновления.
 func (a *AgentServer) CheckUpdate(ctx context.Context, userDataid int64, updateAt *time.Time) (bool, error) {
 
 	req := a.client.R()
@@ -468,7 +480,7 @@ func (a *AgentServer) PostUpdateData(ctx context.Context, userDataId int64, data
 	return &respData, nil
 }
 
-// Передача бинарного файла
+// PostUpdateBinaryFile - Передача (обновление) бинарного файла.
 func (a *AgentServer) PostUpdateBinaryFile(ctx context.Context, data []byte, fileName string, uuidChunk string, nStart int, nEnd int, maxSize int, reqData []byte, userDataId int64) (string, *RespData, error) {
 	req := a.client.R()
 

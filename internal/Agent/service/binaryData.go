@@ -121,6 +121,7 @@ func (s *UseCase) UpdateBinaryFile(ctx context.Context, path string, userDataId 
 	return nil
 }
 
+// createEncryptedFile - создание шифрованного файла.
 func (s *UseCase) createEncryptedFile(path string) (string, error) {
 	// Создаем новый шифрованный файл в tmp папке
 	// Имя нового файла
@@ -170,6 +171,7 @@ func (s *UseCase) prepareReqBinaryFile(originalFileName string, name, descriptio
 
 }
 
+// transferCreateDataBinaryFile - передача файлов на сервер.
 func (s *UseCase) transferCreateDataBinaryFile(ctx context.Context, r *Reader, reqDataJson []byte, ch chan<- string) (*server.RespData, error) {
 	var resp *server.RespData
 
@@ -211,6 +213,8 @@ func (s *UseCase) transferCreateDataBinaryFile(ctx context.Context, r *Reader, r
 
 	return resp, nil
 }
+
+// transferUpdateDataBinaryFile - передача файлов на сервер (при обновлении файла).
 func (s *UseCase) transferUpdateDataBinaryFile(ctx context.Context, r *Reader, reqDataJson []byte, userDataId int64, ch chan<- string) (*server.RespData, error) {
 	var resp *server.RespData
 
@@ -253,6 +257,7 @@ func (s *UseCase) transferUpdateDataBinaryFile(ctx context.Context, r *Reader, r
 	return resp, nil
 }
 
+// saveLocalFile - сохранение файла в локальное хранилище.
 func (s *UseCase) saveLocalFile(ctx context.Context, r *Reader, pathTmpFile, name, description string, reqData *server.ReqData, resp *server.RespData) error {
 	// Копируем файл в локальное хранилище Агента
 	NewNameFile := uuid.NewString()
@@ -306,6 +311,7 @@ func copyFile(src, newPath string, newNameFile string) error {
 	return nil
 }
 
+// decryptFile - дешифрование файлов.
 func (s *UseCase) decryptFile(ctx context.Context, meta *store.MetaData, originalFileName string) (string, error) {
 
 	saveOrigFile := path2.Join(PathUserData, originalFileName)
