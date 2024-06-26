@@ -95,7 +95,9 @@ type UseCaser interface {
 
 // Service - структура сервисного слоя.
 type Service struct {
-	UseCaser // интерфейс UseCase.
+	UseCaser // интерфейс UseCase. //todo add interface
+	Auth
+	StoreAuth
 }
 
 // NewService - Конструктор структуры сервисного слоя.
