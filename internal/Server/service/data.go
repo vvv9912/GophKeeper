@@ -18,7 +18,7 @@ import (
 )
 
 // CreateCredentials - Создание пары логин/пароль.
-func (s *Service) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
+func (s *UseCase) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 
 	hash, err := s.createData(ctx, userId, data, name, description)
 	if err != nil {
@@ -39,7 +39,7 @@ func (s *Service) CreateCredentials(ctx context.Context, userId int64, data []by
 }
 
 // CreateCreditCard - Создание пары данные банковских карт.
-func (s *Service) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
+func (s *UseCase) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	hash, err := s.createData(ctx, userId, data, name, description)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func moveFile(src, dst string) error {
 }
 
 // CreateFileChunks - Создание бинарных данных.
-func (s *Service) CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string, encryptedData []byte) (*RespData, error) {
+func (s *UseCase) CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string, encryptedData []byte) (*RespData, error) {
 
 	// Создаем путь
 	pathStorage := path.Join("storage", strconv.Itoa(int(userId)))
@@ -128,7 +128,7 @@ func (s *Service) CreateFileChunks(ctx context.Context, userId int64, tmpFile *T
 }
 
 // CreateFile - Создание  данных (файл).
-func (s *Service) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
+func (s *UseCase) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	hash, err := s.createData(ctx, userId, data, name, description)
 	if err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (s *Service) CreateFile(ctx context.Context, userId int64, data []byte, nam
 }
 
 // createData - проверка правильности данных и расчет хэша.
-func (s *Service) createData(ctx context.Context, userId int64, data []byte, name, description string) (string, error) {
+func (s *UseCase) createData(ctx context.Context, userId int64, data []byte, name, description string) (string, error) {
 	var err error
 	if data == nil || len(data) == 0 {
 		logger.Log.Error("data is empty")
@@ -178,7 +178,8 @@ func (s *Service) createData(ctx context.Context, userId int64, data []byte, nam
 	return hash, err
 }
 
-func (s *Service) ChangeData(ctx context.Context, userId int64, userDataId int64, lastTimeUpdate time.Time) ([]byte, error) {
+// ChangeData - проверка изменения данных.
+func (s *UseCase) ChangeData(ctx context.Context, userId int64, userDataId int64, lastTimeUpdate time.Time) ([]byte, error) {
 	ok, _ := s.StoreData.ChangeData(ctx, userId, userDataId, lastTimeUpdate)
 	resp := struct {
 		Status bool `json:"status"`
@@ -194,7 +195,8 @@ func (s *Service) ChangeData(ctx context.Context, userId int64, userDataId int64
 	return []byte(response), nil
 }
 
-func (s *Service) ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error) {
+// ChangeAllData - список изменненых данных.
+func (s *UseCase) ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -211,7 +213,8 @@ func (s *Service) ChangeAllData(ctx context.Context, userId int64, lastTimeUpdat
 	return resp, nil
 }
 
-func (s *Service) GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
+// GetFileSize - получение размера бинарного файла.
+func (s *UseCase) GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -234,7 +237,8 @@ func (s *Service) GetFileSize(ctx context.Context, userId int64, userDataId int6
 	return response, nil
 }
 
-func (s *Service) GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error) {
+// GetFileChunks - получение чанков бинарного файла.
+func (s *UseCase) GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -266,7 +270,7 @@ func (s *Service) GetFileChunks(ctx context.Context, userId int64, userDataId in
 	}
 	return data, nil
 }
-func (s *Service) getFile(ctx context.Context, pathFile string, byteStart int, byteEnd int) ([]byte, error) {
+func (s *UseCase) getFile(ctx context.Context, pathFile string, byteStart int, byteEnd int) ([]byte, error) {
 	f, err := os.OpenFile(pathFile, os.O_RDONLY, 0644)
 	if err != nil {
 		logger.Log.Error("error open file", zap.String("path", pathFile), zap.Error(err))
@@ -295,7 +299,8 @@ func (s *Service) getFile(ctx context.Context, pathFile string, byteStart int, b
 	return data, nil
 }
 
-func (s *Service) GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
+// GetData - получение данных.
+func (s *UseCase) GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -323,7 +328,8 @@ func (s *Service) GetData(ctx context.Context, userId int64, userDataId int64) (
 	return response, nil
 }
 
-func (s *Service) UpdateData(ctx context.Context, userId int64, userDataId int64, data []byte) ([]byte, error) {
+// UpdateData - обновление данных.
+func (s *UseCase) UpdateData(ctx context.Context, userId int64, userDataId int64, data []byte) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -346,22 +352,8 @@ func (s *Service) UpdateData(ctx context.Context, userId int64, userDataId int64
 
 }
 
-//	func (s *Service) UpdateData(ctx context.Context, userId int64, usersData *store.UpdateUsersData, data []byte) error {
-//		if userId == 0 {
-//			logger.Log.Error("userId is empty")
-//			return customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
-//		}
-//		usersData.UserId = userId
-//
-//		// todo проверка, если данные уже обновлены с другого устр-ва
-//		err := s.StoreData.UpdateData(ctx, usersData, data)
-//		if err != nil {
-//			return err
-//		}
-//		return nil
-//
-// }
-func (s *Service) RemoveData(ctx context.Context, userId, userDataId int64) error {
+// RemoveData - удаление данных (выставление флага в бд).
+func (s *UseCase) RemoveData(ctx context.Context, userId, userDataId int64) error {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -379,7 +371,8 @@ func (s *Service) RemoveData(ctx context.Context, userId, userDataId int64) erro
 
 }
 
-func (s *Service) GetListData(ctx context.Context, userId int64) ([]byte, error) {
+// GetListData - получение списка данных для пользователя.
+func (s *UseCase) GetListData(ctx context.Context, userId int64) ([]byte, error) {
 	if userId == 0 {
 		logger.Log.Error("userId is empty")
 		return nil, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty")
@@ -424,12 +417,13 @@ func (s *Service) GetListData(ctx context.Context, userId int64) ([]byte, error)
 	return response, nil
 }
 
-func (s *Service) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
+// UploadFile - загрузка файла.
+func (s *UseCase) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
 	return s.SaveFiles.UploadFile(additionalPath, r)
 }
 
-// CreateFile - Создание произвольных данных.
-func (s *Service) UpdateBinaryFile(ctx context.Context, userId int64, userDataId int64, tmpFile *TmpFile, encryptedData []byte) (*RespData, error) {
+// UpdateBinaryFile - Обновление бинарных данных.
+func (s *UseCase) UpdateBinaryFile(ctx context.Context, userId int64, userDataId int64, tmpFile *TmpFile, encryptedData []byte) (*RespData, error) {
 
 	// Создаем путь
 	pathStorage := path.Join("storage", strconv.Itoa(int(userId)))

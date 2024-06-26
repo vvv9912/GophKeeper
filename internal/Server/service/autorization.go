@@ -8,7 +8,7 @@ import (
 )
 
 // SignUp - регистрация пользователя.
-func (s *Service) SignUp(ctx context.Context, login, password string) (string, error) {
+func (s *UseCase) SignUp(ctx context.Context, login, password string) (string, error) {
 	// Получаем хэш пароль передает User
 	hashPassword := authorization.Sha256Hash(password)
 
@@ -26,7 +26,7 @@ func (s *Service) SignUp(ctx context.Context, login, password string) (string, e
 }
 
 // SignIn - авторизация пользователя.
-func (s *Service) SignIn(ctx context.Context, login, password string) (string, error) {
+func (s *UseCase) SignIn(ctx context.Context, login, password string) (string, error) {
 	// Получаем хэш пароль передает User
 
 	hashPassword := authorization.Sha256Hash(password)

@@ -1,37 +1,18 @@
 package handler
 
 import (
-	mock_service "GophKeeper/internal/Server/service/mocks"
-	"context"
+	mock_service "GophKeeper/internal/Agent/service/mocks"
+	service2 "GophKeeper/internal/Server/service"
+	"github.com/jmoiron/sqlx"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 // todo
 func TestHandler_HandlerSignUp(t *testing.T) {
-	type mockFunc func(s *mock_service.MockData, ctx context.Context, login, password string)
-	type args struct {
-		mockFunc
-	}
+	mock_service.MockUseCaser{}
+	s, err := service2.NewService(&sqlx.DB{}, "")
+	assert.NoError(t, err)
+	h := NewHandler(s)
 
-	tests := []struct {
-		name string
-		args args
-	}{
-		{
-			name: "ok",
-			args: args{
-				mockFunc: func(s *mock_service.MockAuth, ctx context.Context, login, password string) {
-					s.EXPECT().SignUp(ctx, login, password).Return(nil)
-				},
-			},
-		},
-		{
-			name: "fail",
-			args: args{
-				mockFunc: func(s *mock_service.MockAuth, ctx context.Context, login, password string) {
-					s.EXPECT().SignUp(ctx, login, password).Return(errors.New("fail"))
-				},
-			},
-		},
-	}
 }

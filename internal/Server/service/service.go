@@ -1,13 +1,9 @@
 package service
 
 import (
-	"GophKeeper/internal/Server/authorization"
-	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store"
-	"GophKeeper/pkg/store/postgresql"
 	"context"
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -27,23 +23,23 @@ type StoreAuth interface {
 	GetUserId(ctx context.Context, login string, password string) (int64, error)
 }
 
-// Data - интерфейс для работы с данными пользователя.
-type Data interface {
-	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
-	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
-	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
-	ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
-	GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
-
-	RemoveData(ctx context.Context, userId, userDataId int64) error
-	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
-	GetListData(ctx context.Context, userId int64) ([]byte, error)
-	UpdateData(ctx context.Context, userId int64, userDataId int64, data []byte) ([]byte, error)
-
-	CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string) (*RespData, error)
-	GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
-	GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error)
-}
+//// Data - интерфейс для работы с данными пользователя.
+//type Data interface {
+//	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
+//	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
+//	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
+//	ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
+//	GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
+//
+//	RemoveData(ctx context.Context, userId, userDataId int64) error
+//	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
+//	GetListData(ctx context.Context, userId int64) ([]byte, error)
+//	UpdateData(ctx context.Context, userId int64, userDataId int64, data []byte) ([]byte, error)
+//
+//	CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string) (*RespData, error)
+//	GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
+//	GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error)
+//}
 
 // StoreData - интерфейс для работы с БД данных пользователя.
 type StoreData interface {
@@ -62,29 +58,53 @@ type StoreData interface {
 	GetListData(ctx context.Context, userId int64) ([]store.UsersData, error)
 	UpdateBinaryFile(ctx context.Context, userId int64, userDataId int64, data []byte, hash string, metaData []byte) (*store.UsersData, error)
 }
+type UseCaser interface {
+	// SignUp - регистрация пользователя.
+	SignUp(ctx context.Context, login, password string) (string, error)
+	// SignIn - авторизация пользователя.
+	SignIn(ctx context.Context, login, password string) (string, error)
+	// CreateCredentials - Создание пары логин/пароль.
+	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
+	// CreateCreditCard - Создание пары данные банковских карт.
+	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
+	// CreateFileChunks - Создание бинарных данных.
+	CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string, encryptedData []byte) (*RespData, error)
+	// CreateFile - Создание  данных (файл).
+	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
+	// ChangeData - проверка изменения данных.
+	ChangeData(ctx context.Context, userId int64, userDataId int64, lastTimeUpdate time.Time) ([]byte, error)
+	// ChangeAllData - список изменненых данных.
+	ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
+	// GetFileSize - получение размера бинарного файла.
+	GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
+	// GetFileChunks - получение чанков бинарного файла.
+	GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error)
+	// GetData - получение данных.
+	GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
+	// UpdateData - обновление данных.
+	UpdateData(ctx context.Context, userId int64, userDataId int64, data []byte) ([]byte, error)
+	// RemoveData - удаление данных (выставление флага в бд).
+	RemoveData(ctx context.Context, userId, userDataId int64) error
+	// GetListData - получение списка данных для пользователя.
+	GetListData(ctx context.Context, userId int64) ([]byte, error)
+	// UploadFile - загрузка файла.
+	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
+	// UpdateBinaryFile - Обновление бинарных данных.
+	UpdateBinaryFile(ctx context.Context, userId int64, userDataId int64, tmpFile *TmpFile, encryptedData []byte) (*RespData, error)
+}
 
 // Service - структура сервисного слоя.
 type Service struct {
-	Auth      // интерфейс аутентификации.
-	StoreAuth // интерфейс для работы с БД пользователя.
-	StoreData // интерфейс для работы с БД данных пользователя.
-	SaveFiles // временное хранилище (сохр при работе с чанками).
+	UseCaser // интерфейс UseCase.
 }
 
 // NewService - Конструктор структуры сервисного слоя.
 func NewService(db *sqlx.DB, secretKey string) (*Service, error) {
-	nDb := postgresql.NewDatabase(db)
-	saveFiles, err := NewSaveFiles(10 * time.Minute)
-
-	//todo
-
+	u, err := NewUseCase(db, secretKey)
 	if err != nil {
-		logger.Log.Error("Error creating save files", zap.Error(err))
 		return nil, err
 	}
-	return &Service{Auth: authorization.NewAutorization(9000*time.Minute, secretKey),
-		StoreAuth: nDb,
-		SaveFiles: *saveFiles,
-		StoreData: nDb,
+	return &Service{
+		UseCaser: u,
 	}, nil
 }
