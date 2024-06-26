@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"GophKeeper/internal/Server/service"
 	"GophKeeper/pkg/customErrors"
 	"GophKeeper/pkg/logger"
 	"encoding/json"
@@ -167,9 +168,6 @@ func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Reque
 	if ok {
 
 		headerInfo := r.FormValue("info")
-		if err != nil {
-			return
-		}
 
 		var Cred ReqData
 		err = json.Unmarshal([]byte(headerInfo), &Cred)
@@ -178,8 +176,9 @@ func (h *Handler) HandlerPostChunkCrateFile(w http.ResponseWriter, r *http.Reque
 			err = customErrors.NewCustomError(err, http.StatusBadRequest, "Error reading request body")
 			return
 		}
+		var response *service.RespData
 
-		response, err := h.service.CreateFileChunks(r.Context(), userId, tmpFile, Cred.Name, Cred.Description, Cred.Data)
+		response, err = h.service.CreateFileChunks(r.Context(), userId, tmpFile, Cred.Name, Cred.Description, Cred.Data)
 		if err != nil {
 			return
 		}
