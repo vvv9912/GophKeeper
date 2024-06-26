@@ -1,6 +1,7 @@
 package service
 
 import (
+	"GophKeeper/internal/Server/authorization"
 	"GophKeeper/pkg/logger"
 	"GophKeeper/pkg/store/postgresql"
 	"github.com/jmoiron/sqlx"
@@ -27,7 +28,7 @@ func NewUseCase(db *sqlx.DB, secretKey string) (*UseCase, error) {
 	}
 
 	return &UseCase{
-		//	Auth:      authorization.NewAutorization(9000*time.Minute, secretKey),
+		Auth:      authorization.NewAutorization(9000*time.Minute, secretKey),
 		StoreAuth: nDb,
 		SaveFiles: *saveFiles,
 		StoreData: nDb,
