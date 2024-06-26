@@ -77,6 +77,7 @@ func (h Handler) HandlerSignIn(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Log.Error("Unmarshal json failed", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	jwt, err := h.service.SignIn(r.Context(), auth.Login, auth.Password)
