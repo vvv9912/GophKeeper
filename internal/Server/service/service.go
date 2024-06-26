@@ -92,10 +92,17 @@ type UseCaser interface {
 	// UpdateBinaryFile - Обновление бинарных данных.
 	UpdateBinaryFile(ctx context.Context, userId int64, userDataId int64, tmpFile *TmpFile, encryptedData []byte) (*RespData, error)
 }
+type FileSaver interface {
+	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
+	DeleteFile(uuID string) error
+	RunCronDeleteFiles(ctx context.Context) error
+	FileUploadCompleted(realFileSize int64, r *http.Request) (bool, error)
+}
 
 // Service - структура сервисного слоя.
 type Service struct {
-	UseCaser // интерфейс UseCase.
+	UseCaser
+	Auth // интерфейс UseCase.
 }
 
 // NewService - Конструктор структуры сервисного слоя.
@@ -106,5 +113,6 @@ func NewService(db *sqlx.DB, secretKey string) (*Service, error) {
 	}
 	return &Service{
 		UseCaser: u,
+		Auth:     u.Auth,
 	}, nil
 }

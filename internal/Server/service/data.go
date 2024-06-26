@@ -419,7 +419,7 @@ func (s *UseCase) GetListData(ctx context.Context, userId int64) ([]byte, error)
 
 // UploadFile - загрузка файла.
 func (s *UseCase) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
-	return s.SaveFiles.UploadFile(additionalPath, r)
+	return s.FileSaver.UploadFile(additionalPath, r)
 }
 
 // UpdateBinaryFile - Обновление бинарных данных.
