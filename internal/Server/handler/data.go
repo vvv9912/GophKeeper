@@ -344,6 +344,7 @@ func (h *Handler) HandlerCheckChanges(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusBadRequest, "Last-Time-Update header is invalid")
 		logger.Log.Error("Last-Time-Update header is invalid", zap.Error(err))
+		return
 	}
 
 	resp, err = h.service.ChangeAllData(r.Context(), userId, LastTimeUpdate)
