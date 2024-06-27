@@ -2,7 +2,6 @@ package handler
 
 import (
 	"GophKeeper/internal/Server/service"
-	mock_service "GophKeeper/internal/Server/service/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -17,7 +16,7 @@ func TestNewHandler(t *testing.T) {
 func TestHandler_InitRoutes(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mock_auth := mock_service.NewMockAuth(ctrl)
+	mock_auth := service.NewMockAuth(ctrl)
 
 	s := &service.Service{
 		UseCaser: nil,

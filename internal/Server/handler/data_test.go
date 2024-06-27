@@ -3,7 +3,6 @@ package handler
 import (
 	"GophKeeper/internal/Agent/server"
 	service2 "GophKeeper/internal/Server/service"
-	mock_service "GophKeeper/internal/Server/service/mocks"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -23,7 +22,7 @@ func TestHandler_HandlerPostCredentials(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -55,7 +54,7 @@ func TestHandler_HandlerPostCredentialsBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -82,7 +81,7 @@ func TestHandler_HandlerPostCredentialsBadDecodeBody(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -109,7 +108,7 @@ func TestHandler_HandlerPostCredentialsBadCreate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -143,7 +142,7 @@ func TestHandler_HandlerPostCreditCard(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -175,7 +174,7 @@ func TestHandler_HandlerPostCreditCardBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -202,7 +201,7 @@ func TestHandler_HandlerPostCreditCardBadJson(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -228,7 +227,7 @@ func TestHandler_HandlerPostCreditCardBadCreate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -273,7 +272,7 @@ func TestHandler_HandlerPostChunkCrateFilePart1Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -305,7 +304,7 @@ func TestHandler_HandlerPostChunkCrateFilePart1BadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -332,7 +331,7 @@ func TestHandler_HandlerPostChunkCrateFilePart1BadGetFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -361,7 +360,7 @@ func TestHandler_HandlerPostChunkCrateFilePart1BadGetFile2(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -390,7 +389,7 @@ func TestHandler_HandlerPostChunkCrateFilePart2Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -437,7 +436,7 @@ func TestHandler_HandlerPostChunkCrateFilePart2BadInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -477,7 +476,7 @@ func TestHandler_HandlerPostChunkCrateFilePart2BadCreateFileChunks(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -526,7 +525,7 @@ func TestHandler_HandlerGetListData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -550,7 +549,7 @@ func TestHandler_HandlerGetListDataBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -568,7 +567,7 @@ func TestHandler_HandlerGetListDataBadGetList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -595,7 +594,7 @@ func TestHandler_HandlerCheckUpdateData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -623,7 +622,7 @@ func TestHandler_HandlerCheckUpdateDataBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -648,7 +647,7 @@ func TestHandler_HandlerCheckUpdateDataBadTimeGet(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -673,7 +672,7 @@ func TestHandler_HandlerCheckUpdateDataBadTimeParse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -700,7 +699,7 @@ func TestHandler_HandlerCheckUpdateDataBadUserDataId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -724,7 +723,7 @@ func TestHandler_HandlerCheckUpdateDataBadChangeData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -755,7 +754,7 @@ func TestHandler_HandlerCheckChanges(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -781,7 +780,7 @@ func TestHandler_HandlerCheckChangesBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -802,7 +801,7 @@ func TestHandler_HandlerCheckChangesBadGetTime(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -824,7 +823,7 @@ func TestHandler_HandlerCheckChangesBadParseTime(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -848,7 +847,7 @@ func TestHandler_HandlerCheckChangesErrorChangeAllData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -877,7 +876,7 @@ func TestHandler_HandlerGetFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -903,7 +902,7 @@ func TestHandler_HandlerGetFileErrGetUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -924,7 +923,7 @@ func TestHandler_HandlerGetFileGetUserDataId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -948,7 +947,7 @@ func TestHandler_HandlerGetFileBadGetFileChunk(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -977,7 +976,7 @@ func TestHandler_HandlerGetData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1005,7 +1004,7 @@ func TestHandler_HandlerGetDataBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1026,7 +1025,7 @@ func TestHandler_HandlerGetDataErrUserDataId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1048,7 +1047,7 @@ func TestHandler_HandlerGetDataErrGerData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1079,7 +1078,7 @@ func TestHandler_HandlerGetFileSize(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1108,7 +1107,7 @@ func TestHandler_HandlerGetFileSizeBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1131,7 +1130,7 @@ func TestHandler_HandlerGetFileSizeBadUserDataId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1154,7 +1153,7 @@ func TestHandler_HandlerGetFileSizeBadUserDataId0(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1181,7 +1180,7 @@ func TestHandler_HandlerGetFileSizeBadGetFileSize(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1211,7 +1210,7 @@ func TestHandler_HandlerUpdateData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1242,7 +1241,7 @@ func TestHandler_HandlerUpdateDataBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1267,7 +1266,7 @@ func TestHandler_HandlerUpdateDataBadUserDataId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1292,7 +1291,7 @@ func TestHandler_HandlerUpdateDataBadBody(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1321,7 +1320,7 @@ func TestHandler_HandlerUpdateDataBadUpdateData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1353,7 +1352,7 @@ func TestHandler_HandlerRemoveData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1382,7 +1381,7 @@ func TestHandler_HandlerRemoveDataBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1406,7 +1405,7 @@ func TestHandler_HandlerRemoveDataBadUserDataId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1429,7 +1428,7 @@ func TestHandler_HandlerRemoveDataBadRemoveData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1459,7 +1458,7 @@ func TestHandler_HandlerUpdateBinaryFilePart1Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1495,7 +1494,7 @@ func TestHandler_HandlerUpdateBinaryFilePart1BadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1526,7 +1525,7 @@ func TestHandler_HandlerUpdateBinaryFilePart1SuccessBadUserDataId(t *testing.T) 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1557,7 +1556,7 @@ func TestHandler_HandlerUpdateBinaryFilePart1GetFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1584,7 +1583,7 @@ func TestHandler_HandlerUpdateBinaryFilePart1FileIsNull(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1619,7 +1618,7 @@ func TestHandler_HandlerUpdateBinaryFilePart1BadUploadFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1655,7 +1654,7 @@ func TestHandler_HandlerUpdateBinaryFilePart1BadUploadFileTmpIsNill(t *testing.T
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1691,7 +1690,7 @@ func TestHandler_HandlerUpdateBinaryFilePart2Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1743,7 +1742,7 @@ func TestHandler_HandlerUpdateBinaryFilePart2BadGetInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1782,7 +1781,7 @@ func TestHandler_HandlerUpdateBinaryFilePart2BadUpdateBinaryFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1835,7 +1834,7 @@ func TestHandler_HandlerPostCrateFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1866,7 +1865,7 @@ func TestHandler_HandlerPostCrateFileBadUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1892,7 +1891,7 @@ func TestHandler_HandlerPostCrateFileBadDecodeBody(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -1915,7 +1914,7 @@ func TestHandler_HandlerPostCrateFileBadCreateFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}

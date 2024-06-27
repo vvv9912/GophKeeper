@@ -2,10 +2,9 @@
 // Source: service.go
 
 // Package mock_service is a generated GoMock package.
-package mock_service
+package service
 
 import (
-	service "GophKeeper/internal/Server/service"
 	store "GophKeeper/pkg/store"
 	context "context"
 	http "net/http"
@@ -393,10 +392,10 @@ func (mr *MockUseCaserMockRecorder) ChangeData(ctx, userId, userDataId, lastTime
 }
 
 // CreateCredentials mocks base method.
-func (m *MockUseCaser) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*service.RespData, error) {
+func (m *MockUseCaser) CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateCredentials", ctx, userId, data, name, description)
-	ret0, _ := ret[0].(*service.RespData)
+	ret0, _ := ret[0].(*RespData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -408,10 +407,10 @@ func (mr *MockUseCaserMockRecorder) CreateCredentials(ctx, userId, data, name, d
 }
 
 // CreateCreditCard mocks base method.
-func (m *MockUseCaser) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*service.RespData, error) {
+func (m *MockUseCaser) CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateCreditCard", ctx, userId, data, name, description)
-	ret0, _ := ret[0].(*service.RespData)
+	ret0, _ := ret[0].(*RespData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -423,10 +422,10 @@ func (mr *MockUseCaserMockRecorder) CreateCreditCard(ctx, userId, data, name, de
 }
 
 // CreateFile mocks base method.
-func (m *MockUseCaser) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*service.RespData, error) {
+func (m *MockUseCaser) CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateFile", ctx, userId, data, name, description)
-	ret0, _ := ret[0].(*service.RespData)
+	ret0, _ := ret[0].(*RespData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -438,10 +437,10 @@ func (mr *MockUseCaserMockRecorder) CreateFile(ctx, userId, data, name, descript
 }
 
 // CreateFileChunks mocks base method.
-func (m *MockUseCaser) CreateFileChunks(ctx context.Context, userId int64, tmpFile *service.TmpFile, name, description string, encryptedData []byte) (*service.RespData, error) {
+func (m *MockUseCaser) CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string, encryptedData []byte) (*RespData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateFileChunks", ctx, userId, tmpFile, name, description, encryptedData)
-	ret0, _ := ret[0].(*service.RespData)
+	ret0, _ := ret[0].(*RespData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -557,10 +556,10 @@ func (mr *MockUseCaserMockRecorder) SignUp(ctx, login, password interface{}) *go
 }
 
 // UpdateBinaryFile mocks base method.
-func (m *MockUseCaser) UpdateBinaryFile(ctx context.Context, userId, userDataId int64, tmpFile *service.TmpFile, encryptedData []byte) (*service.RespData, error) {
+func (m *MockUseCaser) UpdateBinaryFile(ctx context.Context, userId, userDataId int64, tmpFile *TmpFile, encryptedData []byte) (*RespData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateBinaryFile", ctx, userId, userDataId, tmpFile, encryptedData)
-	ret0, _ := ret[0].(*service.RespData)
+	ret0, _ := ret[0].(*RespData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -587,11 +586,11 @@ func (mr *MockUseCaserMockRecorder) UpdateData(ctx, userId, userDataId, data int
 }
 
 // UploadFile mocks base method.
-func (m *MockUseCaser) UploadFile(additionalPath string, r *http.Request) (bool, *service.TmpFile, error) {
+func (m *MockUseCaser) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UploadFile", additionalPath, r)
 	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(*service.TmpFile)
+	ret1, _ := ret[1].(*TmpFile)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -669,11 +668,11 @@ func (mr *MockFileSaverMockRecorder) RunCronDeleteFiles(ctx interface{}) *gomock
 }
 
 // UploadFile mocks base method.
-func (m *MockFileSaver) UploadFile(additionalPath string, r *http.Request) (bool, *service.TmpFile, error) {
+func (m *MockFileSaver) UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UploadFile", additionalPath, r)
 	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(*service.TmpFile)
+	ret1, _ := ret[1].(*TmpFile)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

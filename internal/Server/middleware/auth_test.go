@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"GophKeeper/internal/Server/service"
-	mock_service "GophKeeper/internal/Server/service/mocks"
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +13,7 @@ import (
 func TestMw_MiddlewareAuthBearerPrefix(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockAuth := mock_service.NewMockAuth(ctrl)
+	mockAuth := service.NewMockAuth(ctrl)
 
 	s := &service.Service{
 		UseCaser: nil,
@@ -52,7 +51,7 @@ func TestMw_MiddlewareAuthBearerPrefix(t *testing.T) {
 func TestMw_MiddlewareAuthBearerPrefixBadToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockAuth := mock_service.NewMockAuth(ctrl)
+	mockAuth := service.NewMockAuth(ctrl)
 
 	s := &service.Service{
 		UseCaser: nil,
@@ -84,7 +83,7 @@ func TestMw_MiddlewareAuthBearerPrefixBadToken(t *testing.T) {
 func TestMw_MiddlewareAuthBearerPrefixGetUserId(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockAuth := mock_service.NewMockAuth(ctrl)
+	mockAuth := service.NewMockAuth(ctrl)
 
 	s := &service.Service{
 		UseCaser: nil,
@@ -119,7 +118,7 @@ func TestMw_MiddlewareAuthBearerPrefixGetUserId(t *testing.T) {
 func TestMw_MiddlewareAuthBearerPrefixGetUserId2(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockAuth := mock_service.NewMockAuth(ctrl)
+	mockAuth := service.NewMockAuth(ctrl)
 
 	s := &service.Service{
 		UseCaser: nil,

@@ -2,7 +2,6 @@ package handler
 
 import (
 	service2 "GophKeeper/internal/Server/service"
-	mock_service "GophKeeper/internal/Server/service/mocks"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/mock/gomock"
@@ -18,7 +17,7 @@ func TestHandler_HandlerSignUp(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -41,7 +40,7 @@ func TestHandler_HandlerSignUpBadAnswer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -60,7 +59,7 @@ func TestHandler_HandlerSignUpErrBadBody(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -79,7 +78,7 @@ func TestHandler_HandlerSignIn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -102,7 +101,7 @@ func TestHandler_HandlerSignInErrBadBody(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
@@ -120,7 +119,7 @@ func TestHandler_HandlerSignInBadAnswer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	u := mock_service.NewMockUseCaser(ctrl)
+	u := service2.NewMockUseCaser(ctrl)
 	s := service2.Service{
 		UseCaser: u,
 	}
