@@ -64,7 +64,6 @@ func (a *Autorization) GetUserId(tokenString string) (int64, error) {
 	}
 
 	if !token.Valid {
-		//		fmt.Println("Token is not valid")
 		return -1, nil
 	}
 
