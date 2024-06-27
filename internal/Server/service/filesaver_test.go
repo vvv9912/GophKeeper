@@ -357,7 +357,7 @@ func TestSaveFiles_RunCronDeleteFiles2(t *testing.T) {
 	}()
 
 	err = s.RunCronDeleteFiles(context.Background())
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	require.NoError(t, err)
 	fmt.Println(s.Chunks)
 	if _, exists := s.Chunks["test-uuid"]; exists {
