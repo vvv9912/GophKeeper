@@ -38,7 +38,7 @@ func Run(ctx context.Context) error {
 
 	h := handler.NewHandler(services)
 
-	service.StartServer(ctx, h.InitRoutes(services), config.Get().ServerDNS, config.Get().CertFile, config.Get().KeyFile)
+	service.StartServer(ctx, h.InitRoutes(), config.Get().ServerDNS, config.Get().CertFile, config.Get().KeyFile)
 
 	return nil
 }
