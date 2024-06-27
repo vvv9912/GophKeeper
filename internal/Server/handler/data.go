@@ -604,6 +604,7 @@ func (h *Handler) HandlerUpdateBinaryFile(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if tmpFile == nil {
+		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "TmpFile is nill")
 		return
 	}
 
@@ -614,9 +615,6 @@ func (h *Handler) HandlerUpdateBinaryFile(w http.ResponseWriter, r *http.Request
 	if ok {
 
 		headerInfo := r.FormValue("info")
-		if err != nil {
-			return
-		}
 
 		var Cred ReqData
 		err = json.Unmarshal([]byte(headerInfo), &Cred)
@@ -625,11 +623,12 @@ func (h *Handler) HandlerUpdateBinaryFile(w http.ResponseWriter, r *http.Request
 			err = customErrors.NewCustomError(err, http.StatusBadRequest, "Error reading request body")
 			return
 		}
-
-		response, err := h.service.UpdateBinaryFile(r.Context(), userId, int64(userDataId), tmpFile, Cred.Data)
+		var response *service.RespData
+		response, err = h.service.UpdateBinaryFile(r.Context(), userId, int64(userDataId), tmpFile, Cred.Data)
 		if err != nil {
 			return
 		}
+
 		resp, err = json.Marshal(response)
 		if err != nil {
 			logger.Log.Error("Marshal response failed", zap.Error(err))

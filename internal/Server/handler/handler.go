@@ -18,10 +18,10 @@ func NewHandler(service *service.Service) *Handler {
 }
 
 // InitRoutes - инициализация маршрутов.
-func (h *Handler) InitRoutes(services *service.Service) http.Handler {
+func (h *Handler) InitRoutes() http.Handler {
 
 	r := chi.NewRouter()
-	mw := middleware.Mw{services.Auth}
+	mw := middleware.Mw{h.service.Auth}
 
 	apiR := r.Route("/api", func(r chi.Router) {})
 

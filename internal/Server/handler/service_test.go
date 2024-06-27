@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,4 +43,11 @@ func Test_getUserId(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_getUserIdUserIdNoInt64(t *testing.T) {
+	r := httptest.NewRequest("POST", "/u", nil)
+	ctx := context.WithValue(r.Context(), "UserId", "test")
+	_, err := getUserId(r.WithContext(ctx))
+	assert.Error(t, err)
 }
