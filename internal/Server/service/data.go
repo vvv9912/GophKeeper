@@ -450,10 +450,6 @@ func (s *UseCase) UpdateBinaryFile(ctx context.Context, userId int64, userDataId
 	}
 	// считаем хэш метаднныех
 	hash := ShaHash.Sha256Hash(data)
-	if err != nil {
-		err := customErrors.NewCustomError(err, http.StatusInternalServerError, "Hash error")
-		return nil, err
-	}
 
 	// Сохраняем структуру с описанием файла.
 	userData, err := s.StoreData.UpdateBinaryFile(ctx, userId, userDataId, encryptedData, hash, data)

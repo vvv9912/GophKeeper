@@ -549,8 +549,6 @@ func TestUseCase_ChangeDataBad(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// ChangeAllData
-
 func TestUseCase_GetFileSize(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -748,7 +746,7 @@ func TestUseCase_GetFileChunksErrorGetMera(t *testing.T) {
 	storeData.EXPECT().GetMetaData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 
 	_, err = u.GetFileChunks(context.TODO(), 1, 1, req)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 }
 
 func TestUseCase_GetFileChunksBadSize(t *testing.T) {
@@ -1301,9 +1299,140 @@ func TestUseCase_UpdateBinaryFile(t *testing.T) {
 		StoreData: storeData,
 		FileSaver: fileSaver,
 	}
+	namef := uuid.NewString()
+	tmpFile := &TmpFile{
+		PathFileSave: "tmp/testfile.txt",
+		Uuid:         namef,
+		Size:         1024,
+	}
+	err := os.MkdirAll(path.Dir(tmpFile.PathFileSave), os.ModePerm)
+	require.NoError(t, err)
+	f, err := os.Create(tmpFile.PathFileSave)
+	require.NoError(t, err)
+	defer f.Close()
+	defer os.Remove(tmpFile.PathFileSave)
 
-	storeData.EXPECT().CreateCredentials(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&store.UsersData{}, nil)
-
-	_, err := u.CreateCredentials(context.TODO(), 1, []byte("data"), "name", "description")
+	storeData.EXPECT().UpdateBinaryFile(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&store.UsersData{}, nil)
+	_, err = u.UpdateBinaryFile(context.TODO(), 1, 1, tmpFile, []byte("data"))
 	assert.NoError(t, err)
+}
+
+func TestUseCase_UpdateBinaryFileBadMove(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAuth := NewMockAuth(ctrl)
+	mockStore := NewMockStoreAuth(ctrl)
+	storeData := NewMockStoreData(ctrl)
+	fileSaver := NewMockFileSaver(ctrl)
+
+	u := &UseCase{
+		Auth:      mockAuth,
+		StoreAuth: mockStore,
+		StoreData: storeData,
+		FileSaver: fileSaver,
+	}
+
+	//storeData.EXPECT().UpdateBinaryFile(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&store.UsersData{}, nil)
+
+	userId := int64(1)
+	namef := uuid.NewString()
+	tmpFile := &TmpFile{
+		PathFileSave: "tmp/testfile.txt",
+		Uuid:         namef,
+		Size:         1024,
+	}
+
+	_, err := u.UpdateBinaryFile(context.TODO(), userId, 1, tmpFile, []byte("data"))
+
+	require.Error(t, err)
+}
+
+// upload
+func TestUseCase_UploadFileBadUpload(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAuth := NewMockAuth(ctrl)
+	mockStore := NewMockStoreAuth(ctrl)
+	storeData := NewMockStoreData(ctrl)
+	fileSaver := NewMockFileSaver(ctrl)
+
+	u := &UseCase{
+		Auth:      mockAuth,
+		StoreAuth: mockStore,
+		StoreData: storeData,
+		FileSaver: fileSaver,
+	}
+	fileSaver.EXPECT().UploadFile(gomock.Any(), gomock.Any()).Return(true, &TmpFile{}, fmt.Errorf("error"))
+
+	_, _, err := u.UploadFile("path", &http.Request{})
+	require.Error(t, err)
+}
+
+//ChangeAllData
+
+func TestUseCase_ChangeAllData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAuth := NewMockAuth(ctrl)
+	mockStore := NewMockStoreAuth(ctrl)
+	storeData := NewMockStoreData(ctrl)
+	fileSaver := NewMockFileSaver(ctrl)
+
+	u := &UseCase{
+		Auth:      mockAuth,
+		StoreAuth: mockStore,
+		StoreData: storeData,
+		FileSaver: fileSaver,
+	}
+
+	storeData.EXPECT().ChangeAllData(gomock.Any(), gomock.Any(), gomock.Any()).Return([]store.UsersData{}, nil)
+
+	_, err := u.ChangeAllData(context.TODO(), 1, time.Now())
+
+	assert.NoError(t, err)
+}
+func TestUseCase_ChangeAllDataBaduserId(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAuth := NewMockAuth(ctrl)
+	mockStore := NewMockStoreAuth(ctrl)
+	storeData := NewMockStoreData(ctrl)
+	fileSaver := NewMockFileSaver(ctrl)
+
+	u := &UseCase{
+		Auth:      mockAuth,
+		StoreAuth: mockStore,
+		StoreData: storeData,
+		FileSaver: fileSaver,
+	}
+
+	_, err := u.ChangeAllData(context.TODO(), 0, time.Now())
+
+	assert.Error(t, err)
+}
+func TestUseCase_ChangeAllDataBadStore(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAuth := NewMockAuth(ctrl)
+	mockStore := NewMockStoreAuth(ctrl)
+	storeData := NewMockStoreData(ctrl)
+	fileSaver := NewMockFileSaver(ctrl)
+
+	u := &UseCase{
+		Auth:      mockAuth,
+		StoreAuth: mockStore,
+		StoreData: storeData,
+		FileSaver: fileSaver,
+	}
+
+	storeData.EXPECT().ChangeAllData(gomock.Any(), gomock.Any(), gomock.Any()).Return([]store.UsersData{}, fmt.Errorf("error"))
+
+	_, err := u.ChangeAllData(context.TODO(), 1, time.Now())
+
+	assert.Error(t, err)
 }
