@@ -28,6 +28,7 @@ func (s *UseCase) CreateCredentials(ctx context.Context, userId int64, data []by
 	if err != nil {
 		return nil, err
 	}
+
 	resp := &RespData{
 		UserDataId: userData.UserDataId,
 		Hash:       hash,
@@ -61,10 +62,10 @@ func (s *UseCase) CreateCreditCard(ctx context.Context, userId int64, data []byt
 func createPathIfNotExists(dirPath string) error {
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
-		if errors.Is(err, os.ErrExist) {
-			logger.Log.Error("createPathIfNotExists", zap.Error(err))
-			return nil
-		}
+		//if errors.Is(err, os.ErrExist) {
+		//	logger.Log.Error("createPathIfNotExists", zap.Error(err))
+		//	return nil
+		//}
 		logger.Log.Error("createPathIfNotExists", zap.Error(err))
 		return err
 	}
