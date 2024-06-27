@@ -46,8 +46,3 @@ func StartServer(ctx context.Context, h http.Handler, addr, cert, key string) *S
 	}()
 	return &Server{}
 }
-
-// Stop - остановка сервера.
-func (s *Server) Stop(ctx context.Context) error {
-	return s.httpServer.Shutdown(ctx)
-}
