@@ -1347,6 +1347,38 @@ func TestUseCase_UpdateBinaryFileBadMove(t *testing.T) {
 
 	require.Error(t, err)
 }
+func TestUseCase_UpdateBinaryFileBadUpdate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAuth := NewMockAuth(ctrl)
+	mockStore := NewMockStoreAuth(ctrl)
+	storeData := NewMockStoreData(ctrl)
+	fileSaver := NewMockFileSaver(ctrl)
+
+	u := &UseCase{
+		Auth:      mockAuth,
+		StoreAuth: mockStore,
+		StoreData: storeData,
+		FileSaver: fileSaver,
+	}
+	namef := uuid.NewString()
+	tmpFile := &TmpFile{
+		PathFileSave: "tmp/testfile.txt",
+		Uuid:         namef,
+		Size:         1024,
+	}
+	err := os.MkdirAll(path.Dir(tmpFile.PathFileSave), os.ModePerm)
+	require.NoError(t, err)
+	f, err := os.Create(tmpFile.PathFileSave)
+	require.NoError(t, err)
+	defer f.Close()
+	defer os.Remove(tmpFile.PathFileSave)
+
+	storeData.EXPECT().UpdateBinaryFile(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&store.UsersData{}, fmt.Errorf("error"))
+	_, err = u.UpdateBinaryFile(context.TODO(), 1, 1, tmpFile, []byte("data"))
+	assert.Error(t, err)
+}
 
 // upload
 func TestUseCase_UploadFileBadUpload(t *testing.T) {
