@@ -27,7 +27,8 @@ func TestGetConfig(t *testing.T) {
 func TestInitConfig_OverrideValuesFromFiles(t *testing.T) {
 	f, err := os.Create("config.hcl")
 	require.NoError(t, err)
-	f.Close()
+	err = f.Close()
+	require.NoError(t, err)
 	defer os.Remove("config.hcl")
 	InitConfig()
 

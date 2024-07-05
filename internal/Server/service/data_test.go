@@ -250,7 +250,8 @@ func TestUseCase_CreateFileChunks(t *testing.T) {
 	require.NoError(t, err)
 	f, err := os.Create(tmpFile.PathFileSave)
 	require.NoError(t, err)
-	f.Close()
+	err = f.Close()
+	require.NoError(t, err)
 
 	defer os.Remove(tmpFile.PathFileSave)
 	_, err = u.CreateFileChunks(context.TODO(), userId, tmpFile, "name", "description", []byte("data"))
@@ -1315,7 +1316,8 @@ func TestUseCase_UpdateBinaryFile(t *testing.T) {
 	require.NoError(t, err)
 	f, err := os.Create(tmpFile.PathFileSave)
 	require.NoError(t, err)
-	defer f.Close()
+	err = f.Close()
+	require.NoError(t, err)
 	defer os.Remove(tmpFile.PathFileSave)
 
 	storeData.EXPECT().UpdateBinaryFile(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&store.UsersData{}, nil)
