@@ -239,7 +239,7 @@ func TestUseCase_CreateFileChunks(t *testing.T) {
 	storeData.EXPECT().CreateFileDataChunks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&store.UsersData{}, nil)
 
 	userId := int64(1)
-	namef := uuid.NewString()
+	namef := uuid.NewString() + ".txt"
 	tmpFile := &TmpFile{
 		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,
@@ -1304,7 +1304,7 @@ func TestUseCase_UpdateBinaryFile(t *testing.T) {
 		StoreData: storeData,
 		FileSaver: fileSaver,
 	}
-	namef := uuid.NewString()
+	namef := uuid.NewString() + ".txt"
 	tmpFile := &TmpFile{
 		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,
@@ -1338,10 +1338,8 @@ func TestUseCase_UpdateBinaryFileBadMove(t *testing.T) {
 		FileSaver: fileSaver,
 	}
 
-	//storeData.EXPECT().UpdateBinaryFile(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&store.UsersData{}, nil)
-
 	userId := int64(1)
-	namef := uuid.NewString()
+	namef := uuid.NewString() + ".txt"
 	tmpFile := &TmpFile{
 		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,
@@ -1367,7 +1365,7 @@ func TestUseCase_UpdateBinaryFileBadUpdate(t *testing.T) {
 		StoreData: storeData,
 		FileSaver: fileSaver,
 	}
-	namef := uuid.NewString()
+	namef := uuid.NewString() + ".txt"
 	tmpFile := &TmpFile{
 		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,

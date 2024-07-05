@@ -260,12 +260,12 @@ func TestSaveFiles_DeleteFile(t *testing.T) {
 	s := &SaveFiles{
 		Chunks: map[string]TmpFile{
 			"test-uuid": {
-				PathFileSave: "test-path",
+				PathFileSave: "test-path.txt",
 			},
 		},
 		fileSave: false,
 	}
-	f, err := os.Create("test-path")
+	f, err := os.Create("test-path.txt")
 	require.NoError(t, err)
 
 	defer func() {
@@ -278,7 +278,7 @@ func TestSaveFiles_DeleteFile(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	if _, exists := s.Chunks["test-uuid"]; exists {
+	if _, exists := s.Chunks["test-uuid.txt"]; exists {
 		t.Fatalf("expected file to be deleted from Chunks map")
 	}
 }
