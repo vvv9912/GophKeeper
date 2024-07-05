@@ -21,7 +21,7 @@ func NewHandler(service *service.Service) *Handler {
 func (h *Handler) InitRoutes() http.Handler {
 
 	r := chi.NewRouter()
-	mw := middleware.Mw{h.service.Auth}
+	mw := middleware.NewMw(h.service.Auth)
 
 	apiR := r.Route("/api", func(r chi.Router) {})
 

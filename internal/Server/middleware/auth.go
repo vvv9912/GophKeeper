@@ -12,6 +12,10 @@ type Mw struct {
 	service.Auth
 }
 
+func NewMw(auth service.Auth) *Mw {
+	return &Mw{Auth: auth}
+}
+
 // MiddlewareAuth - middleware для проверки токена.
 func (m Mw) MiddlewareAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
