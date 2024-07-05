@@ -19,7 +19,8 @@ import (
 
 func TestUseCase_CreateBinaryFile(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+
+	path := path.Join("/tmp", "test.txt")
 	name := "test"
 	description := "test"
 	ch := make(chan string)
@@ -46,7 +47,7 @@ func TestUseCase_CreateBinaryFile(t *testing.T) {
 
 func TestUseCase_CreateBinaryFile7(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 	name := "test"
 	description := "test"
 	ch := make(chan string)
@@ -74,7 +75,7 @@ func TestUseCase_CreateBinaryFile7(t *testing.T) {
 }
 func TestUseCase_CreateBinaryFile8(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 	name := "test"
 	description := "test"
 	ch := make(chan string)
@@ -102,7 +103,7 @@ func TestUseCase_CreateBinaryFile8(t *testing.T) {
 }
 func TestUseCase_CreateBinaryFile2(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 	name := "test"
 	description := "test"
 	ch := make(chan string)
@@ -129,7 +130,7 @@ func TestUseCase_CreateBinaryFile2(t *testing.T) {
 }
 func TestUseCase_CreateBinaryFile3(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 	name := "test"
 	description := "test"
 	ch := make(chan string)
@@ -331,7 +332,7 @@ func TestUseCase_CreateBinaryFile6(t *testing.T) {
 // ////////////////////////////
 func TestUseCase_UpdateBinaryFile(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 	userDataId := int64(1)
 
 	ch := make(chan string)
@@ -357,7 +358,7 @@ func TestUseCase_UpdateBinaryFile(t *testing.T) {
 }
 func TestUseCase_UpdateBinaryFile8(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 	userDataId := int64(1)
 
 	ch := make(chan string)
@@ -384,7 +385,7 @@ func TestUseCase_UpdateBinaryFile8(t *testing.T) {
 }
 func TestUseCase_UpdateBinaryFile7(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 	userDataId := int64(1)
 
 	ch := make(chan string)
@@ -412,7 +413,7 @@ func TestUseCase_UpdateBinaryFile7(t *testing.T) {
 
 func TestUseCase_UpdateBinaryFile2(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 	userDataId := int64(1)
 	ch := make(chan string)
 
@@ -439,7 +440,7 @@ func TestUseCase_UpdateBinaryFile2(t *testing.T) {
 }
 func TestUseCase_UpdateBinaryFile3(t *testing.T) {
 	ctx := context.TODO()
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 	userDataId := int64(1)
 	ch := make(chan string)
 
@@ -640,7 +641,7 @@ func TestUseCase_UpdateBinaryFile6(t *testing.T) {
 
 // ////////////////////////////
 func TestUseCase_createEncryptedFile(t *testing.T) {
-	path := "/tmp/test.txt"
+	path := path.Join("/tmp", "test.txt")
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -694,7 +695,9 @@ func TestUseCase_createEncryptedFile3(t *testing.T) {
 func Test_copyFile(t *testing.T) {
 
 	//src := "/tmp/source.txt"
-	newPath := "/tmp/new/"
+
+	//newPath := "/tmp/new/"
+	newPath := path.Join("/tmp", "new")
 	newNameFile := "new_file.txt"
 
 	// Create a temporary source file for testing
@@ -817,7 +820,7 @@ func TestUseCase_PrepareReqBinaryFile2(t *testing.T) {
 
 func Test_copyFile1(t *testing.T) {
 	src := "/tmp/source.txt"
-	newPath := "/tmp/new/"
+	newPath := path.Join("/tmp", "new")
 	newNameFile := "new_file.txt"
 
 	// Create a temporary source file for testing
@@ -835,8 +838,8 @@ func Test_copyFile2(t *testing.T) {
 }
 func Test_copyFile3(t *testing.T) {
 
-	newPath := "/tmp/new/"
-	newNameFile := "new_file/fff/ss/ss.txt"
+	newPath := path.Join("/tmp", "new")
+	newNameFile := path.Join("new_file", "fff", "ss", "ss.txt")
 
 	// Create a temporary source file for testing
 	tempFile, err := ioutil.TempFile("", "source.txt")

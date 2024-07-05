@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"os"
+	"path"
 	"runtime"
 	"testing"
 )
@@ -192,6 +193,10 @@ func TestEncrypt_DecryptFile23(t *testing.T) {
 	}
 }
 func TestEncrypt_DecryptFile24(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping test on non-Linux")
+	}
+
 	key := []byte("example key 1234")
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -234,7 +239,8 @@ func TestEncrypt_DecryptFile22(t *testing.T) {
 	e := &Encrypt{block: block}
 
 	inputFilePath := "input.txt"
-	outputFilePath := "ccc/encrypted.txt"
+
+	outputFilePath := path.Join("ccc", "encrypted.txt")
 	defer func() {
 		_ = os.Remove(inputFilePath)
 		_ = os.Remove(outputFilePath)

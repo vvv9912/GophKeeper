@@ -241,7 +241,7 @@ func TestUseCase_CreateFileChunks(t *testing.T) {
 	userId := int64(1)
 	namef := uuid.NewString()
 	tmpFile := &TmpFile{
-		PathFileSave: "tmp/testfile.txt",
+		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,
 		Size:         1024,
 	}
@@ -303,7 +303,7 @@ func TestUseCase_CreateFileChunksCreateFileData(t *testing.T) {
 	userId := int64(1)
 	namef := uuid.NewString()
 	tmpFile := &TmpFile{
-		PathFileSave: "tmp/testfile.txt",
+		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,
 		Size:         1024,
 	}
@@ -336,7 +336,7 @@ func TestUseCase_CreateFileChunksErrCreateData(t *testing.T) {
 	userId := int64(1)
 	namef := uuid.NewString()
 	tmpFile := &TmpFile{
-		PathFileSave: "tmp/testfile.txt",
+		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,
 		Size:         1024,
 	}
@@ -1306,7 +1306,7 @@ func TestUseCase_UpdateBinaryFile(t *testing.T) {
 	}
 	namef := uuid.NewString()
 	tmpFile := &TmpFile{
-		PathFileSave: "tmp/testfile.txt",
+		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,
 		Size:         1024,
 	}
@@ -1343,7 +1343,7 @@ func TestUseCase_UpdateBinaryFileBadMove(t *testing.T) {
 	userId := int64(1)
 	namef := uuid.NewString()
 	tmpFile := &TmpFile{
-		PathFileSave: "tmp/testfile.txt",
+		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,
 		Size:         1024,
 	}
@@ -1369,7 +1369,7 @@ func TestUseCase_UpdateBinaryFileBadUpdate(t *testing.T) {
 	}
 	namef := uuid.NewString()
 	tmpFile := &TmpFile{
-		PathFileSave: "tmp/testfile.txt",
+		PathFileSave: path.Join("tmp", "testfile.txt"),
 		Uuid:         namef,
 		Size:         1024,
 	}
