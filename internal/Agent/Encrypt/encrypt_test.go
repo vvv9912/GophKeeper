@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
 	"testing"
 )
 
@@ -130,6 +131,10 @@ func TestEncryptFile_InputFileNotExist(t *testing.T) {
 	}
 }
 func TestEncryptFile_OutputDirPermissionDenied(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping test on non-Linux")
+	}
+
 	key := []byte("example key 1234")
 	block, err := aes.NewCipher(key)
 	if err != nil {
