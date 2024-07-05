@@ -21,7 +21,14 @@ func NewCobra(s *service.Service) *Cobra {
 
 // Start - инициализация команд
 func (c *Cobra) Start(ctx context.Context) error {
-
+	c.initCommand(ctx)
+	if err := c.rootCmd.Execute(); err != nil {
+		logger.Log.Error("Root execute err", zap.Error(err))
+		return err
+	}
+	return nil
+}
+func (c *Cobra) initCommand(ctx context.Context) {
 	signIn := &cobra.Command{
 		Use:     "signIn",
 		Short:   "Sign in",
@@ -123,9 +130,4 @@ func (c *Cobra) Start(ctx context.Context) error {
 	c.rootCmd.AddCommand(UpdateBinaryFile)
 	c.rootCmd.SetContext(ctx)
 
-	if err := c.rootCmd.Execute(); err != nil {
-		logger.Log.Error("Root execute err", zap.Error(err))
-		return err
-	}
-	return nil
 }

@@ -27,6 +27,7 @@ func Run(ctx context.Context) {
 	logger.Log.Info("start app, config: ", zap.Any("config", config.Get()))
 
 	key, err := readKeyFromFile(config.Get().PathSecretKey)
+
 	if err != nil {
 		panic(err)
 	}

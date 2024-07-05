@@ -1,16 +1,29 @@
 package command
 
 import (
+	"GophKeeper/internal/Agent/service"
+	mock_service "GophKeeper/internal/Agent/service/mocks"
+	"context"
+	"github.com/golang/mock/gomock"
 	"testing"
 )
 
-func TestCobra_Start(t *testing.T) {
-	//ctrl := gomock.NewController(t)
-	//defer ctrl.Finish()
-	//
-	//mockUse := mock_service.NewMockUseCaser(ctrl)
-	//serv := service.Service{mockUse}
-	//
-	//err := NewCobra(&serv).Start(context.Background())
-	//assert.Error(t, err)
+func TestNewCobra(t *testing.T) {
+	NewCobra(nil)
+}
+
+func TestCobra_initCommand(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUse := mock_service.NewMockUseCaser(ctrl)
+
+	serv := &service.Service{
+		UseCaser: mockUse,
+	}
+
+	cobr := NewCobra(serv)
+
+	cobr.initCommand(context.Background())
+
 }
