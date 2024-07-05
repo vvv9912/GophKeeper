@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -163,6 +164,10 @@ func TestCreatePathIfNotExists_DirectoryAlreadyExists(t *testing.T) {
 	assert.NoError(t, err)
 }
 func TestCreatePathIfNotExists_PermissionError(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping test on non-Linux")
+	}
+
 	dirPath := "/root/testDir"
 
 	err := createPathIfNotExists(dirPath)
