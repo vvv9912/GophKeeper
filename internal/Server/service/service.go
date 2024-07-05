@@ -23,24 +23,6 @@ type StoreAuth interface {
 	GetUserId(ctx context.Context, login string, password string) (int64, error)
 }
 
-//// Data - интерфейс для работы с данными пользователя.
-//type Data interface {
-//	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
-//	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
-//	CreateFile(ctx context.Context, userId int64, data []byte, name, description string) (*RespData, error)
-//	ChangeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]byte, error)
-//	GetData(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
-//
-//	RemoveData(ctx context.Context, userId, userDataId int64) error
-//	UploadFile(additionalPath string, r *http.Request) (bool, *TmpFile, error)
-//	GetListData(ctx context.Context, userId int64) ([]byte, error)
-//	UpdateData(ctx context.Context, userId int64, userDataId int64, data []byte) ([]byte, error)
-//
-//	CreateFileChunks(ctx context.Context, userId int64, tmpFile *TmpFile, name, description string) (*RespData, error)
-//	GetFileSize(ctx context.Context, userId int64, userDataId int64) ([]byte, error)
-//	GetFileChunks(ctx context.Context, userId int64, userDataId int64, r *http.Request) ([]byte, error)
-//}
-
 // StoreData - интерфейс для работы с БД данных пользователя.
 type StoreData interface {
 	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (*store.UsersData, error)

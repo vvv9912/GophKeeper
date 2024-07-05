@@ -250,7 +250,8 @@ func TestUseCase_CreateFileChunks(t *testing.T) {
 	require.NoError(t, err)
 	f, err := os.Create(tmpFile.PathFileSave)
 	require.NoError(t, err)
-	defer f.Close()
+	f.Close()
+
 	defer os.Remove(tmpFile.PathFileSave)
 	_, err = u.CreateFileChunks(context.TODO(), userId, tmpFile, "name", "description", []byte("data"))
 	require.NoError(t, err)
