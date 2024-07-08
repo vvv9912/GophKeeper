@@ -26,13 +26,14 @@ jobs:
     - name: Run go vet
       run: go vet ./...
       continue-on-error: true
+
     - name: Run go test
       run: go test -vet=off ./...
 
     - name: Install Docker
       uses: docker/setup-buildx-action@v1
 
-    - name: Run integration tests
+    - name: Run integration tests for postgres
       run: go test -tags=integrationTest ./...
   test-windows:
     name: Test on Windows
