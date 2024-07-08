@@ -89,7 +89,7 @@ func TestValidLoginAndPasswordProvidedAsArguments(t *testing.T) {
 	// Mock dependencies
 
 	args := []string{"validLogin", "validPassword"}
-	login, password := auth(args)
+	login, password, _ := auth(args)
 
 	assert.Equal(t, "validLogin", login)
 	assert.Equal(t, "validPassword", password)

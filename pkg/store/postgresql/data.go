@@ -107,7 +107,6 @@ func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byt
 	}()
 
 	// возвращаем user_data_id
-
 	dataId, err := db.createData(ctx, tx, data)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")

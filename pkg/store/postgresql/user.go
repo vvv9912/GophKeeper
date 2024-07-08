@@ -30,12 +30,12 @@ func (db *Database) CreateUser(ctx context.Context, login, password string) (int
 }
 
 func (db *Database) GetUserId(ctx context.Context, login, password string) (int64, error) {
-	//row := db.db.QueryRowxContext(ctx, "SELECT user_id FROM users WHERE login = $1 AND password = $2", login, password)
-	//var id int64
-	//err := row.Scan(&id)
-	//if err != nil {
-	//	logger.Log.Error("Error while getting user id", zap.String("login", login), zap.String("password", password), zap.Error(err))
-	//	return 0, err
-	//}
-	return 1, nil
+	row := db.db.QueryRowxContext(ctx, "SELECT user_id FROM users WHERE login = $1 AND password = $2", login, password)
+	var id int64
+	err := row.Scan(&id)
+	if err != nil {
+		logger.Log.Error("Error while getting user id", zap.String("login", login), zap.String("password", password), zap.Error(err))
+		return 0, err
+	}
+	return id, nil
 }

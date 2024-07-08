@@ -65,7 +65,7 @@ func (s *UseCase) CreateFileData(ctx context.Context, data *server.ReqData) erro
 	if err := s.setJwtToken(ctx); err != nil {
 		return err
 	}
-	//todo шифруем data
+
 	resp, err := s.DataInterface.PostCrateFile(ctx, data)
 	if err != nil {
 		return err
@@ -233,7 +233,7 @@ func (s *UseCase) UpdateData(ctx context.Context, userDataId int64, data []byte)
 	if err := s.setJwtToken(ctx); err != nil {
 		return nil, err
 	}
-	//todo шифруем data
+
 	data, err := s.Encrypter.Encrypt(data)
 	if err != nil {
 		return nil, err

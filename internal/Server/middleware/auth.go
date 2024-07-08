@@ -38,7 +38,7 @@ func (m Mw) MiddlewareAuth(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		//todo
+
 		ctx := context.WithValue(r.Context(), "UserId", userId)
 
 		next.ServeHTTP(w, r.WithContext(ctx))

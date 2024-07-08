@@ -11,15 +11,16 @@ type Auth interface {
 }
 
 type Data interface {
-	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
-	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
-	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (int64, error)
-	ChangeData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]UsersData, error)
+	CreateCredentials(ctx context.Context, userId int64, data []byte, name, description, hash string) (*UsersData, error)
+	CreateCreditCard(ctx context.Context, userId int64, data []byte, name, description, hash string) (*UsersData, error)
+	CreateFileData(ctx context.Context, userId int64, data []byte, name, description, hash string) (*UsersData, error)
+	ChangeData(ctx context.Context, userId int64, userDataId int64, lastTimeUpdate time.Time) (bool, error)
 	GetData(ctx context.Context, userId int64, usersDataId int64) (*UsersData, *DataFile, error)
-	UpdateData(ctx context.Context, updateData *UpdateUsersData, data []byte) error
+	UpdateData(ctx context.Context, userId int64, userDataId int64, data []byte, hash string) (*UsersData, error)
 	RemoveData(ctx context.Context, userId, usersDataId int64) error
-	CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name, description, hash string, metaData []byte) (int64, error)
+	CreateFileDataChunks(ctx context.Context, userId int64, data []byte, name string, description string, hash string, metaData *MetaData) (*UsersData, error)
 	GetMetaData(ctx context.Context, userId, userDataId int64) (*MetaData, error)
+	GetListData(ctx context.Context, userId int64) ([]UsersData, error)
 }
 
 type DataClient interface {

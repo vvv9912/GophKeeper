@@ -170,7 +170,7 @@ func (s *UseCase) createData(ctx context.Context, userId int64, data []byte, nam
 		logger.Log.Error("userId is empty")
 		err = errors.Join(err, customErrors.NewCustomError(nil, http.StatusBadRequest, "userId is empty"))
 	}
-	//todo в вывод добавить unwrap
+
 	if err != nil {
 		return "", err
 	}

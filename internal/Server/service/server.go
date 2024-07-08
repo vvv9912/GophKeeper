@@ -34,15 +34,11 @@ func StartServer(ctx context.Context, h http.Handler, addr, cert, key string) *S
 	}()
 
 	go func() {
-		select {
-		case <-ctx.Done():
-			err := server.Shutdown(ctx)
-			if err != nil {
-				logger.Log.Error("shutdown error", zap.Error(err))
-				return
-			}
+		<-ctx.Done()
+		err := server.Shutdown(ctx)
+		if err != nil {
+			logger.Log.Error("shutdown error", zap.Error(err))
 		}
-
 	}()
 	return &Server{}
 }

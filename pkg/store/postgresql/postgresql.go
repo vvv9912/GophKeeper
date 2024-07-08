@@ -33,9 +33,9 @@ func NewDatabase(db *sqlx.DB) *Database {
 	return &Database{db: db}
 }
 func (db *Database) createUser(ctx context.Context, login, password string) (int64, error) {
-	query := "INSERT INTO users (login, password) VALUES ($1, $2) RETURNING user_id"
+	q := "INSERT INTO users (login, password) VALUES ($1, $2) RETURNING user_id"
 	var id int64
-	err := db.db.QueryRowxContext(ctx, query, login, password).Scan(&id)
+	err := db.db.QueryRowxContext(ctx, q, login, password).Scan(&id)
 	if err != nil {
 		logger.Log.Error("Error while creating user", zap.String("login", login), zap.String("password", password), zap.Error(err))
 		return 0, err
@@ -45,11 +45,11 @@ func (db *Database) createUser(ctx context.Context, login, password string) (int
 
 func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userId int64, dataId int64, dataType int, name, description, hash string) (*store.UsersData, error) {
 
-	query := "INSERT INTO users_data (data_id,user_id, data_type, name, description,hash) VALUES ($1, $2,$3,$4,$5,$6) RETURNING user_data_id,created_at,update_at"
+	q := "INSERT INTO users_data (data_id,user_id, data_type, name, description,hash) VALUES ($1, $2,$3,$4,$5,$6) RETURNING user_data_id,created_at,update_at"
 
 	var usersData store.UsersData
 
-	err := db.db.QueryRowContext(ctx, query, dataId, userId, dataType, name, description, hash).Scan(&usersData.UserDataId, &usersData.CreatedAt, &usersData.UpdateAt)
+	err := db.db.QueryRowContext(ctx, q, dataId, userId, dataType, name, description, hash).Scan(&usersData.UserDataId, &usersData.CreatedAt, &usersData.UpdateAt)
 	if err != nil {
 		logger.Log.Error("Add credentials error", zap.String("name", name), zap.String("description", description), zap.String("hash", hash), zap.Int("data_type", dataType))
 		return nil, err
@@ -67,9 +67,9 @@ func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userId int64
 // createData - добавление пользовательских данных.
 func (db *Database) createDataWithMeta(ctx context.Context, tx *sql.Tx, data []byte, metaData []byte) (int64, error) {
 
-	query := "INSERT INTO data (encrypt_data, meta_data) VALUES ($1,$2) RETURNING data_id"
+	q := "INSERT INTO data (encrypt_data, meta_data) VALUES ($1,$2) RETURNING data_id"
 	var id int64
-	err := tx.QueryRowContext(ctx, query, data, metaData).Scan(&id)
+	err := tx.QueryRowContext(ctx, q, data, metaData).Scan(&id)
 	if err != nil {
 		logger.Log.Error("Add data")
 		return 0, err
@@ -81,9 +81,9 @@ func (db *Database) createDataWithMeta(ctx context.Context, tx *sql.Tx, data []b
 // createData - добавление пользовательских данных.
 func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (int64, error) {
 
-	query := "INSERT INTO data (encrypt_data) VALUES ($1) RETURNING data_id"
+	q := "INSERT INTO data (encrypt_data) VALUES ($1) RETURNING data_id"
 	var id int64
-	err := tx.QueryRowContext(ctx, query, data).Scan(&id)
+	err := tx.QueryRowContext(ctx, q, data).Scan(&id)
 	if err != nil {
 		logger.Log.Error("Add data")
 		return 0, err
@@ -93,9 +93,9 @@ func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (in
 }
 
 func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.DataFile, error) {
-	query := "SELECT data_id, encrypt_data FROM data WHERE data_id = $1"
+	q := "SELECT data_id, encrypt_data FROM data WHERE data_id = $1"
 	var data store.DataFile
-	err := db.db.QueryRow(query, dataId).Scan(&data.DataId, &data.EncryptData)
+	err := db.db.QueryRow(q, dataId).Scan(&data.DataId, &data.EncryptData)
 	if err != nil {
 		logger.Log.Error("Get data by id", zap.Error(err))
 		return nil, err
@@ -105,8 +105,8 @@ func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.D
 
 // getDataByUserId - Получение информации о данных пользователя, которые не удалены
 func (db *Database) getDataUserByUserId(ctx context.Context, tx *sql.Tx, userId int64, userDataId int64) (*store.UsersData, error) {
-	query := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_data_id = $1 and is_deleted = false and user_id = $2 FOR UPDATE "
-	row := tx.QueryRowContext(ctx, query, userDataId, userId)
+	q := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_data_id = $1 and is_deleted = false and user_id = $2 FOR UPDATE "
+	row := tx.QueryRowContext(ctx, q, userDataId, userId)
 
 	var data store.UsersData
 
@@ -133,8 +133,8 @@ func (db *Database) getDataUserByUserId(ctx context.Context, tx *sql.Tx, userId 
 
 // getDataByUserId - Получение информации о данных пользователя
 func (db *Database) getListData(ctx context.Context, userId int64) ([]store.UsersData, error) {
-	query := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE is_deleted = false and user_id = $1 FOR UPDATE "
-	rows, err := db.db.QueryContext(ctx, query, userId)
+	q := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE is_deleted = false and user_id = $1 FOR UPDATE "
+	rows, err := db.db.QueryContext(ctx, q, userId)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")
 		logger.Log.Error("Error getting data", zap.Error(err))
@@ -182,9 +182,9 @@ func (db *Database) changeData(ctx context.Context, userId int64, userDataId int
 // changeData - получение информации об изменненных данных
 func (db *Database) changeAllData(ctx context.Context, userId int64, lastTimeUpdate time.Time) ([]store.UsersData, error) {
 
-	query := "SELECT user_data_id, name, description,data_type, hash, update_at,is_deleted FROM users_data WHERE user_id = $1 and update_at > $2 FOR UPDATE "
+	q := "SELECT user_data_id, name, description,data_type, hash, update_at,is_deleted FROM users_data WHERE user_id = $1 and update_at > $2 FOR UPDATE "
 
-	row, err := db.db.QueryContext(ctx, query, userId, lastTimeUpdate)
+	row, err := db.db.QueryContext(ctx, q, userId, lastTimeUpdate)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return nil, err
@@ -234,14 +234,14 @@ func (db *Database) updateMetaData(ctx context.Context, tx *sql.Tx, dataId int64
 // updateData - обновление пользовательских данных
 func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userId, userDataId int64, data []byte, hash string) error {
 
-	//// Блокировка таблицы users_data и получение dataid
+	// Блокировка таблицы users_data и получение dataid
 
 	queryBlock1 := "SELECT data_id FROM users_data WHERE user_id = $1 and user_data_id = $2 FOR UPDATE "
 
 	// Изменение данных в таблице users_data
-	query1 := "UPDATE users_data SET  hash=$1, update_at=$2 WHERE user_data_id = $3"
+	queryChangeUsersData := "UPDATE users_data SET  hash=$1, update_at=$2 WHERE user_data_id = $3"
 	// Изменение данных в таблице data
-	query2 := "UPDATE data SET encrypt_data = $1 where data_id=$2"
+	queryChangeData := "UPDATE data SET encrypt_data = $1 where data_id=$2"
 
 	// Получим dataId и заблокируем на изменение табилцу
 	var dataId int64
@@ -251,15 +251,7 @@ func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userId, userData
 		return err
 	}
 
-	//// Заблокируем таблицу data
-	//_, err = tx.QueryContext(ctx, queryBlock2, dataId)
-	//if err != nil {
-	//	logger.Log.Error("Error while querying data", zap.Error(err))
-	//	return err
-	//}
-
-	// Вставляем новые данные
-	res, err := tx.ExecContext(ctx, query2, data, dataId)
+	res, err := tx.ExecContext(ctx, queryChangeData, data, dataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
@@ -271,12 +263,11 @@ func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userId, userData
 		return err
 	}
 	if nr == 0 {
-		//todo add err in repo
 		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
 	}
 	updateAt := time.Now().UTC()
 
-	res, err = tx.ExecContext(ctx, query1, hash, updateAt, userDataId)
+	res, err = tx.ExecContext(ctx, queryChangeUsersData, hash, updateAt, userDataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
@@ -288,7 +279,6 @@ func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userId, userData
 		return err
 	}
 	if nr == 0 {
-		//todo add err in repo
 		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
 	}
 
@@ -300,9 +290,9 @@ func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userId, userData
 func (db *Database) removeData(ctx context.Context, userId int64, usersDataId int64) error {
 
 	// Удаление данных в таблице users_data
-	query1 := "UPDATE users_data SET is_deleted=$1 WHERE user_data_id = $2 and user_id = $3"
+	queryRemoveUsersData := "UPDATE users_data SET is_deleted=$1 WHERE user_data_id = $2 and user_id = $3"
 
-	res, err := db.db.ExecContext(ctx, query1, true, usersDataId, userId)
+	res, err := db.db.ExecContext(ctx, queryRemoveUsersData, true, usersDataId, userId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
@@ -314,35 +304,8 @@ func (db *Database) removeData(ctx context.Context, userId int64, usersDataId in
 		return err
 	}
 	if nr == 0 {
-		//todo add err in repo
 		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
 	}
 
 	return nil
-}
-
-// createData - добавление пользовательских данных.
-func (db *Database) updateDataWithMeta(ctx context.Context, tx *sql.Tx, data []byte, metaData []byte) (int64, error) {
-	query := "UPDATE data SET encrypt_data = $1, meta_data = $2 WHERE data_id = $3 RETURNING data_id"
-	var id int64
-	err := tx.QueryRowContext(ctx, query, data, metaData).Scan(&id)
-	if err != nil {
-		logger.Log.Error("Add data")
-		return 0, err
-	}
-
-	return id, nil
-}
-
-// deleteData - удаление пользовательских данных
-func (db *Database) deleteData(ctx context.Context, user_data_id int64) error {
-
-	// todo
-
-	return nil
-}
-
-func (db *Database) GetUsersData(ctx context.Context, userId int64) ([]store.UsersData, error) {
-	//todo
-	return nil, nil
 }

@@ -185,8 +185,8 @@ func (db *Database) GetData(ctx context.Context, usersDataId int64) (*store.User
 	return usersData, data, nil
 }
 func (db *Database) getDataUserByUserId(ctx context.Context, userDataId int64) (*store.UsersData, error) {
-	query := "SELECT user_data_id, data_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_data_id = $1 and is_deleted = false "
-	row := db.db.QueryRowContext(ctx, query, userDataId)
+	q := "SELECT user_data_id, data_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE user_data_id = $1 and is_deleted = false "
+	row := db.db.QueryRowContext(ctx, q, userDataId)
 
 	var data store.UsersData
 
@@ -211,9 +211,9 @@ func (db *Database) getDataUserByUserId(ctx context.Context, userDataId int64) (
 }
 
 func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.DataFile, error) {
-	query := "SELECT data_id, encrypt_data FROM data WHERE data_id = $1"
+	q := "SELECT data_id, encrypt_data FROM data WHERE data_id = $1"
 	var data store.DataFile
-	err := db.db.QueryRow(query, dataId).Scan(&data.DataId, &data.EncryptData)
+	err := db.db.QueryRow(q, dataId).Scan(&data.DataId, &data.EncryptData)
 	if err != nil {
 		logger.Log.Error("Get data by id", zap.Error(err))
 		return nil, err
@@ -224,9 +224,9 @@ func (db *Database) getDataByDataId(ctx context.Context, dataId int64) (*store.D
 // createData - добавление пользовательских данных.
 func (db *Database) createDataWithMeta(ctx context.Context, tx *sql.Tx, data []byte, metaData []byte) (int64, error) {
 
-	query := "INSERT INTO data (encrypt_data, meta_data) VALUES (?,?) RETURNING data_id"
+	q := "INSERT INTO data (encrypt_data, meta_data) VALUES (?,?) RETURNING data_id"
 	var id int64
-	err := tx.QueryRowContext(ctx, query, data, metaData).Scan(&id)
+	err := tx.QueryRowContext(ctx, q, data, metaData).Scan(&id)
 	if err != nil {
 		logger.Log.Error("Add data")
 		return 0, err
@@ -238,9 +238,9 @@ func (db *Database) createDataWithMeta(ctx context.Context, tx *sql.Tx, data []b
 // createData - добавление пользовательских данных.
 func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (int64, error) {
 
-	query := "INSERT INTO data (encrypt_data) VALUES (?) RETURNING data_id"
+	q := "INSERT INTO data (encrypt_data) VALUES (?) RETURNING data_id"
 	var id int64
-	err := tx.QueryRowContext(ctx, query, data).Scan(&id)
+	err := tx.QueryRowContext(ctx, q, data).Scan(&id)
 	if err != nil {
 		logger.Log.Error("Add data")
 		return 0, err
@@ -250,9 +250,9 @@ func (db *Database) createData(ctx context.Context, tx *sql.Tx, data []byte) (in
 }
 func (db *Database) createUserData(ctx context.Context, tx *sql.Tx, userDataId int64, dataId int64, dataType int, name, description, hash string, createdAt, updateAt *time.Time) error {
 
-	query := "INSERT INTO users_data (user_data_id,data_id, data_type, name, description,hash, created_at, update_at) VALUES (?, ?,?,?,?,?,?,?)"
+	q := "INSERT INTO users_data (user_data_id,data_id, data_type, name, description,hash, created_at, update_at) VALUES (?, ?,?,?,?,?,?,?)"
 
-	res, err := tx.Exec(query, userDataId, dataId, dataType, name, description, hash, createdAt, updateAt)
+	res, err := tx.Exec(q, userDataId, dataId, dataType, name, description, hash, createdAt, updateAt)
 	if err != nil {
 		logger.Log.Error("Add credentials error", zap.String("name", name), zap.String("description", description), zap.String("hash", hash), zap.Int("data_type", dataType))
 		return err
@@ -329,30 +329,23 @@ func (db *Database) UpdateDataBinary(ctx context.Context, userDataId int64, data
 // updateData - обновление пользовательских данных
 func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userDataId int64, data []byte, hash string, updateAt *time.Time) error {
 
-	queryBlock1 := "SELECT data_id FROM users_data WHERE user_data_id = ? "
+	querySelectDataId := "SELECT data_id FROM users_data WHERE user_data_id = ? "
 
 	// Изменение данных в таблице users_data
-	query1 := "UPDATE users_data SET  hash=?, update_at=? WHERE user_data_id = ?"
+	queryUpdateUsersData := "UPDATE users_data SET  hash=?, update_at=? WHERE user_data_id = ?"
 	// Изменение данных в таблице data
-	query2 := "UPDATE data SET encrypt_data = ? where data_id=?"
+	queryUpdateData := "UPDATE data SET encrypt_data = ? where data_id=?"
 
 	// Получим dataId и заблокируем на изменение табилцу
 	var dataId int64
-	err := tx.QueryRowContext(ctx, queryBlock1, userDataId).Scan(&dataId)
+	err := tx.QueryRowContext(ctx, querySelectDataId, userDataId).Scan(&dataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
 	}
 
-	//// Заблокируем таблицу data
-	//_, err = tx.QueryContext(ctx, queryBlock2, dataId)
-	//if err != nil {
-	//	logger.Log.Error("Error while querying data", zap.Error(err))
-	//	return err
-	//}
-
 	// Вставляем новые данные
-	res, err := tx.ExecContext(ctx, query2, data, dataId)
+	res, err := tx.ExecContext(ctx, queryUpdateData, data, dataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
@@ -364,11 +357,11 @@ func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userDataId int64
 		return err
 	}
 	if nr == 0 {
-		//todo add err in repo
+
 		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
 	}
 
-	res, err = tx.ExecContext(ctx, query1, hash, updateAt, userDataId)
+	res, err = tx.ExecContext(ctx, queryUpdateUsersData, hash, updateAt, userDataId)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return err
@@ -380,7 +373,6 @@ func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userDataId int64
 		return err
 	}
 	if nr == 0 {
-		//todo add err in repo
 		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
 	}
 

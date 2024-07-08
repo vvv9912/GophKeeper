@@ -13,7 +13,11 @@ import (
 
 // SignIn - вход в аккаунт
 func (c *Cobra) SignIn(cmd *cobra.Command, args []string) {
-	Login, Password := auth(args)
+	Login, Password, err := auth(args)
+	if err != nil {
+		return
+	}
+
 	log.Println("Login:", Login)
 	log.Println("Password:", Password)
 
@@ -31,7 +35,10 @@ func (c *Cobra) SignIn(cmd *cobra.Command, args []string) {
 
 // SignUp - регистрация
 func (c *Cobra) SignUp(cmd *cobra.Command, args []string) {
-	Login, Password := auth(args)
+	Login, Password, err := auth(args)
+	if err != nil {
+		return
+	}
 
 	log.Println("Login:", Login)
 	log.Println("Password:", Password)
@@ -47,7 +54,7 @@ func (c *Cobra) SignUp(cmd *cobra.Command, args []string) {
 	logger.Log.Debug("jwt", zap.String("jwt", jwt))
 }
 
-func auth(args []string) (string, string) {
+func auth(args []string) (string, string, error) {
 
 	// Ограничение по длине символов для логин, пароля
 	const (
@@ -64,9 +71,14 @@ func auth(args []string) (string, string) {
 	)
 
 	if len(args) == 2 {
-		Login = args[0]
-		Password = args[1]
+		return args[0], args[1], nil
 	} else {
+
+		reg, err := regexp.Compile("^[a-zA-Z][a-zA-Z0-9]*$")
+		if err != nil {
+			logger.Log.Error("Error create regexp")
+			return "", "", err
+		}
 
 		for {
 			fmt.Print("Enter Login: ")
@@ -77,11 +89,7 @@ func auth(args []string) (string, string) {
 				continue
 			}
 
-			match, err := regexp.MatchString("^[a-zA-Z][a-zA-Z0-9]*$", Login)
-			if err != nil {
-				logger.Log.Error("Error Login")
-				continue
-			}
+			match := reg.MatchString(Login)
 			if !match {
 				logger.Log.Error("Error Login")
 				continue
@@ -100,18 +108,15 @@ func auth(args []string) (string, string) {
 				continue
 			}
 			Password = string(passwordByte)
-			match, err = regexp.MatchString("^[a-zA-Z][a-zA-Z0-9]*$", Password)
-			if err != nil {
-				logger.Log.Error("Error Password")
-				continue
-			}
+			match = reg.MatchString(Password)
 			if !match {
 				logger.Log.Error("Error Password")
 				continue
 			}
+
 			break
 		}
 
 	}
-	return Login, Password
+	return Login, Password, nil
 }
