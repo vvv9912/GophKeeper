@@ -267,9 +267,11 @@ func TestSaveFiles_DeleteFile(t *testing.T) {
 	}
 	f, err := os.Create("test-path.txt")
 	require.NoError(t, err)
+	err = f.Close()
+	require.NoError(t, err)
 
 	defer func() {
-		_ = f.Close()
+
 		_ = os.Remove("test-path")
 	}()
 
@@ -350,8 +352,10 @@ func TestSaveFiles_RunCronDeleteFiles2(t *testing.T) {
 
 	f, err := os.Create("test-path")
 	require.NoError(t, err)
+	err = f.Close()
+	require.NoError(t, err)
 	defer func() {
-		f.Close()
+
 		os.Remove("test-path")
 
 	}()

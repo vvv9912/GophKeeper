@@ -20,8 +20,8 @@ func TestMw_MiddlewareAuthBearerPrefix(t *testing.T) {
 		Auth:     mockAuth,
 	}
 
-	mw := Mw{s.Auth}
-
+	//mw := NewMw(s.Auth)
+	mw := &Mw{s.Auth}
 	validToken := "validToken"
 	userId := int64(123)
 
@@ -58,7 +58,7 @@ func TestMw_MiddlewareAuthBearerPrefixBadToken(t *testing.T) {
 		Auth:     mockAuth,
 	}
 
-	mw := Mw{s.Auth}
+	mw := NewMw(s.Auth)
 
 	userId := int64(123)
 
