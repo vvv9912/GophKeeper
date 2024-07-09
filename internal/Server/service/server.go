@@ -8,13 +8,8 @@ import (
 	"net/http"
 )
 
-// Server - структура сервера.
-type Server struct {
-	httpServer *http.Server
-}
-
 // StartServer - запуск сервера.
-func StartServer(ctx context.Context, h http.Handler, addr, cert, key string) *Server {
+func StartServer(ctx context.Context, h http.Handler, addr, cert, key string) *http.Server {
 
 	server := &http.Server{
 		Addr:    addr,
@@ -40,5 +35,5 @@ func StartServer(ctx context.Context, h http.Handler, addr, cert, key string) *S
 			logger.Log.Error("shutdown error", zap.Error(err))
 		}
 	}()
-	return &Server{}
+	return server
 }

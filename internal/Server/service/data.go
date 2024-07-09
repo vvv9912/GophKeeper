@@ -176,7 +176,7 @@ func (s *UseCase) createData(ctx context.Context, userId int64, data []byte, nam
 	}
 	// Считаем хэш полученных данных
 	hash := ShaHash.Sha256Hash(data)
-	return hash, err
+	return hash, nil
 }
 
 // ChangeData - проверка изменения данных.
