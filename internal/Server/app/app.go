@@ -14,10 +14,10 @@ import (
 func Run(ctx context.Context) error {
 
 	if err := config.InitConfig(); err != nil {
-		panic(err)
+		return err
 	}
 	if err := logger.Initialize(config.Get().LevelLogger); err != nil {
-		panic(err)
+		return err
 	}
 	logger.Log.Info("start app")
 

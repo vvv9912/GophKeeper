@@ -6,6 +6,7 @@ import (
 	"GophKeeper/pkg/store"
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"net/http"
@@ -136,7 +137,6 @@ func (db *Database) getListData(ctx context.Context, userId int64) ([]store.User
 	q := "SELECT user_data_id, data_id,user_id,data_type,name, description, hash, created_at,update_at,is_deleted FROM users_data WHERE is_deleted = false and user_id = $1 FOR UPDATE "
 	rows, err := db.db.QueryContext(ctx, q, userId)
 	if err != nil {
-		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "get data failed")
 		logger.Log.Error("Error getting data", zap.Error(err))
 		return nil, err
 	}
@@ -184,38 +184,23 @@ func (db *Database) changeAllData(ctx context.Context, userId int64, lastTimeUpd
 
 	q := "SELECT user_data_id, name, description,data_type, hash, update_at,is_deleted FROM users_data WHERE user_id = $1 and update_at > $2 FOR UPDATE "
 
-	row, err := db.db.QueryContext(ctx, q, userId, lastTimeUpdate)
+	rows, err := db.db.QueryContext(ctx, q, userId, lastTimeUpdate)
 	if err != nil {
 		logger.Log.Error("Error while querying data", zap.Error(err))
 		return nil, err
 	}
-	defer row.Close()
+	defer rows.Close()
 
 	var data []store.UsersData
 
-	for row.Next() {
-		var userDataId int64
-		var name string
-		var description string
-		var dataType int
-		var hash string
-		var updateAt time.Time
-		var isDeleted bool
-
-		err = row.Scan(&userDataId, &name, &description, &dataType, &hash, &updateAt, &isDeleted)
+	for rows.Next() {
+		var userData store.UsersData
+		err = rows.Scan(&userData.UserDataId, &userData.Name, &userData.Description, &userData.DataType, &userData.Hash, &userData.UpdateAt, &userData.IsDeleted)
 		if err != nil {
 			logger.Log.Error("Error getting data", zap.Error(err))
 			return nil, err
 		}
-		data = append(data, store.UsersData{
-			UserDataId:  userDataId,
-			Name:        name,
-			Description: description,
-			DataType:    dataType,
-			Hash:        hash,
-			UpdateAt:    &updateAt,
-			IsDeleted:   isDeleted,
-		})
+		data = append(data, userData)
 	}
 
 	return data, nil
@@ -279,7 +264,7 @@ func (db *Database) updateData(ctx context.Context, tx *sql.Tx, userId, userData
 		return err
 	}
 	if nr == 0 {
-		return customErrors.NewCustomError(nil, http.StatusNotFound, "data not found")
+		return fmt.Errorf("data not found")
 	}
 
 	// Возвращаем updateAt

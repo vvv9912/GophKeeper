@@ -21,7 +21,7 @@ func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []
 	}
 
 	defer func() {
-		err = handleTransaction(tx, err)
+		handleTransaction(tx, err)
 	}()
 
 	dataId, err := db.createData(ctx, tx, data)
@@ -32,6 +32,12 @@ func (db *Database) CreateCredentials(ctx context.Context, userId int64, data []
 	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeCredentials, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credentials failed")
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Error("Error while commit", zap.Error(err))
 		return nil, err
 	}
 
@@ -46,7 +52,7 @@ func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []b
 	}
 
 	defer func() {
-		err = handleTransaction(tx, err)
+		handleTransaction(tx, err)
 	}()
 
 	dataId, err := db.createData(ctx, tx, data)
@@ -57,6 +63,12 @@ func (db *Database) CreateCreditCard(ctx context.Context, userId int64, data []b
 	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeCreditCardData, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add credit card failed")
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Error("Error while commit", zap.Error(err))
 		return nil, err
 	}
 
@@ -71,7 +83,7 @@ func (db *Database) CreateFileDataChunks(ctx context.Context, userId int64, data
 	}
 
 	defer func() {
-		err = handleTransaction(tx, err)
+		handleTransaction(tx, err)
 	}()
 
 	m, err := json.Marshal(metaData)
@@ -92,6 +104,12 @@ func (db *Database) CreateFileDataChunks(ctx context.Context, userId int64, data
 		return nil, err
 	}
 
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Error("Error while commit", zap.Error(err))
+		return nil, err
+	}
+
 	return userData, nil
 }
 
@@ -103,7 +121,7 @@ func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byt
 	}
 
 	defer func() {
-		err = handleTransaction(tx, err)
+		handleTransaction(tx, err)
 	}()
 
 	// возвращаем user_data_id
@@ -115,6 +133,12 @@ func (db *Database) CreateFileData(ctx context.Context, userId int64, data []byt
 	userData, err := db.createUserData(ctx, tx, userId, dataId, TypeBinaryFile, name, description, hash)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "add file failed")
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Error("Error while commit", zap.Error(err))
 		return nil, err
 	}
 
@@ -171,7 +195,7 @@ func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64
 		return nil, nil, err
 	}
 	defer func() {
-		err = handleTransaction(tx, err)
+		handleTransaction(tx, err)
 	}()
 
 	usersData, err := db.getDataUserByUserId(ctx, tx, userId, usersDataId)
@@ -191,6 +215,12 @@ func (db *Database) GetData(ctx context.Context, userId int64, usersDataId int64
 		return nil, nil, err
 	}
 
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Error("Error while commit", zap.Error(err))
+		return nil, nil, err
+	}
+
 	return usersData, data, nil
 }
 
@@ -201,7 +231,7 @@ func (db *Database) UpdateData(ctx context.Context, userId, userDataId int64, da
 		return nil, err
 	}
 	defer func() {
-		err = handleTransaction(tx, err)
+		handleTransaction(tx, err)
 	}()
 
 	err = db.updateData(ctx, tx, userId, userDataId, data, hash)
@@ -212,6 +242,12 @@ func (db *Database) UpdateData(ctx context.Context, userId, userDataId int64, da
 	usersData, err := db.getDataUserByUserId(ctx, tx, userId, userDataId)
 	if err != nil {
 		err = customErrors.NewCustomError(err, http.StatusInternalServerError, "update data failed")
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Error("Error while commit", zap.Error(err))
 		return nil, err
 	}
 
@@ -244,7 +280,7 @@ func (db *Database) UpdateBinaryFile(ctx context.Context, userId int64, userData
 	}
 
 	defer func() {
-		err = handleTransaction(tx, err)
+		handleTransaction(tx, err)
 	}()
 
 	err = db.updateData(ctx, tx, userId, userDataId, data, hash)
@@ -262,22 +298,21 @@ func (db *Database) UpdateBinaryFile(ctx context.Context, userId int64, userData
 		return nil, err
 	}
 
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Error("Error while commit", zap.Error(err))
+		return nil, err
+	}
+
 	return usersData, nil
 }
 
-func handleTransaction(tx *sql.Tx, err error) error {
+func handleTransaction(tx *sql.Tx, err error) {
 	if err != nil {
 		newErr := tx.Rollback()
 		if newErr != nil {
 			logger.Log.Error("Error while rollback", zap.Error(newErr))
 			err = errors.Join(err, newErr)
 		}
-	} else {
-		newErr := tx.Commit()
-		if newErr != nil {
-			logger.Log.Error("Error while commit", zap.Error(newErr))
-			err = errors.Join(err, newErr)
-		}
 	}
-	return err
 }

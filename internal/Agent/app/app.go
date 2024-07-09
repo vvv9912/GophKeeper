@@ -15,7 +15,7 @@ import (
 )
 
 // Run - запуск приложения
-func Run(ctx context.Context) {
+func Run(ctx context.Context) error {
 	if err := config.InitConfig(); err != nil {
 		panic(err)
 	}
@@ -29,17 +29,17 @@ func Run(ctx context.Context) {
 	key, err := readKeyFromFile(config.Get().PathSecretKey)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	db, err := sqlx.Open("sqlite", config.Get().PathDatabaseFile)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = store.MigrateSQLITE(db)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	agent := service.NewServiceAgent(db, key, config.Get().CertFile, config.Get().KeyFile, config.Get().PathDatabaseFile)
@@ -47,10 +47,10 @@ func Run(ctx context.Context) {
 	cob := command.NewCobra(agent)
 
 	if err := cob.Start(ctx); err != nil {
-		panic(err)
+		return err
 	}
 
-	return
+	return nil
 
 }
 

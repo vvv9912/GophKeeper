@@ -22,7 +22,9 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer cancel()
 
-	app.Run(ctx)
+	if err := app.Run(ctx); err != nil {
+		log.Fatal("Error during app.Run:", err)
+	}
 
 	<-ctx.Done()
 

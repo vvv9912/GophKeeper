@@ -225,6 +225,7 @@ func (c *Cobra) UpdateCredentials(cmd *cobra.Command, args []string) {
 	resp, err := c.s.UpdateData(cmd.Context(), int64(userDataId), credential)
 	if err != nil {
 		logger.Log.Error("CreateCredentials failed", zap.Error(err))
+		return
 	}
 
 	logger.Log.Info(string(resp))
